@@ -23,3 +23,7 @@ Bu kurallar, projenin tüm backend, frontend, prompt tasarımı ve yapay zekâ e
 
 5. **Ebeveyn Denetimi (Parental Gate):**
    - Ayarlar, masal oluşturma/satın alma butonları ve dış bağlantılar daima rastgele bilişsel/matematiksel bir soru (Parental Gate) arkasında korunmalıdır.
+
+6. **Web Araştırması ve Proje Uygunluk Teyidi (Zorunlu):**
+   - Kullanıcıya sunulacak tüm mimari kararlar, kütüphane ve paket önerileri, API entegrasyonları ve kod çözümleri ilk olarak web üzerinden araştırılmalı;
+   - Elde edilen güncel çözümler 3-6 yaş pedagojik yapısına, görsel/ses senkronizasyon gereksinimlerine ve performans standartlarına göre teyit edilerek kullanıcıya sunulmalıdır.
