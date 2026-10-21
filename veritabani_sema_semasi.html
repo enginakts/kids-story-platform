@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>3-6 Yaş Yapay Zekâ Masal Platformu - Veritabanı Şeması</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #1e293b;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+      z-index: 10;
+    }
+    h1 { font-size: 1.15rem; font-weight: 600; color: #f8fafc; }
+    .badge {
+      background: #2563eb;
+      color: white;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      margin-left: 8px;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn {
+      background: #334155;
+      color: white;
+      border: 1px solid #475569;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #475569; }
+    .btn-primary { background: #2563eb; border-color: #3b82f6; }
+    .btn-primary:hover { background: #1d4ed8; }
+    #viewport {
+      flex: 1;
+      overflow: auto;
+      background: #090d16;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      position: relative;
+    }
+    #viewport:active { cursor: grabbing; }
+    #schema-img {
+      max-width: none;
+      transition: transform 0.15s ease-out;
+      transform-origin: center center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>3-6 Yaş Masal Platformu - İlişkisel Veritabanı Şeması <span class="badge">Faz 1 - 20 Tablo</span></h1>
+    </div>
+    <div class="controls">
+      <button class="btn" onclick="zoomIn()">🔍 Yakınlaştır (+)</button>
+      <button class="btn" onclick="zoomOut()">🔍 Uzaklaştır (-)</button>
+      <button class="btn" onclick="resetZoom()">↺ Sıfırla (100%)</button>
+      <button class="btn btn-primary" onclick="fitWidth()">↔ Ekrana Sığdır</button>
+    </div>
+  </header>
+  <div id="viewport">
+    <img id="schema-img" src="./veritabani_sema_semasi.png" alt="Veritabanı Şeması" />
+  </div>
+
+  <script>
+    let scale = 0.45;
+    const img = document.getElementById('schema-img');
+    const viewport = document.getElementById('viewport');
+
+    function applyZoom() {
+      img.style.transform = `scale(${scale})`;
+    }
+    function zoomIn() {
+      scale = Math.min(2.0, scale + 0.1);
+      applyZoom();
+    }
+    function zoomOut() {
+      scale = Math.max(0.15, scale - 0.1);
+      applyZoom();
+    }
+    function resetZoom() {
+      scale = 1.0;
+      applyZoom();
+    }
+    function fitWidth() {
+      scale = (viewport.clientWidth - 60) / 3840;
+      applyZoom();
+    }
+
+    // Wheel zoom
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (e.deltaY < 0) zoomIn();
+      else zoomOut();
+    });
+
+    // Initial fit
+    window.onload = fitWidth;
+    window.onresize = fitWidth;
+  </script>
+</body>
+</html>
