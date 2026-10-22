@@ -27,3 +27,7 @@ Bu kurallar, projenin tüm backend, frontend, prompt tasarımı ve yapay zekâ e
 6. **Web Araştırması ve Proje Uygunluk Teyidi (Zorunlu):**
    - Kullanıcıya sunulacak tüm mimari kararlar, kütüphane ve paket önerileri, API entegrasyonları ve kod çözümleri ilk olarak web üzerinden araştırılmalı;
    - Elde edilen güncel çözümler 3-6 yaş pedagojik yapısına, görsel/ses senkronizasyon gereksinimlerine ve performans standartlarına göre teyit edilerek kullanıcıya sunulmalıdır.
+
+7. **GitHub Senkronizasyon Kuralı (Kullanıcı İzni Şartı):**
+   - Yapılan hiçbir kod, tasarım veya dokümantasyon değişikliği otomatik olarak GitHub'a yüklenmez / push edilmez.
+   - GitHub'a yükleme işlemi YALNIZCA kullanıcı açık bir şekilde "GitHub'a yükle" dediğinde gerçekleştirilir.

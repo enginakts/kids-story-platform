@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Build outputs
+target/
+backend/target/
+dist/
+build/
+*.class
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# Database & Runtime
+*.db
+*.db-journal
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# IDEs & System files
+.idea/
+.vscode/
+*.suo
+*.user
+*.swp
+Thumbs.db
+.DS_Store
