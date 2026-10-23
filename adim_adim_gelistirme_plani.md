@@ -18,8 +18,8 @@ Bu doküman; projenin **"küçük, test edilebilir, parça parça ilerleyen"** g
 | Adım No | Modül / Özellik | Backend Durumu | Frontend Durumu | Durum |
 | :---: | :--- | :---: | :---: | :---: |
 | **Adım 1** | Kimlik Doğrulama & Ebeveyn/Yönetici Ayrımı | Tamamlandı | Tamamlandı |  **ONAYLANDI** |
-| **Adım 2** | Çocuk Profili Yönetimi & Veri İzolasyonu | Beklemede | Beklemede | ⏳ *Sıradaki Adım* |
-| **Adım 3** | Karakter ve Mekân Tutarlılık Rehberi (Bibles) | Beklemede | Beklemede | 📋 Planlandı |
+| **Adım 2** | Çocuk Profili Yönetimi, Navbar, Footer & İzolasyon | Tamamlandı | Tamamlandı |  **İNCELEMEDE** |
+| **Adım 3** | Karakter ve Mekân Tutarlılık Rehberi (Bibles) | Beklemede | Beklemede | ⏳ *Sıradaki Adım* |
 | **Adım 4** | Masal Sihirbazı & Tek Seferlik Masal Üretimi | Beklemede | Beklemede | 📋 Planlandı |
 | **Adım 5** | Masal Okuyucu & Sahne Sahne Oynatıcı | Beklemede | Beklemede | 📋 Planlandı |
 | **Adım 6** | Etkileşimli Masal Motoru (A/B Karar Ağacı) | Beklemede | Beklemede | 📋 Planlandı |
