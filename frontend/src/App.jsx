@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ParentAuth from './components/ParentAuth';
 import AdminAuth from './components/AdminAuth';
 import UserDashboard from './components/UserDashboard';
+import ParentPortal from './components/parent/ParentPortal';
 import './App.css';
 
 export default function App() {
@@ -36,11 +37,46 @@ export default function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    window.location.hash = '';
   };
 
+  // EBEVEYN GİRİŞ YAPTIYSA DOĞRUDAN EBEVEYN PORTALI DÜZENİNİ (NAVBAR + İÇERİK + FOOTER) GÖSTER
+  if (currentUser && currentUser.userType === 'PARENT') {
+    return (
+      <ParentPortal
+        user={currentUser}
+        onLogout={handleLogout}
+        backendUrl={backendUrl}
+      />
+    );
+  }
+
+  // YÖNETİCİ GİRİŞ YAPTIYSA YÖNETİCİ KONSOLU
+  if (currentUser && currentUser.userType === 'ADMIN') {
+    return (
+      <div className="app-container admin-mode">
+        <header className="app-header">
+          <div className="brand-badge">
+            <div className="brand-icon">🛡️</div>
+            <div>
+              <div className="brand-title">Masal Dünyası AI</div>
+              <div className="brand-subtitle">Yönetim ve Güvenlik Konsolu</div>
+            </div>
+          </div>
+          <button type="button" className="navbar-logout-btn" onClick={handleLogout}>
+            Yönetici Çıkışı 🚪
+          </button>
+        </header>
+        <main className="content-area">
+          <UserDashboard user={currentUser} onLogout={handleLogout} />
+        </main>
+      </div>
+    );
+  }
+
+  // GİRİŞ YAPILMADIYSA GİRİŞ / KAYIT PORTALI
   return (
     <div className={`app-container ${portal}-mode`}>
-      {/* ÜST GEZİNTİ VE PORTAL GEÇİŞ ÇUBUĞU */}
       <header className="app-header">
         <a href="#" className="brand-badge" onClick={() => handlePortalChange('parent')}>
           <div className="brand-icon">
@@ -54,32 +90,26 @@ export default function App() {
           </div>
         </a>
 
-        {/* Portal Seçici (Farklı Giriş Kapıları) */}
-        {!currentUser && (
-          <div className="portal-switch">
-            <button
-              type="button"
-              className={`portal-btn ${portal === 'parent' ? 'active' : ''}`}
-              onClick={() => handlePortalChange('parent')}
-            >
-              👶 Ebeveyn Girişi
-            </button>
-            <button
-              type="button"
-              className={`portal-btn ${portal === 'admin' ? 'active' : ''}`}
-              onClick={() => handlePortalChange('admin')}
-            >
-              🛡️ Yönetici Girişi
-            </button>
-          </div>
-        )}
+        <div className="portal-switch">
+          <button
+            type="button"
+            className={`portal-btn ${portal === 'parent' ? 'active' : ''}`}
+            onClick={() => handlePortalChange('parent')}
+          >
+            👶 Ebeveyn Girişi
+          </button>
+          <button
+            type="button"
+            className={`portal-btn ${portal === 'admin' ? 'active' : ''}`}
+            onClick={() => handlePortalChange('admin')}
+          >
+            🛡️ Yönetici Girişi
+          </button>
+        </div>
       </header>
 
-      {/* ANA İÇERİK ALANI */}
       <main className="content-area">
-        {currentUser ? (
-          <UserDashboard user={currentUser} onLogout={handleLogout} />
-        ) : portal === 'parent' ? (
+        {portal === 'parent' ? (
           <ParentAuth onLoginSuccess={handleLoginSuccess} backendUrl={backendUrl} />
         ) : (
           <AdminAuth onLoginSuccess={handleLoginSuccess} backendUrl={backendUrl} />
