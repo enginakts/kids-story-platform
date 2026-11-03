@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Giriş yap')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: publicNav}"></header>
+<main class="page narrow">
+    <h1>Ebeveyn girişi</h1>
+    <p class="error" th:if="${param.error}">E-posta veya parola hatalı.</p>
+    <p class="error" th:if="${param.locked}">Çok fazla hatalı deneme yapıldı. Lütfen 15 dakika sonra tekrar deneyin.</p>
+    <p class="notice" th:if="${param.logout}">Çıkış yapıldı.</p>
+    <p class="notice" th:if="${param.reset}">Parolanız değiştirildi. Yeni parolanızla giriş yapabilirsiniz.</p>
+    <form th:action="@{/login}" method="post" class="form">
+        <label>E-posta <input type="email" name="username" autocomplete="email" required></label>
+        <label>Parola <input type="password" name="password" autocomplete="current-password" required></label>
+        <button class="button">Giriş yap</button>
+    </form>
+    <p><a th:href="@{/forgot-password}">Parolamı unuttum</a></p>
+</main>
+</body>
+</html>

@@ -1,21 +1,14 @@
 package com.kidstory.backend.dto;
 
-import lombok.*;
+import com.kidstory.backend.entity.ChildProfile;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class ChildProfileResponse {
-    private Long id;
-    private Long parentId;
-    private String name;
-    private Integer age;
-    private String gender;
-    private String favoriteAnimals;
-    private String favoriteColors;
-    private String specialInterests;
-    private String bedtimeHour;
-    private String avatarUrl;
-    private Boolean isActive;
+import java.time.LocalTime;
+
+public record ChildProfileResponse(Long id, String name, Integer age, String gender, String favoriteAnimals,
+                            String favoriteColors, String specialInterests, LocalTime bedtimeHour, String avatarKey) {
+
+    public static ChildProfileResponse from(ChildProfile c) {
+        return new ChildProfileResponse(c.getId(), c.getName(), c.getAge(), c.getGender(), c.getFavoriteAnimals(),
+                c.getFavoriteColors(), c.getSpecialInterests(), c.getBedtimeHour(), c.getAvatarKey());
+    }
 }

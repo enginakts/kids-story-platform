@@ -2,12 +2,14 @@ package com.kidstory.backend.repository;
 
 import com.kidstory.backend.entity.ChildProfile;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
-@Repository
+/** Tüm sorgular parentId içerir: veri izolasyonu depo düzeyinde zorunludur. */
 public interface ChildProfileRepository extends JpaRepository<ChildProfile, Long> {
-    List<ChildProfile> findByParentIdAndIsActiveTrue(Long parentId);
-    List<ChildProfile> findByParentId(Long parentId);
+
+    List<ChildProfile> findByParentIdAndActiveTrueOrderByCreatedAtAsc(Long parentId);
+
+    Optional<ChildProfile> findByIdAndParentIdAndActiveTrue(Long id, Long parentId);
 }

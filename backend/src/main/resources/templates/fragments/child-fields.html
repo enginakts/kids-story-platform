@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="fields">
+    <label>Takma ad <input th:field="*{name}" required></label>
+    <p class="error" th:errors="*{name}"></p>
+    <label>Yaş <input type="number" min="3" max="7" th:field="*{age}" required></label>
+    <p class="error" th:errors="*{age}"></p>
+    <label>Sevdiği hayvanlar <input th:field="*{favoriteAnimals}"></label>
+    <label>Sevdiği renkler <input th:field="*{favoriteColors}"></label>
+    <label>İlgi alanları <input th:field="*{specialInterests}"></label>
+    <label>Uyku saati <input type="time" th:field="*{bedtimeHour}"></label>
+</th:block>
+</body>
+</html>

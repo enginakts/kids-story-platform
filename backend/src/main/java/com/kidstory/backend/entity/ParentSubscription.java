@@ -1,47 +1,35 @@
 package com.kidstory.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Entity
-@Table(name = "parent_subscriptions")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class ParentSubscription {
+@Getter @Setter
+@Entity @Table(name = "parent_subscriptions")
+public class ParentSubscription extends CreatedEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public enum Status { ACTIVE, CANCELLED, EXPIRED }
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "parent_id", nullable = false)
     private Parent parent;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "plan_id", nullable = false)
     private SubscriptionPlan plan;
 
-    @Column(name = "status", nullable = false, length = 50)
-    @Builder.Default
-    private String status = "ACTIVE"; // ACTIVE, EXPIRED, CANCELLED
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private Status status = Status.ACTIVE;
 
-    @Column(name = "start_date")
-    @Builder.Default
-    private LocalDateTime startDate = LocalDateTime.now();
+    @Column(name = "start_date", nullable = false)
+    private Instant startDate = Instant.now();
 
-    @Column(name = "end_date", nullable = false)
-    private LocalDateTime endDate;
+    @Column(name = "end_date")
+    private Instant endDate;
 
     @Column(name = "auto_renew", nullable = false)
-    @Builder.Default
-    private Boolean autoRenew = true;
-
-    @Column(name = "created_at")
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private boolean autoRenew;
 }

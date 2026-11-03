@@ -1,44 +1,31 @@
 package com.kidstory.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Entity
-@Table(name = "system_settings")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class SystemSetting {
+@Getter @Setter
+@Entity @Table(name = "system_settings")
+public class SystemSetting extends IdEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "setting_key", unique = true, nullable = false, length = 100)
+    @Column(name = "setting_key", nullable = false, unique = true, length = 100)
     private String settingKey;
 
-    @Column(name = "setting_value", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "setting_value", nullable = false, columnDefinition = "TEXT")
     private String settingValue;
 
     @Column(name = "data_type", nullable = false, length = 30)
-    private String dataType; // STRING, NUMBER, BOOLEAN, JSON
+    private String dataType;
 
-    @Column(name = "category", nullable = false, length = 50)
+    @Column(nullable = false, length = 50)
     private String category;
 
-    @Column(name = "description", length = 255)
     private String description;
 
-    @Column(name = "updated_at")
-    @Builder.Default
-    private LocalDateTime updatedAt = LocalDateTime.now();
-
-    @PreUpdate
-    public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 }

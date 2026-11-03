@@ -6,44 +6,50 @@ import com.kidstory.backend.service.ChildProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
 
-/**
- * Çocuk Profilleri Controller'ı
- * .NET Core Karşılığı: [Authorize] [Route("api/[controller]")] public class ChildrenController : ControllerBase
- */
-@RestController
-@RequestMapping("/api/children")
+@ApiController
+@RequestMapping("/api/v1/children")
 @RequiredArgsConstructor
 public class ChildProfileController {
 
-    private final ChildProfileService childProfileService;
+    private final ChildProfileService service;
 
-    /**
-     * Ebeveyne ait çocuk profillerini listeler
-     * GET /api/children?parentId=1
-     */
     @GetMapping
-    public ResponseEntity<List<ChildProfileResponse>> getChildren(@RequestParam(required = false) Long parentId) {
-        if (parentId == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        List<ChildProfileResponse> children = childProfileService.getChildrenByParent(parentId);
-        return ResponseEntity.ok(children);
+    List<ChildProfileResponse> list(@AuthenticationPrincipal Jwt jwt) {
+        return service.list(parentId(jwt));
     }
 
-    /**
-     * Yeni çocuk profili ekler
-     * POST /api/children?parentId=1
-     */
     @PostMapping
-    public ResponseEntity<ChildProfileResponse> createChild(
-            @RequestParam Long parentId,
-            @Valid @RequestBody CreateChildRequest request) {
-        ChildProfileResponse response = childProfileService.createChild(parentId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @ResponseStatus(HttpStatus.CREATED)
+    ChildProfileResponse create(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CreateChildRequest request) {
+        return service.create(parentId(jwt), request);
+    }
+
+    @PutMapping("/{id}")
+    ChildProfileResponse update(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id,
+                         @Valid @RequestBody CreateChildRequest request) {
+        return service.update(parentId(jwt), id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void delete(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        service.deactivate(parentId(jwt), id);
+    }
+
+    private Long parentId(Jwt jwt) {
+        return Long.valueOf(jwt.getSubject());
     }
 }

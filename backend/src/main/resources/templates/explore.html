@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Keşfet')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: publicNav}"></header>
+<main class="page">
+    <h1>Keşfet</h1>
+    <p th:if="${#lists.isEmpty(stories)}">Henüz yayımlanmış masal yok.</p>
+    <ul class="cards">
+        <li class="card" th:each="story : ${stories}"><strong th:text="${story.title}">Başlık</strong></li>
+    </ul>
+</main>
+</body>
+</html>

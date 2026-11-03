@@ -1,24 +1,14 @@
 package com.kidstory.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
+@Getter @Setter
+@Entity @Table(name = "parental_gate_attempts")
+public class ParentalGateAttempt extends CreatedEntity {
 
-@Entity
-@Table(name = "parental_gate_attempts")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class ParentalGateAttempt {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "parent_id", nullable = false)
     private Parent parent;
 
@@ -26,15 +16,11 @@ public class ParentalGateAttempt {
     private String challengeQuestion;
 
     @Column(name = "is_success", nullable = false)
-    private Boolean isSuccess;
+    private boolean success;
 
     @Column(name = "action_type", nullable = false, length = 100)
-    private String actionType; // SETTINGS_ACCESS, CREDIT_PURCHASE, PROFILE_EDIT
+    private String actionType;
 
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
-
-    @Column(name = "created_at")
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
 }

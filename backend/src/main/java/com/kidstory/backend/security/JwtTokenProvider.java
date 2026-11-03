@@ -1,58 +1,40 @@
 package com.kidstory.backend.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
+import java.time.Instant;
+import java.util.List;
 
-@Component
+/** Mobil istemci için kısa ömürlü erişim token'ı üretir. Kimlik token'ın subject alanındadır. */
+@Service
+@RequiredArgsConstructor
 public class JwtTokenProvider {
 
-    @Value("${app.jwt.secret:KidsStoryPlatformSecretKeyForJwt2026SuperSecureKeyMustBeLongEnough!}")
-    private String jwtSecret;
+    private final JwtEncoder encoder;
 
-    @Value("${app.jwt.expiration-ms:86400000}") // 24 saat
-    private long jwtExpirationMs;
+    @Value("${app.jwt.expiration-seconds}")
+    private long expirationSeconds;
 
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public String generateToken(String subject, String userType, String role, Long userId) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
-
-        return Jwts.builder()
-                .subject(subject)
-                .claim("userType", userType)
-                .claim("role", role)
-                .claim("userId", userId)
+    public String issue(Long parentId, String role) {
+        Instant now = Instant.now();
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .subject(parentId.toString())
+                .claim("roles", List.of(role))
                 .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(getSigningKey())
-                .compact();
+                .expiresAt(now.plusSeconds(expirationSeconds))
+                .build();
+        return encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims))
+                .getTokenValue();
     }
 
-    public String getSubjectFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        return claims.getSubject();
-    }
-
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
-            return true;
-        } catch (Exception ex) {
-            return false;
-        }
+    public long expirationSeconds() {
+        return expirationSeconds;
     }
 }

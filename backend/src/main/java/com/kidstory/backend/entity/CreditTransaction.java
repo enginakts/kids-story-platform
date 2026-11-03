@@ -1,40 +1,32 @@
 package com.kidstory.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
+@Getter @Setter
+@Entity @Table(name = "credit_transactions")
+public class CreditTransaction extends CreatedEntity {
 
-@Entity
-@Table(name = "credit_transactions")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class CreditTransaction {
+    public enum Type { WELCOME_BONUS, SUBSCRIPTION_RENEWAL, STORY_SPEND, REFUND, ADMIN_ADJUSTMENT }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "wallet_id", nullable = false)
     private CreditWallet wallet;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "story_id")
+    private Story story;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "transaction_type", nullable = false, length = 50)
-    private String transactionType; // USAGE, PURCHASE, REFUND, BONUS
+    private Type transactionType;
 
     @Column(name = "story_credit_amount", nullable = false)
-    private Integer storyCreditAmount;
+    private int storyCreditAmount;
 
     @Column(name = "interactive_credit_amount", nullable = false)
-    private Integer interactiveCreditAmount;
+    private int interactiveCreditAmount;
 
-    @Column(name = "description", length = 255)
     private String description;
-
-    @Column(name = "created_at")
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
 }

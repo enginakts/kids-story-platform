@@ -1,24 +1,14 @@
 package com.kidstory.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
+@Getter @Setter
+@Entity @Table(name = "interactive_nodes")
+public class InteractiveNode extends CreatedEntity {
 
-@Entity
-@Table(name = "interactive_nodes")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class InteractiveNode {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "story_id", nullable = false)
     private Story story;
 
@@ -27,9 +17,9 @@ public class InteractiveNode {
     private StoryScene scene;
 
     @Column(name = "node_step", nullable = false)
-    private Integer nodeStep;
+    private int nodeStep;
 
-    @Column(name = "prompt_question", nullable = false, length = 255)
+    @Column(name = "prompt_question", nullable = false)
     private String promptQuestion;
 
     @Column(name = "choice_a_text", nullable = false, length = 100)
@@ -45,9 +35,5 @@ public class InteractiveNode {
     private String choiceBIcon;
 
     @Column(name = "selected_choice", length = 10)
-    private String selectedChoice; // 'A' veya 'B'
-
-    @Column(name = "created_at")
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private String selectedChoice;
 }

@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Hata')}"></head>
+<body>
+<main class="page narrow">
+    <h1>Bir sorun oluştu</h1>
+    <p>İstediğiniz sayfa açılamadı.</p>
+    <a th:href="@{/}">Ana sayfaya dön</a>
+</main>
+</body>
+</html>

@@ -1,73 +1,126 @@
-# 🌟 Masal Dünyası AI - 3-6 Yaş Yapay Zekâ Masal Platformu
+# Masal Dünyası AI
 
-3–6 yaş aralığındaki çocuklara yönelik; ebeveyn denetimli, görsel ve karakter tutarlılığı (Bibles) korunan, pedagojik güvenlik filtreli, tek seferlik ve dallanan (karar ağaçlı) masallar üreten yeni nesil yapay zekâ hikâye platformu.
+3-7 yaş çocuklar için yapay zekâ ile kişiselleştirilmiş, resimli ve sesli masallar üreten, ebeveyn denetimli Türkçe platform.
 
----
+Proje tek bir Spring Boot uygulamasıdır. Web arayüzü Thymeleaf ile sunucuda üretilir, mobil uygulama aynı iş mantığını REST API üzerinden kullanır.
 
-## 🛠️ Teknoloji Yığını
+## Mimari kararlar
 
-* **Backend:** Java 17, Spring Boot 3.4.1, Spring Data JPA, Spring Security, JJWT (0.12.6), SQLite (Geliştirme & Test) / PostgreSQL (Üretim).
-* **Frontend:** React 19, Vite, Modern Vanilla CSS Design System, Responsive Glassmorphism UI.
-* **Veritabanı Şeması:** 20 Tabloluk optimize Faz 1 MVP mimarisi (`admins` ve `parents` ayrımı, `role_id` optimizasyonu, Karakter ve Mekân İncilleri).
+| Konu | Karar | Uygulaması |
+| :--- | :--- | :--- |
+| Arka uç | Spring Boot 4.1, Java 21 | Tek uygulama, özelliğe göre paketler |
+| Web | Thymeleaf | `/`, `/app/**`, `/admin/**`; oturum ve CSRF korumalı |
+| Mobil | REST API | `/api/v1/**`; JWT, oturumsuz. Mobil istemci sonraki aşamada |
+| Veritabanı | PostgreSQL 16 | Şema yalnızca Flyway ile yönetilir |
+| LLM | Hibrit, değiştirilebilir | `AiRouter`, `ai_providers_config` öncelik sırasıyla sağlayıcı dener |
+| Görsel ve TTS | Dış API | `ImageClient`, `TtsClient` arayüzleri; şu an yalnızca taslak adaptörler var |
+| Üretim kuyruğu | Veritabanı kuyruğu | `generation_jobs`; ücretsiz katmanda Redis gerektirmez |
+| Giriş | E-posta ve parola | Ebeveyn ve yönetici ayrı tablo, ayrı giriş |
+| Dağıtım | Önce yerel, sonra bulut | `dev` ve `prod` profilleri |
 
----
-
-## 📂 Proje Yapısı
+## Proje yapısı
 
 ```text
-kids-histories/
-├── backend/                                   # Spring Boot (Java 17) REST API
+kids-story-platform/
+├── backend/                                   # Spring Boot (Java 21)
 │   ├── src/main/java/com/kidstory/backend/
-│   │   ├── config/                            # Security & CORS yapılandırması
-│   │   ├── controller/                        # REST Controller'lar (AuthController vb.)
-│   │   ├── dto/                               # Request/Response DTO sınıfları
-│   │   ├── entity/                            # 20 Tablonun JPA Entity modelleri
-│   │   ├── repository/                        # Spring Data JPA Repository arayüzleri
-│   │   ├── security/                          # JWT Token Provider & Filter
-│   │   └── service/                           # İş mantığı servisleri (AuthService vb.)
+│   │   ├── config/                            # Güvenlik zincirleri, ilk yönetici kurulumu
+│   │   ├── controller/                        # REST API (AuthController vb.) ve Thymeleaf sayfa controller'ları
+│   │   ├── dto/                               # Request/Response sınıfları
+│   │   ├── entity/                            # 29 tablonun JPA entity modelleri
+│   │   ├── exception/                         # Hata sınıfları ve API hata yönetimi
+│   │   ├── repository/                        # Spring Data JPA repository arayüzleri
+│   │   ├── security/                          # JWT üretimi/doğrulaması, kullanıcı yükleme
+│   │   └── service/                           # İş mantığı (AuthService vb.)
+│   │       └── ai/                            # Değiştirilebilir LLM, görsel ve TTS katmanı
 │   ├── src/main/resources/
-│   │   └── application.properties             # SQLite & JPA ddl-auto=update ayarları
-│   └── pom.xml                                # Maven bağımlılıkları
-│
-├── frontend/                                  # Vite + React 19 Arayüzü
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── ParentAuth.jsx                 # Ebeveyn Giriş & Kayıt Portalı
-│   │   │   ├── AdminAuth.jsx                  # Yönetici Giriş Konsolu (Obsidiyen Kalkan Teması)
-│   │   │   └── UserDashboard.jsx              # Giriş sonrası oturum ve kredi göstergesi
-│   │   ├── App.jsx                            # Portal geçişi ve ana navigasyon
-│   │   ├── App.css                            # Arayüz ve tema stilleri
-│   │   └── index.css                          # Global tasarım değişkenleri
-│   └── index.html
-│
-├── platform_mimari_ve_veritabani_rehberi.md   # 20 Tabloluk detaylı şema ve DDL rehberi
-├── adim_adim_gelistirme_plani.md              # Parça parça ilerleyen mikro geliştirme yol haritası
-├── veritabani_sema_semasi.png                 # Yüksek çözünürlüklü Türkçe ERD diyagramı
-└── veritabani_sema_semasi.html                # Dinamik şema inceleme tarayıcısı
+│   │   ├── db/migration/                      # Flyway şeması (V1 çekirdek, V2 başlangıç verisi, V3 sohbet)
+│   │   ├── templates/                         # Thymeleaf sayfaları
+│   │   ├── static/css/                        # Arayüz stilleri
+│   │   └── application*.properties            # dev / prod profilleri
+│   └── pom.xml
+├── docker-compose.yml                         # İsteğe bağlı yerel PostgreSQL
+├── platform_mimari_ve_veritabani_rehberi.md   # Tablo ve ilişki rehberi
+├── kullanilan_modeller_rehberi.md             # Yapay zekâ sağlayıcı adayları
+└── adim_adim_gelistirme_plani.md              # Yol haritası
 ```
 
----
+`exception/` ve `service/ai/` eski yapıya eklenen iki yeni klasördür. Web arayüzü Thymeleaf ile sunucuda üretildiği için ayrı bir React `frontend/` uygulaması yoktur; sayfalar `backend/src/main/resources/templates` altındadır.
 
-## 🚀 Başlangıç ve Çalıştırma
+Şema `backend/src/main/resources/db/migration` altındadır ve 29 tablodan oluşur. Tablo açıklamaları için [platform_mimari_ve_veritabani_rehberi.md](./platform_mimari_ve_veritabani_rehberi.md) dosyasına bakın.
 
-### 1. Backend (Spring Boot)
+## Çalıştırma
+
+Gereksinim: Java 21. Docker zorunlu değildir.
+
+### Docker olmadan (gömülü PostgreSQL)
+
 ```bash
+cd backend
+./mvnw spring-boot:test-run -Dspring-boot.run.main-class=com.kidstory.backend.LocalDevApplication
+```
+
+Veriler `backend/.devdb` klasöründe kalıcıdır. Sıfırlamak için uygulamayı kapatıp bu klasörü silin.
+
+### Docker ile
+
+```bash
+docker compose up -d
 cd backend
 ./mvnw spring-boot:run
 ```
-* Backend API: `http://localhost:8080`
-* SQLite Veritabanı: `backend/kidstory.db`
 
-### 2. Frontend (React + Vite)
+### Adresler
+
+| Adres | Açıklama |
+| :--- | :--- |
+| `http://localhost:8080/` | Ana sayfa |
+| `http://localhost:8080/register` | Ebeveyn kaydı |
+| `http://localhost:8080/admin/login` | Yönetici girişi (`dev`: `superadmin` / `DevAdmin123!`) |
+
+Bu yönetici hesabı yalnızca `dev` profiline aittir.
+
+### Testler
+
 ```bash
-cd frontend
-npm run dev
+cd backend
+./mvnw test
 ```
-* Frontend Web: `http://localhost:5173`
-  * Ebeveyn Portalı: `http://localhost:5173/#parent`
-  * Yönetici Portalı: `http://localhost:5173/#admin`
 
----
+Testler Docker olmadan gerçek PostgreSQL üzerinde çalışır.
 
-## 📌 Geliştirme Yol Haritası
-Proje, adım adım küçük parçalar halinde geliştirilmektedir. Detaylı geliştirme planını [adim_adim_gelistirme_plani.md](./adim_adim_gelistirme_plani.md) dosyasından takip edebilirsiniz.
+## Üretim ortamı
+
+`SPRING_PROFILES_ACTIVE=prod` ile çalıştırılır. Şu değişkenler zorunludur; eksikse uygulama başlamaz:
+
+* Veritabanı: `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+* Güvenlik: `JWT_SECRET` (en az 32 bayt)
+* Bağlantılar: `APP_BASE_URL` (örn. `https://masaldunyasi.com`)
+* E-posta (herhangi bir SMTP sağlayıcısı): `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM`; isteğe bağlı `MAIL_PORT` (587)
+
+Geliştirmede e-posta gönderilmez; doğrulama ve sıfırlama bağlantıları konsol log'una yazılır.
+
+İlk yönetici için `ADMIN_USERNAME`, `ADMIN_EMAIL` ve `ADMIN_PASSWORD` verilir. Taslak yapay zekâ adaptörleri `prod` profilinde yüklenmez.
+
+## REST API
+
+| Yöntem | Yol | Açıklama |
+| :--- | :--- | :--- |
+| POST | `/api/v1/auth/register` | Ebeveyn kaydı; erişim ve yenileme token'ı döner |
+| POST | `/api/v1/auth/login` | Giriş; erişim ve yenileme token'ı döner |
+| POST | `/api/v1/auth/refresh` | Yenileme token'ını yenisiyle değiştirir |
+| POST | `/api/v1/auth/logout` | Yenileme token'ını iptal eder |
+| POST | `/api/v1/auth/verify-email` | E-posta doğrulama |
+| POST | `/api/v1/auth/password/forgot` | Parola sıfırlama bağlantısı ister |
+| POST | `/api/v1/auth/password/reset` | Yeni parolayı kaydeder |
+| POST | `/api/v1/account/verify-email/resend` | Doğrulama bağlantısını yeniden gönderir |
+| GET, POST | `/api/v1/children` | Çocukları listeler, ekler |
+| PUT, DELETE | `/api/v1/children/{id}` | Çocuğu günceller, pasife alır |
+
+Ebeveyn kimliği her zaman token'dan okunur, istekten alınmaz. Erişim token'ı 15 dakika, yenileme token'ı 30 gün geçerlidir.
+
+Giriş güvenliği: aynı hesaba 5 hatalı denemede hesap 15 dakika kilitlenir. Giriş, kayıt ve parola uçlarına IP başına dakikada 20 istek sınırı uygulanır. Bu sayaçlar bellektedir; birden fazla sunucuya geçildiğinde paylaşımlı depoya taşınmalıdır.
+
+## Yol haritası
+
+Durum ve sıradaki adımlar için [adim_adim_gelistirme_plani.md](./adim_adim_gelistirme_plani.md) dosyasına bakın.

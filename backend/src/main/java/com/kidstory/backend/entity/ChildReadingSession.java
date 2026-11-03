@@ -1,40 +1,31 @@
 package com.kidstory.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Entity
-@Table(name = "child_reading_sessions")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class ChildReadingSession {
+@Getter @Setter
+@Entity @Table(name = "child_reading_sessions")
+public class ChildReadingSession extends IdEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "child_id", nullable = false)
-    private ChildProfile childProfile;
+    private ChildProfile child;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "story_id", nullable = false)
     private Story story;
 
     @Column(name = "duration_seconds", nullable = false)
-    @Builder.Default
-    private Integer durationSeconds = 0;
+    private int durationSeconds;
 
     @Column(name = "is_completed", nullable = false)
-    @Builder.Default
-    private Boolean isCompleted = false;
+    private boolean completed;
 
-    @Column(name = "session_date")
-    @Builder.Default
-    private LocalDateTime sessionDate = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name = "session_date", nullable = false, updatable = false)
+    private Instant sessionDate;
 }

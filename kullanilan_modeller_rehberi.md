@@ -1,12 +1,14 @@
-# 3-6 Yaş Yapay Zekâ Masal Platformu - Modeller, API'ler ve Mimari Rehberi
+# 3-7 Yaş Yapay Zekâ Masal Platformu - Modeller, API'ler ve Mimari Rehberi
 
-Bu rehber; 3-6 yaş grubu çocuklar için ebeveyn denetimli, sahneleme yapabilen, görsel tutarlılığı koruyan ve seslendirme desteğine sahip masal platformu için kullanılacak modelleri, API'leri, algoritmaları ve sistem mimarisini açık ve net bir şekilde özetler.
+Bu rehber; 3-7 yaş grubu çocuklar için ebeveyn denetimli, sahneleme yapabilen, görsel tutarlılığı koruyan ve seslendirme desteğine sahip masal platformu için kullanılacak modelleri, API'leri, algoritmaları ve sistem mimarisini açık ve net bir şekilde özetler.
+
+> **Durum:** Bu rehber aday listesidir, kesin seçim değildir. Model adları ve fiyatlar eskimiş olabilir. Projede şu an yalnızca geliştirme taslakları vardır; gerçek sağlayıcılar ilgili adımda güncel olarak araştırılır. Karar: LLM hibrit ve değiştirilebilir, görsel ve TTS dış API, bütçe ücretsiz ağırlıklı.
 
 ---
 
 ## 1. Hikaye Üretim ve Sahneleme Modelleri (LLM)
 
-3-6 yaş grubu için dilin kısa, basit, kafiyeli/akıcı ve pedagojik olarak pozitif olması gerekir. Model yalnızca metin üretmez; çıktıyı doğrudan **JSON formatında** sahne sahne, her sahnenin görsel prompt'u ve seslendirme metniyle birlikte verir.
+3-7 yaş grubu için dilin kısa, basit, kafiyeli/akıcı ve pedagojik olarak pozitif olması gerekir. Model yalnızca metin üretmez; çıktıyı doğrudan **JSON formatında** sahne sahne, her sahnenin görsel prompt'u ve seslendirme metniyle birlikte verir.
 
 | Model / API | Avantajı | Kullanım Amacı | Önerilen Rol |
 | :--- | :--- | :--- | :--- |
@@ -51,7 +53,7 @@ Bu rehber; 3-6 yaş grubu çocuklar için ebeveyn denetimli, sahneleme yapabilen
 
 ## 3. Seslendirme ve Kelime Senkronizasyonu (TTS & Read-Along)
 
-3-6 yaş okuma öncesi çocukların kelimeleri görsel ve işitsel olarak eşleştirmesi için **kelime düzeyinde zaman damgalı (Karaoke) seslendirme** gerekir.
+3-7 yaş okuma öncesi çocukların kelimeleri görsel ve işitsel olarak eşleştirmesi için **kelime düzeyinde zaman damgalı (Karaoke) seslendirme** gerekir.
 
 | Sağlayıcı | Model / Özellik | Neden Kullanılmalı? |
 | :--- | :--- | :--- |
@@ -75,7 +77,8 @@ Bu rehber; 3-6 yaş grubu çocuklar için ebeveyn denetimli, sahneleme yapabilen
 
 ## 5. Sistem ve Orkestrasyon Mimarisi
 
-* **Mobil Uygulama (İstemci):** Flutter veya React Native
+* **Web:** Spring Boot üzerinde Thymeleaf.
+* **Mobil Uygulama (İstemci):** Sonraki aşamada Flutter veya React Native
   * Sayfa çevirme efekti (Page Curl / Flip).
   * Ses oynarken kelime vurgulama (Karaoke highlighting).
   * Sevimli ses efektleri ve sakinleştirici fon müziği.

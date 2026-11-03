@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kidstory-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-kidstory}
+      POSTGRES_USER: ${DB_USER:-kidstory}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-kidstory_dev_pw}
+    ports:
+      - "5432:5432"
+    volumes:
+      - kidstory_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kidstory} -d ${DB_NAME:-kidstory}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  kidstory_pgdata:

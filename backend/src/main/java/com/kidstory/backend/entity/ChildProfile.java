@@ -1,34 +1,28 @@
 package com.kidstory.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.LocalTime;
 
-@Entity
-@Table(name = "child_profiles")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class ChildProfile {
+@Getter @Setter
+@Entity @Table(name = "child_profiles")
+public class ChildProfile extends CreatedEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "parent_id", nullable = false)
     private Parent parent;
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(name = "age", nullable = false)
+    @Column(nullable = false)
     private Integer age;
 
-    @Column(name = "gender", length = 20)
+    @Column(length = 20)
     private String gender;
 
     @Column(name = "favorite_animals", columnDefinition = "TEXT")
@@ -40,27 +34,16 @@ public class ChildProfile {
     @Column(name = "special_interests", columnDefinition = "TEXT")
     private String specialInterests;
 
-    @Column(name = "bedtime_hour", length = 10)
-    @Builder.Default
-    private String bedtimeHour = "20:30:00";
+    @Column(name = "bedtime_hour", nullable = false)
+    private LocalTime bedtimeHour = LocalTime.of(20, 30);
 
-    @Column(name = "avatar_url", length = 500)
-    private String avatarUrl;
+    @Column(name = "avatar_key", nullable = false, length = 50)
+    private String avatarKey = "default";
 
     @Column(name = "is_active", nullable = false)
-    @Builder.Default
-    private Boolean isActive = true;
+    private boolean active = true;
 
-    @Column(name = "created_at")
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    @Column(name = "updated_at")
-    @Builder.Default
-    private LocalDateTime updatedAt = LocalDateTime.now();
-
-    @PreUpdate
-    public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 }

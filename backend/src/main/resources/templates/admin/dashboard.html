@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Yönetim')}"></head>
+<body>
+<header class="nav">
+    <span class="brand">Masal Dünyası Yönetim</span>
+    <nav>
+        <span th:text="${user.displayName}">Yönetici</span>
+        <form th:action="@{/admin/logout}" method="post"><button class="link">Çıkış</button></form>
+    </nav>
+</header>
+<main class="page">
+    <h1>Yönetim paneli</h1>
+    <ul class="cards">
+        <li class="card"><span>Ebeveyn</span><strong th:text="${parentCount}">0</strong></li>
+        <li class="card"><span>Masal</span><strong th:text="${storyCount}">0</strong></li>
+        <li class="card"><span>Onay bekleyen</span><strong th:text="${pendingCount}">0</strong></li>
+    </ul>
+</main>
+</body>
+</html>

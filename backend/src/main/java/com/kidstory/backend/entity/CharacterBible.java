@@ -1,37 +1,28 @@
 package com.kidstory.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
+@Getter @Setter
+@Entity @Table(name = "character_bibles")
+public class CharacterBible extends CreatedEntity {
 
-@Entity
-@Table(name = "character_bibles")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class CharacterBible {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+    /** Boşsa herkesin kullanabildiği sistem şablonudur. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "child_id")
-    private ChildProfile childProfile;
+    private ChildProfile child;
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(name = "species", nullable = false, length = 50)
+    @Column(nullable = false, length = 50)
     private String species;
 
     @Column(name = "personality_traits", columnDefinition = "TEXT")
     private String personalityTraits;
 
-    @Column(name = "visual_anchor_tokens", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "visual_anchor_tokens", nullable = false, columnDefinition = "TEXT")
     private String visualAnchorTokens;
 
     @Column(name = "clothing_description", columnDefinition = "TEXT")
@@ -47,10 +38,5 @@ public class CharacterBible {
     private String referenceImageUrl;
 
     @Column(name = "is_system_preset", nullable = false)
-    @Builder.Default
-    private Boolean isSystemPreset = false;
-
-    @Column(name = "created_at")
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private boolean systemPreset;
 }

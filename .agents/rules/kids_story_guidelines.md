@@ -1,4 +1,4 @@
-# 3-6 Yaş Yapay Zekâ Masal Platformu Geliştirme Kuralları
+# 3-7 Yaş Yapay Zekâ Masal Platformu Geliştirme Kuralları
 
 Bu kurallar, projenin tüm backend, frontend, prompt tasarımı ve yapay zekâ entegrasyonu aşamalarında katı bir şekilde uygulanır:
 
@@ -8,7 +8,7 @@ Bu kurallar, projenin tüm backend, frontend, prompt tasarımı ve yapay zekâ e
    - Her kullanıcı girdisi (prompt veya serbest metin) LLM'e gitmeden önce moderasyon katmanından geçirilmelidir.
 
 2. **Sahne ve Yapı Standartları:**
-   - Her hikaye tam 4 ila 6 sahneden oluşur (3-6 yaş dikkat süresi: 2-3 dakika).
+   - Her hikaye tam 4 ila 6 sahneden oluşur (3-7 yaş dikkat süresi: 2-3 dakika).
    - Her sahne 1-2 basit, kafiyeli/akıcı cümleyi aşamaz.
    - LLM her sahne için sahne metni, görsel üretim prompt'u ve ses senkronizasyon verisini JSON formatında üretmelidir.
 
@@ -26,7 +26,7 @@ Bu kurallar, projenin tüm backend, frontend, prompt tasarımı ve yapay zekâ e
 
 6. **Web Araştırması ve Proje Uygunluk Teyidi (Zorunlu):**
    - Kullanıcıya sunulacak tüm mimari kararlar, kütüphane ve paket önerileri, API entegrasyonları ve kod çözümleri ilk olarak web üzerinden araştırılmalı;
-   - Elde edilen güncel çözümler 3-6 yaş pedagojik yapısına, görsel/ses senkronizasyon gereksinimlerine ve performans standartlarına göre teyit edilerek kullanıcıya sunulmalıdır.
+   - Elde edilen güncel çözümler 3-7 yaş pedagojik yapısına, görsel/ses senkronizasyon gereksinimlerine ve performans standartlarına göre teyit edilerek kullanıcıya sunulmalıdır.
 
 7. **GitHub Senkronizasyon Kuralı (Kullanıcı İzni Şartı):**
    - Yapılan hiçbir kod, tasarım veya dokümantasyon değişikliği otomatik olarak GitHub'a yüklenmez / push edilmez.
