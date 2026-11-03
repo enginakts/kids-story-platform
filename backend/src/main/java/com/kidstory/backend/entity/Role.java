@@ -1,33 +1,24 @@
 package com.kidstory.backend.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
+@Getter @Setter
+@Entity @Table(name = "roles")
+public class Role extends CreatedEntity {
 
-@Entity
-@Table(name = "roles")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class Role {
+    public static final String PARENT = "ROLE_PARENT";
+    public static final String ADMIN = "ROLE_ADMIN";
+    public static final String SUPER_ADMIN = "ROLE_SUPER_ADMIN";
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "name", unique = true, nullable = false, length = 50)
+    @Column(nullable = false, unique = true, length = 50)
     private String name;
 
     @Column(name = "display_name", nullable = false, length = 100)
     private String displayName;
 
-    @Column(name = "description", length = 255)
     private String description;
-
-    @Column(name = "created_at")
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
 }

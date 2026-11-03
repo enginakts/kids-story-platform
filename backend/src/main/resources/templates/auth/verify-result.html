@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('E-posta doğrulama')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: publicNav}"></header>
+<main class="page narrow">
+    <th:block th:if="${success}">
+        <h1>E-posta adresiniz doğrulandı</h1>
+        <p><a class="button" th:href="@{/app}">Kütüphaneme git</a></p>
+    </th:block>
+    <th:block th:unless="${success}">
+        <h1>Bağlantı geçersiz</h1>
+        <p>Bağlantı kullanılmış veya süresi dolmuş. Giriş yaptıktan sonra yeni bağlantı isteyebilirsiniz.</p>
+    </th:block>
+</main>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' | Masal Dünyası'">Masal Dünyası</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:fragment="publicNav" class="nav">
+    <a class="brand" th:href="@{/}">Masal Dünyası</a>
+    <nav>
+        <a th:href="@{/explore}">Keşfet</a>
+        <a th:href="@{/login}">Giriş yap</a>
+        <a class="button" th:href="@{/register}">Kayıt ol</a>
+    </nav>
+</header>
+<header th:fragment="appNav(name)" class="nav">
+    <a class="brand" th:href="@{/app}">Masal Dünyası</a>
+    <nav>
+        <a th:href="@{/app}">Kütüphanem</a>
+        <a th:href="@{/app/children}">Çocuklarım</a>
+        <a th:href="@{/explore}">Keşfet</a>
+        <span th:text="${name}">Ebeveyn</span>
+        <form th:action="@{/logout}" method="post"><button class="link">Çıkış</button></form>
+    </nav>
+</header>
+</body>
+</html>

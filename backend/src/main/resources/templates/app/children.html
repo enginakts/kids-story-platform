@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Çocuklarım')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: appNav(${user.displayName})}"></header>
+<main class="page">
+    <h1>Çocuklarım</h1>
+    <ul class="cards">
+        <li class="card" th:each="child : ${children}">
+            <strong th:text="${child.name}">Ad</strong>
+            <span th:text="${child.age} + ' yaş'">4 yaş</span>
+            <a th:href="@{/app/children/{id}/edit(id=${child.id})}">Düzenle</a>
+            <form th:action="@{/app/children/{id}/delete(id=${child.id})}" method="post">
+                <button class="link">Kaldır</button>
+            </form>
+        </li>
+    </ul>
+    <h2>Yeni çocuk ekle</h2>
+    <p class="notice">Gerçek ad yerine takma ad kullanabilirsiniz. Soyad veya fotoğraf istemiyoruz.</p>
+    <form th:action="@{/app/children}" th:object="${form}" method="post" class="form">
+        <th:block th:replace="~{fragments/child-fields :: fields}"></th:block>
+        <button class="button">Ekle</button>
+    </form>
+</main>
+</body>
+</html>

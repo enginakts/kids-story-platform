@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Kütüphanem')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: appNav(${user.displayName})}"></header>
+<main class="page">
+    <div class="banner" th:unless="${emailVerified}">
+        <span th:if="${param.verificationSent}">Doğrulama bağlantısı gönderildi.</span>
+        <span th:unless="${param.verificationSent}">E-posta adresiniz henüz doğrulanmadı.</span>
+        <form th:action="@{/app/verify-email/resend}" method="post"><button class="link">Bağlantıyı yeniden gönder</button></form>
+    </div>
+    <h1>Kütüphanem</h1>
+    <p th:if="${wallet}">
+        Masal kredisi: <strong th:text="${wallet.storyCreditBalance}">0</strong>,
+        etkileşimli kredi: <strong th:text="${wallet.interactiveCreditBalance}">0</strong>
+    </p>
+    <p th:if="${#lists.isEmpty(stories)}">Henüz masalınız yok. Masal oluşturma sihirbazı sonraki adımda eklenecek.</p>
+    <ul class="cards">
+        <li class="card" th:each="story : ${stories}">
+            <strong th:text="${story.title}">Başlık</strong>
+            <span th:text="${story.status}">Durum</span>
+        </li>
+    </ul>
+</main>
+</body>
+</html>

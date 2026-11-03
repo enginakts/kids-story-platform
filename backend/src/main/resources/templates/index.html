@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Ana sayfa')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: publicNav}"></header>
+<main class="page hero">
+    <h1>Çocuğunuza özel, resimli ve sesli masallar</h1>
+    <p>3-7 yaş için güvenli, eğitici ve ebeveyn denetimli masal platformu.</p>
+    <a class="button" th:href="@{/register}">Ücretsiz başla</a>
+</main>
+</body>
+</html>

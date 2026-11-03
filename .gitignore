@@ -31,3 +31,7 @@ __pycache__/
 *.swp
 Thumbs.db
 .DS_Store
+
+# Yerel gömülü PostgreSQL verisi ve gizli dosyalar
+.devdb/
+.env

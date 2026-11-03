@@ -1,27 +1,18 @@
 package com.kidstory.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "story_scenes", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"story_id", "scene_number"})
-})
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class StoryScene {
+@Getter @Setter
+@Entity @Table(name = "story_scenes")
+public class StoryScene extends CreatedEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "story_id", nullable = false)
     private Story story;
 
@@ -30,19 +21,18 @@ public class StoryScene {
     private LocationBible location;
 
     @Column(name = "scene_number", nullable = false)
-    private Integer sceneNumber;
+    private int sceneNumber;
 
-    @Column(name = "scene_text", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "scene_text", nullable = false, columnDefinition = "TEXT")
     private String sceneText;
 
-    @Column(name = "voice_text", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "voice_text", nullable = false, columnDefinition = "TEXT")
     private String voiceText;
 
-    @Column(name = "image_prompt", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "image_prompt", nullable = false, columnDefinition = "TEXT")
     private String imagePrompt;
 
-    @Column(name = "negative_prompt", columnDefinition = "TEXT")
-    @Builder.Default
+    @Column(name = "negative_prompt", nullable = false, columnDefinition = "TEXT")
     private String negativePrompt = "no text, no watermark, no dark colors, no horror";
 
     @Column(name = "image_url", length = 500)
@@ -54,13 +44,10 @@ public class StoryScene {
     @Column(name = "audio_duration_seconds", precision = 6, scale = 2)
     private BigDecimal audioDurationSeconds;
 
-    @Column(name = "timestamps_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "timestamps_json", columnDefinition = "jsonb")
     private String timestampsJson;
 
     @Column(name = "generation_seed")
     private Long generationSeed;
-
-    @Column(name = "created_at")
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
 }

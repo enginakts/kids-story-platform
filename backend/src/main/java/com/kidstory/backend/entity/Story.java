@@ -1,28 +1,20 @@
 package com.kidstory.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Entity
-@Table(name = "stories")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class Story {
+@Getter @Setter
+@Entity @Table(name = "stories")
+public class Story extends CreatedEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "child_id", nullable = false)
-    private ChildProfile childProfile;
+    private ChildProfile child;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "parent_id", nullable = false)
     private Parent parent;
 
@@ -34,39 +26,48 @@ public class Story {
     @JoinColumn(name = "primary_location_id")
     private LocationBible primaryLocation;
 
-    @Column(name = "title", nullable = false, length = 255)
+    @Column(nullable = false)
     private String title;
 
-    @Column(name = "theme", nullable = false, length = 150)
-    private String theme;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private StoryEnums.Theme theme;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "narration_style", nullable = false, length = 50)
+    private StoryEnums.NarrationStyle narrationStyle = StoryEnums.NarrationStyle.WARM;
+
+    @Column(name = "target_duration_minutes", nullable = false)
+    private int targetDurationMinutes = 3;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "story_mode", nullable = false, length = 50)
-    @Builder.Default
-    private String storyMode = "SINGLE_SHOT"; // SINGLE_SHOT veya INTERACTIVE
+    private StoryEnums.Mode storyMode = StoryEnums.Mode.SINGLE_SHOT;
 
     @Column(name = "personalized_used", nullable = false)
-    @Builder.Default
-    private Boolean personalizedUsed = false;
+    private boolean personalizedUsed;
 
     @Column(name = "total_scenes", nullable = false)
-    @Builder.Default
-    private Integer totalScenes = 4;
+    private int totalScenes = 4;
 
-    @Column(name = "status", nullable = false, length = 50)
-    @Builder.Default
-    private String status = "PENDING"; // PENDING, GENERATING, COMPLETED, FAILED
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private StoryEnums.Status status = StoryEnums.Status.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private StoryEnums.Visibility visibility = StoryEnums.Visibility.PRIVATE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "moderation_status", nullable = false, length = 20)
+    private StoryEnums.ModerationStatus moderationStatus = StoryEnums.ModerationStatus.NOT_REQUESTED;
+
+    @Column(name = "published_at")
+    private Instant publishedAt;
 
     @Column(name = "cover_image_url", length = 500)
     private String coverImageUrl;
 
     @Column(name = "storage_expiry_date")
-    private LocalDateTime storageExpiryDate;
-
-    @Column(name = "is_favorite", nullable = false)
-    @Builder.Default
-    private Boolean isFavorite = false;
-
-    @Column(name = "created_at")
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant storageExpiryDate;
 }

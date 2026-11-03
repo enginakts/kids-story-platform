@@ -1,42 +1,29 @@
 package com.kidstory.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Entity
-@Table(name = "prompt_templates")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class PromptTemplate {
+@Getter @Setter
+@Entity @Table(name = "prompt_templates")
+public class PromptTemplate extends IdEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "template_key", unique = true, nullable = false, length = 100)
+    @Column(name = "template_key", nullable = false, unique = true, length = 100)
     private String templateKey;
 
-    @Column(name = "system_prompt", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "system_prompt", nullable = false, columnDefinition = "TEXT")
     private String systemPrompt;
 
-    @Column(name = "user_prompt_template", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "user_prompt_template", nullable = false, columnDefinition = "TEXT")
     private String userPromptTemplate;
 
     @Column(name = "is_active", nullable = false)
-    @Builder.Default
-    private Boolean isActive = true;
+    private boolean active = true;
 
-    @Column(name = "updated_at")
-    @Builder.Default
-    private LocalDateTime updatedAt = LocalDateTime.now();
-
-    @PreUpdate
-    public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 }

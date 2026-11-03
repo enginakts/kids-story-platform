@@ -1,47 +1,38 @@
 package com.kidstory.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "subscription_plans")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class SubscriptionPlan {
+@Getter @Setter
+@Entity @Table(name = "subscription_plans")
+public class SubscriptionPlan extends IdEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public static final String FREE = "FREE_TIER";
 
-    @Column(name = "plan_code", unique = true, nullable = false, length = 50)
+    @Column(name = "plan_code", nullable = false, unique = true, length = 50)
     private String planCode;
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
-    @Builder.Default
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price = BigDecimal.ZERO;
 
     @Column(name = "monthly_story_credits", nullable = false)
-    private Integer monthlyStoryCredits;
+    private int monthlyStoryCredits;
 
     @Column(name = "interactive_credits", nullable = false)
-    private Integer interactiveCredits;
+    private int interactiveCredits;
 
     @Column(name = "max_child_profiles", nullable = false)
-    @Builder.Default
-    private Integer maxChildProfiles = 1;
+    private int maxChildProfiles = 1;
 
     @Column(name = "storage_retention_days", nullable = false)
-    private Integer storageRetentionDays;
+    private int storageRetentionDays;
 
     @Column(name = "is_active", nullable = false)
-    @Builder.Default
-    private Boolean isActive = true;
+    private boolean active = true;
 }

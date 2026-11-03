@@ -1,176 +1,59 @@
 package com.kidstory.backend.service;
 
-import com.kidstory.backend.dto.AdminLoginRequest;
-import com.kidstory.backend.dto.AuthResponse;
-import com.kidstory.backend.dto.ParentLoginRequest;
 import com.kidstory.backend.dto.ParentRegisterRequest;
-import com.kidstory.backend.entity.Admin;
-import com.kidstory.backend.entity.CreditWallet;
 import com.kidstory.backend.entity.Parent;
+import com.kidstory.backend.entity.ParentConsent;
 import com.kidstory.backend.entity.Role;
-import com.kidstory.backend.repository.AdminRepository;
-import com.kidstory.backend.repository.CreditWalletRepository;
+import com.kidstory.backend.exception.ConflictException;
+import com.kidstory.backend.repository.ParentConsentRepository;
 import com.kidstory.backend.repository.ParentRepository;
 import com.kidstory.backend.repository.RoleRepository;
-import com.kidstory.backend.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final ParentRepository parentRepository;
-    private final AdminRepository adminRepository;
-    private final RoleRepository roleRepository;
-    private final CreditWalletRepository creditWalletRepository;
+    /** Onay metni değiştiğinde artırılır; ebeveynden yeniden onay alınır. */
+    private static final String CONSENT_VERSION = "1.0";
+
+    private final ParentRepository parents;
+    private final RoleRepository roles;
+    private final ParentConsentRepository consents;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final BillingService billing;
+    private final ApplicationEventPublisher events;
 
-    /**
-     * Ebeveyn Girişi (.NET Core: Task<AuthResponseDto> LoginParentAsync)
-     */
     @Transactional
-    public AuthResponse loginParent(ParentLoginRequest request) {
-        Parent parent = parentRepository.findByEmail(request.getEmail().trim().toLowerCase())
-                .orElseThrow(() -> new IllegalArgumentException("E-posta adresi veya şifre hatalı"));
-
-        if (!passwordEncoder.matches(request.getPassword(), parent.getPasswordHash())) {
-            throw new IllegalArgumentException("E-posta adresi veya şifre hatalı");
+    public Parent register(ParentRegisterRequest request, String ipAddress) {
+        String email = request.email().trim().toLowerCase(Locale.ROOT);
+        if (parents.existsByEmail(email)) {
+            throw new ConflictException("Bu e-posta adresi zaten kayıtlı");
         }
 
-        if (!Boolean.TRUE.equals(parent.getIsActive())) {
-            throw new IllegalStateException("Bu ebeveyn hesabı devre dışı bırakılmıştır.");
-        }
+        Parent parent = new Parent();
+        parent.setEmail(email);
+        parent.setPasswordHash(passwordEncoder.encode(request.password()));
+        parent.setFirstName(request.firstName().trim());
+        parent.setLastName(request.lastName().trim());
+        parent.setRole(roles.findByName(Role.PARENT).orElseThrow());
+        parents.save(parent);
 
-        parent.setLastLoginAt(LocalDateTime.now());
-        parentRepository.save(parent);
+        ParentConsent consent = new ParentConsent();
+        consent.setParent(parent);
+        consent.setConsentType(ParentConsent.Type.KVKK_PARENTAL);
+        consent.setDocumentVersion(CONSENT_VERSION);
+        consent.setIpAddress(ipAddress);
+        consents.save(consent);
 
-        CreditWallet wallet = creditWalletRepository.findByParentId(parent.getId()).orElse(null);
-
-        String token = jwtTokenProvider.generateToken(
-                parent.getEmail(),
-                "PARENT",
-                parent.getRole() != null ? parent.getRole().getName() : "ROLE_PARENT",
-                parent.getId()
-        );
-
-        return AuthResponse.builder()
-                .token(token)
-                .tokenType("Bearer")
-                .userType("PARENT")
-                .id(parent.getId())
-                .email(parent.getEmail())
-                .fullName(parent.getFirstName() + " " + parent.getLastName())
-                .role(parent.getRole() != null ? parent.getRole().getName() : "ROLE_PARENT")
-                .storyCredits(wallet != null ? wallet.getStoryCreditBalance() : 0)
-                .interactiveCredits(wallet != null ? wallet.getInteractiveCreditBalance() : 0)
-                .build();
-    }
-
-    /**
-     * Ebeveyn Kaydı (.NET Core: Task<AuthResponseDto> RegisterParentAsync)
-     */
-    @Transactional
-    public AuthResponse registerParent(ParentRegisterRequest request) {
-        String normalizedEmail = request.getEmail().trim().toLowerCase();
-
-        if (parentRepository.existsByEmail(normalizedEmail)) {
-            throw new IllegalArgumentException("Bu e-posta adresi ile kayıtlı bir hesap zaten mevcuttur.");
-        }
-
-        Role parentRole = roleRepository.findByName("ROLE_PARENT")
-                .orElseGet(() -> roleRepository.save(Role.builder()
-                        .name("ROLE_PARENT")
-                        .displayName("Ebeveyn")
-                        .description("Masal üreten ve çocuk profili yöneten standart ebeveyn hesabı")
-                        .build()));
-
-        Parent parent = Parent.builder()
-                .email(normalizedEmail)
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .firstName(request.getFirstName().trim())
-                .lastName(request.getLastName().trim())
-                .phoneNumber(request.getPhoneNumber())
-                .preferredLanguage(request.getPreferredLanguage() != null ? request.getPreferredLanguage() : "tr")
-                .role(parentRole)
-                .isActive(true)
-                .isEmailVerified(false)
-                .lastLoginAt(LocalDateTime.now())
-                .avatarUrl("https://api.dicebear.com/7.x/bottts/svg?seed=" + request.getFirstName().trim())
-                .build();
-
-        Parent savedParent = parentRepository.save(parent);
-
-        // Yeni ebeveyne hoş geldin deneme kredileri (3 tek seferlik masal, 1 etkileşimli)
-        CreditWallet wallet = CreditWallet.builder()
-                .parent(savedParent)
-                .storyCreditBalance(3)
-                .interactiveCreditBalance(1)
-                .build();
-        creditWalletRepository.save(wallet);
-
-        String token = jwtTokenProvider.generateToken(
-                savedParent.getEmail(),
-                "PARENT",
-                parentRole.getName(),
-                savedParent.getId()
-        );
-
-        return AuthResponse.builder()
-                .token(token)
-                .tokenType("Bearer")
-                .userType("PARENT")
-                .id(savedParent.getId())
-                .email(savedParent.getEmail())
-                .fullName(savedParent.getFirstName() + " " + savedParent.getLastName())
-                .role(parentRole.getName())
-                .storyCredits(wallet.getStoryCreditBalance())
-                .interactiveCredits(wallet.getInteractiveCreditBalance())
-                .build();
-    }
-
-    /**
-     * Yönetici Girişi (.NET Core: Task<AuthResponseDto> LoginAdminAsync)
-     */
-    @Transactional
-    public AuthResponse loginAdmin(AdminLoginRequest request) {
-        String identifier = request.getUsernameOrEmail().trim();
-
-        Admin admin = adminRepository.findByUsernameOrEmail(identifier, identifier)
-                .orElseThrow(() -> new IllegalArgumentException("Yönetici bilgileri veya şifre hatalı"));
-
-        if (!passwordEncoder.matches(request.getPassword(), admin.getPasswordHash())) {
-            throw new IllegalArgumentException("Yönetici bilgileri veya şifre hatalı");
-        }
-
-        if (!Boolean.TRUE.equals(admin.getIsActive())) {
-            throw new IllegalStateException("Bu yönetici hesabı devre dışı bırakılmıştır.");
-        }
-
-        admin.setLastLoginAt(LocalDateTime.now());
-        adminRepository.save(admin);
-
-        String token = jwtTokenProvider.generateToken(
-                admin.getUsername(),
-                "ADMIN",
-                admin.getRole() != null ? admin.getRole().getName() : "ROLE_ADMIN",
-                admin.getId()
-        );
-
-        return AuthResponse.builder()
-                .token(token)
-                .tokenType("Bearer")
-                .userType("ADMIN")
-                .id(admin.getId())
-                .email(admin.getEmail())
-                .username(admin.getUsername())
-                .fullName(admin.getFullName())
-                .role(admin.getRole() != null ? admin.getRole().getName() : "ROLE_ADMIN")
-                .build();
+        billing.openFreeAccount(parent);
+        events.publishEvent(new ParentRegisteredEvent(parent.getId()));
+        return parent;
     }
 }

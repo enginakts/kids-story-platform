@@ -1,41 +1,32 @@
 package com.kidstory.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Entity
-@Table(name = "credit_wallets")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class CreditWallet {
+@Getter @Setter
+@Entity @Table(name = "credit_wallets")
+public class CreditWallet extends IdEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id", unique = true, nullable = false)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "parent_id", nullable = false, unique = true)
     private Parent parent;
 
     @Column(name = "story_credit_balance", nullable = false)
-    @Builder.Default
-    private Integer storyCreditBalance = 3;
+    private int storyCreditBalance = 3;
 
     @Column(name = "interactive_credit_balance", nullable = false)
-    @Builder.Default
-    private Integer interactiveCreditBalance = 1;
+    private int interactiveCreditBalance = 1;
 
-    @Column(name = "updated_at")
-    @Builder.Default
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    /** Eşzamanlı isteklerde aynı kredinin iki kez harcanmasını engeller. */
+    @Version
+    @Column(nullable = false)
+    private long version;
 
-    @PreUpdate
-    public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 }

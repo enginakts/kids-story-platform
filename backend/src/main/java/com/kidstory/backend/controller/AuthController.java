@@ -1,99 +1,97 @@
 package com.kidstory.backend.controller;
 
-import com.kidstory.backend.dto.AdminLoginRequest;
 import com.kidstory.backend.dto.AuthResponse;
+import com.kidstory.backend.dto.ForgotPasswordRequest;
 import com.kidstory.backend.dto.ParentLoginRequest;
 import com.kidstory.backend.dto.ParentRegisterRequest;
+import com.kidstory.backend.dto.RefreshTokenRequest;
+import com.kidstory.backend.dto.ResetPasswordRequest;
+import com.kidstory.backend.dto.VerifyEmailRequest;
+import com.kidstory.backend.entity.Parent;
+import com.kidstory.backend.entity.Role;
+import com.kidstory.backend.security.AppUser;
+import com.kidstory.backend.security.JwtTokenProvider;
+import com.kidstory.backend.service.AccountService;
 import com.kidstory.backend.service.AuthService;
+import com.kidstory.backend.service.RefreshTokenService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * Kimlik Doğrulama Controller'ı
- * .NET Core Karşılığı: [ApiController] [Route("api/[controller]")] public class AuthController : ControllerBase
- */
-@RestController
-@RequestMapping("/api/auth")
-@RequiredArgsConstructor
+/** Mobil istemcinin kimlik uçları. Tümü token gerektirmez. */
+@ApiController
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
     private final AuthService authService;
+    private final AccountService accounts;
+    private final RefreshTokenService refreshTokens;
+    private final JwtTokenProvider jwt;
+    private final AuthenticationProvider parentAuth;
 
-    /**
-     * Ebeveyn Girişi
-     * POST /api/auth/parent/login
-     */
-    @PostMapping("/parent/login")
-    public ResponseEntity<?> loginParent(@Valid @RequestBody ParentLoginRequest request) {
-        try {
-            AuthResponse response = authService.loginParent(request);
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Giriş işlemi sırasında bir hata oluştu: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+    AuthController(AuthService authService, AccountService accounts, RefreshTokenService refreshTokens,
+                   JwtTokenProvider jwt, @Qualifier("parentAuthProvider") AuthenticationProvider parentAuth) {
+        this.authService = authService;
+        this.accounts = accounts;
+        this.refreshTokens = refreshTokens;
+        this.jwt = jwt;
+        this.parentAuth = parentAuth;
     }
 
-    /**
-     * Ebeveyn Kaydı
-     * POST /api/auth/parent/register
-     */
-    @PostMapping("/parent/register")
-    public ResponseEntity<?> registerParent(@Valid @RequestBody ParentRegisterRequest request) {
-        try {
-            AuthResponse response = authService.registerParent(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (IllegalArgumentException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Kayıt işlemi sırasında bir hata oluştu: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    AuthResponse register(@Valid @RequestBody ParentRegisterRequest request, HttpServletRequest http) {
+        Parent parent = authService.register(request, http.getRemoteAddr());
+        return response(parent.getId(), Role.PARENT, refreshTokens.issue(parent.getId()));
     }
 
-    /**
-     * Yönetici Girişi
-     * POST /api/auth/admin/login
-     */
-    @PostMapping("/admin/login")
-    public ResponseEntity<?> loginAdmin(@Valid @RequestBody AdminLoginRequest request) {
-        try {
-            AuthResponse response = authService.loginAdmin(request);
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Yönetici girişi sırasında bir hata oluştu: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+    @PostMapping("/login")
+    AuthResponse login(@Valid @RequestBody ParentLoginRequest request) {
+        var result = parentAuth.authenticate(
+                UsernamePasswordAuthenticationToken.unauthenticated(request.email(), request.password()));
+        AppUser user = (AppUser) result.getPrincipal();
+        return response(user.id(), user.role(), refreshTokens.issue(user.id()));
     }
 
-    /**
-     * API Durum Kontrolü
-     */
-    @GetMapping("/health")
-    public ResponseEntity<Map<String, Object>> health() {
-        Map<String, Object> status = new HashMap<>();
-        status.put("status", "UP");
-        status.put("service", "Kids Story Auth Service");
-        status.put("timestamp", System.currentTimeMillis());
-        return ResponseEntity.ok(status);
+    @PostMapping("/refresh")
+    AuthResponse refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        RefreshTokenService.Rotation rotation = refreshTokens.rotate(request.refreshToken());
+        return response(rotation.parentId(), rotation.role(), rotation.refreshToken());
+    }
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void logout(@Valid @RequestBody RefreshTokenRequest request) {
+        refreshTokens.revoke(request.refreshToken());
+    }
+
+    @PostMapping("/verify-email")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        accounts.verifyEmail(request.token());
+    }
+
+    /** Kayıtlı olsun olmasın aynı yanıt döner. */
+    @PostMapping("/password/forgot")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        accounts.requestPasswordReset(request.email());
+    }
+
+    @PostMapping("/password/reset")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        accounts.resetPassword(request.token(), request.newPassword());
+    }
+
+    private AuthResponse response(Long id, String role, String refreshToken) {
+        return new AuthResponse(jwt.issue(id, role), "Bearer", jwt.expirationSeconds(), refreshToken);
     }
 }
