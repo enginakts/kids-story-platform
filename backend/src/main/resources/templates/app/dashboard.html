@@ -4,23 +4,36 @@
 <body>
 <header th:replace="~{fragments/layout :: appNav(${user.displayName})}"></header>
 <main class="page">
-    <div class="banner" th:unless="${emailVerified}">
-        <span th:if="${param.verificationSent}">Doğrulama bağlantısı gönderildi.</span>
-        <span th:unless="${param.verificationSent}">E-posta adresiniz henüz doğrulanmadı.</span>
-        <form th:action="@{/app/verify-email/resend}" method="post"><button class="link">Bağlantıyı yeniden gönder</button></form>
+    <div class="alert" th:unless="${emailVerified}">
+        <span th:text="${param.verificationSent} ? 'Doğrulama bağlantısı gönderildi.' : 'E-posta adresiniz henüz doğrulanmadı.'">E-posta doğrulanmadı.</span>
+        <form th:action="@{/app/verify-email/resend}" method="post" style="display:inline"><button class="link">Bağlantıyı yeniden gönder</button></form>
     </div>
-    <h1>Kütüphanem</h1>
-    <p th:if="${wallet}">
-        Masal kredisi: <strong th:text="${wallet.storyCreditBalance}">0</strong>,
-        etkileşimli kredi: <strong th:text="${wallet.interactiveCreditBalance}">0</strong>
-    </p>
-    <p th:if="${#lists.isEmpty(stories)}">Henüz masalınız yok. Masal oluşturma sihirbazı sonraki adımda eklenecek.</p>
-    <ul class="cards">
-        <li class="card" th:each="story : ${stories}">
-            <strong th:text="${story.title}">Başlık</strong>
-            <span th:text="${story.status}">Durum</span>
-        </li>
-    </ul>
+    <div class="page-head">
+        <div>
+            <h1>Kütüphanem</h1>
+            <p th:if="${wallet}" th:text="${#lists.size(shelves)} + ' çocuk · ' + ${wallet.storyCreditBalance} + ' masal kredisi kaldı'">2 çocuk · 3 kredi</p>
+        </div>
+    </div>
+
+    <section class="empty-shelf" th:if="${#lists.isEmpty(shelves)}">
+        <svg class="art" viewBox="0 0 200 200" aria-hidden="true"><use th:href="@{/img/art.svg} + '#pamuk'"/></svg><p>Masal oluşturmak için önce çocuğunuzun profilini ekleyin. Gerçek ad yerine takma ad kullanabilirsiniz.</p>
+        <a class="button" th:href="@{/app/children}">Çocuk ekle</a>
+    </section>
+
+    <section class="shelf" th:each="shelf : ${shelves}" th:attr="aria-labelledby='shelf-' + ${shelf.child.id}">
+        <div class="shelf-head">
+            <span class="avatar" aria-hidden="true" th:text="${#strings.substring(shelf.child.name, 0, 1)}">E</span>
+            <h2 th:id="'shelf-' + ${shelf.child.id}">
+                <a th:href="@{/app/children/{id}(id=${shelf.child.id})}" th:text="${shelf.child.name}">Ad</a>
+                <small th:text="${shelf.child.age} + ' yaş'">4 yaş</small>
+            </h2>
+            <a class="button" th:href="@{/app/stories/new(childId=${shelf.child.id})}">Masal oluştur</a>
+        </div>
+        <div class="empty-shelf" th:if="${#lists.isEmpty(shelf.stories)}">
+            <svg class="art" viewBox="0 0 200 200" aria-hidden="true"><use th:href="@{/img/art.svg} + '#leo'"/></svg><p th:text="${shelf.child.name} + ' için henüz masal yok. İlk masal birkaç saniyede hazır olur.'">Henüz masal yok.</p>
+        </div>
+        <ul th:replace="~{fragments/story :: row(${shelf.stories})}"></ul>
+    </section>
 </main>
 </body>
 </html>

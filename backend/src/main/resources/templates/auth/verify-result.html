@@ -3,15 +3,21 @@
 <head th:replace="~{fragments/layout :: head('E-posta doğrulama')}"></head>
 <body>
 <header th:replace="~{fragments/layout :: publicNav}"></header>
-<main class="page narrow">
-    <th:block th:if="${success}">
-        <h1>E-posta adresiniz doğrulandı</h1>
-        <p><a class="button" th:href="@{/app}">Kütüphaneme git</a></p>
-    </th:block>
-    <th:block th:unless="${success}">
-        <h1>Bağlantı geçersiz</h1>
-        <p>Bağlantı kullanılmış veya süresi dolmuş. Giriş yaptıktan sonra yeni bağlantı isteyebilirsiniz.</p>
-    </th:block>
+<main class="auth">
+    <section class="panel">
+        <th:block th:if="${success}">
+            <h1>E-posta adresiniz doğrulandı</h1>
+            <p style="margin-top:20px"><a class="button" th:href="@{/app}">Kütüphaneme git</a></p>
+        </th:block>
+        <th:block th:unless="${success}">
+            <h1>Bağlantı geçersiz</h1>
+            <p class="lead">Bağlantı kullanılmış veya süresi dolmuş. Giriş yaptıktan sonra yeni bağlantı isteyebilirsiniz.</p>
+        </th:block>
+    </section>
+    <figure>
+        <svg class="art cloud" viewBox="0 0 120 60" aria-hidden="true"><use th:href="@{/img/art.svg} + '#cloud'"/></svg><svg class="art" viewBox="0 0 200 200" aria-hidden="true"><use th:href="@{/img/art.svg} + '#findik'"/></svg>
+        <figcaption>Fındık sevinçten zıplıyor.</figcaption>
+    </figure>
 </main>
 </body>
 </html>

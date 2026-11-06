@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${child.name} + ' kütüphanesi')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: appNav(${user.displayName})}"></header>
+<main class="page">
+    <a class="crumb" th:href="@{/app}">← Kütüphanem</a>
+    <div class="page-head">
+        <div class="kid-top">
+            <span class="avatar" aria-hidden="true" th:text="${#strings.substring(child.name, 0, 1)}">E</span>
+            <div>
+                <h1 th:text="${child.name}">Ad</h1>
+                <p th:text="${child.age} + ' yaş · ' + ${#lists.size(stories)} + ' masal'">4 yaş · 2 masal</p>
+            </div>
+        </div>
+        <a class="button" th:href="@{/app/stories/new(childId=${child.id})}">Masal oluştur</a>
+    </div>
+    <div class="empty-shelf" th:if="${#lists.isEmpty(stories)}">
+        <svg class="art" viewBox="0 0 200 200" aria-hidden="true"><use th:href="@{/img/art.svg} + '#fikri'"/></svg><p>Bu çocuk için henüz masal oluşturulmadı.</p>
+    </div>
+    <ul th:replace="~{fragments/story :: row(${stories})}"></ul>
+    <p style="margin-top:24px"><a th:href="@{/app/children/{id}/edit(id=${child.id})}">Profili düzenle</a></p>
+</main>
+</body>
+</html>

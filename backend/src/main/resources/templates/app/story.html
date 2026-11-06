@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${story.title})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: appNav(${user.displayName})}"></header>
+<main class="page reader">
+    <a class="crumb" th:href="@{/app/children/{id}(id=${story.childId})}" th:text="'← ' + ${story.childName} + ' kütüphanesi'">← Kütüphane</a>
+    <div class="reader-head">
+        <div>
+            <h1 th:text="${story.title}">Başlık</h1>
+            <div class="meta">
+                <span class="tag" th:text="${story.themeLabel}">Paylaşma</span>
+                <span class="tag" th:if="${story.situationLabel}" th:text="${story.situationLabel}">Durum</span>
+                <span class="tag" th:if="${story.emotionLabel}" th:text="${story.emotionLabel}">Duygu</span>
+                <span class="tag" th:text="${story.characterName} + ' · ' + ${story.locationName}">Pamuk · Orman</span>
+            </div>
+        </div>
+        <div class="read-aloud" th:if="${story.status.name() == 'COMPLETED'}">
+            <button type="button" class="button" data-read-all>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                Baştan sesli oku
+            </button>
+        </div>
+    </div>
+
+    <section class="progress-box" th:if="${story.inProgress()}" data-reload="2500" aria-live="polite">
+        <div class="magic"><svg viewBox="0 0 60 60" aria-hidden="true"><use th:href="@{/img/art.svg} + '#wand'"/></svg><h2>Masal hazırlanıyor, sihir çalışıyor…</h2></div>
+        <div class="track" role="progressbar" aria-label="İlerleme" aria-valuemin="0" aria-valuemax="100"
+             th:attr="aria-valuenow=${story.progressPercent}">
+            <span th:style="'--p:' + ${story.progressPercent / 100.0}"></span>
+        </div>
+        <ul class="stages">
+            <li th:classappend="${story.status.name() == 'PENDING'} ? 'is-now' : 'is-done'">Hikâye yazılıyor</li>
+            <li th:classappend="${story.status.name() == 'GENERATING'} ? 'is-now' : ''">Resimler ve sesler hazırlanıyor</li>
+            <li>Kitap hazır</li>
+        </ul>
+        <p class="notice">Bu sayfa kendini yeniler; dilerseniz kütüphaneye dönebilirsiniz.</p>
+    </section>
+    <p class="alert" th:if="${story.status.name() == 'FAILED'}" role="alert">
+        Bu masal üretilemedi. Krediniz iade edildi.
+        <a th:href="@{/app/stories/new(childId=${story.childId})}">Yeniden deneyin</a>
+    </p>
+
+    <ol class="book-pages" th:unless="${#lists.isEmpty(story.scenes)}">
+        <li class="leaf" th:each="scene : ${story.scenes}">
+            <figure>
+                <img th:if="${scene.hasImage}" alt="" width="768" height="512"
+                     th:src="@{/app/stories/{id}/scenes/{n}/image(id=${story.id},n=${scene.number})}">
+                <div th:unless="${scene.hasImage}" class="image-wait">Resim hazırlanıyor…</div>
+            </figure>
+            <div class="words">
+                <span class="page-no" th:text="'Sahne ' + ${scene.number}">Sahne 1</span>
+                <p class="scene-text" th:text="${scene.text}" th:attr="data-ts=${scene.timestampsJson}">Metin</p>
+                <audio th:if="${scene.hasAudio}" controls preload="none"
+                       th:src="@{/app/stories/{id}/scenes/{n}/audio(id=${story.id},n=${scene.number})}"></audio>
+            </div>
+        </li>
+    </ol>
+    <nav class="pager" aria-label="Sahneler">
+        <button type="button" class="button quiet round" data-prev aria-label="Önceki sahne">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="dots"></div>
+        <span class="sr-only" data-count aria-live="polite"></span>
+        <button type="button" class="button round" data-next aria-label="Sonraki sahne">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+    </nav>
+</main>
+</body>
+</html>

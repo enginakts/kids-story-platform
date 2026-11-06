@@ -35,10 +35,12 @@ public class AccountService {
     private final PasswordEncoder passwordEncoder;
     private final EmailSender email;
     private final String baseUrl;
+    private final boolean verificationEnabled;
 
     AccountService(ParentRepository parents, AccountTokenRepository tokens, RefreshTokenService refreshTokens,
                    LoginAttemptService loginAttempts, PasswordEncoder passwordEncoder, EmailSender email,
-                   @Value("${app.base-url}") String baseUrl) {
+                   @Value("${app.base-url}") String baseUrl,
+                   @Value("${app.account.email-verification.enabled}") boolean verificationEnabled) {
         this.parents = parents;
         this.tokens = tokens;
         this.refreshTokens = refreshTokens;
@@ -46,11 +48,20 @@ public class AccountService {
         this.passwordEncoder = passwordEncoder;
         this.email = email;
         this.baseUrl = baseUrl.replaceAll("/+$", "");
+        this.verificationEnabled = verificationEnabled;
+    }
+
+    /** Doğrulama kapalıysa arayüz uyarı göstermez ve kayıtta e-posta gönderilmez. */
+    public boolean isVerificationEnabled() {
+        return verificationEnabled;
     }
 
     @TransactionalEventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRegistered(ParentRegisteredEvent event) {
+        if (!verificationEnabled) {
+            return;
+        }
         try {
             sendVerification(event.parentId());
         } catch (RuntimeException e) {

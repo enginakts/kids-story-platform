@@ -31,6 +31,12 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
     }
 
+    /** Aynı cüzdandan eşzamanlı harcama: istemci isteği yeniden denemelidir. */
+    @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
+    ProblemDetail concurrentUpdate() {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "İşlem aynı anda başka bir istekle çakıştı, tekrar deneyin");
+    }
+
     @ExceptionHandler(InvalidTokenException.class)
     ProblemDetail invalidToken(InvalidTokenException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());

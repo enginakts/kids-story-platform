@@ -34,6 +34,14 @@ public class Story extends CreatedEntity {
     private StoryEnums.Theme theme;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
+    private StoryEnums.Situation situation;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_emotion", length = 50)
+    private StoryEnums.Emotion targetEmotion;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "narration_style", nullable = false, length = 50)
     private StoryEnums.NarrationStyle narrationStyle = StoryEnums.NarrationStyle.WARM;
 

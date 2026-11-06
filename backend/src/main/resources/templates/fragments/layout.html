@@ -4,25 +4,39 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${title} + ' | Masal Dünyası'">Masal Dünyası</title>
+    <meta name="theme-color" content="#e5e1d8">
+    <script>document.documentElement.classList.add('js')</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;700&display=swap">
     <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script defer th:src="@{/js/app.js}"></script>
 </head>
 <body>
-<header th:fragment="publicNav" class="nav">
-    <a class="brand" th:href="@{/}">Masal Dünyası</a>
-    <nav>
+<!-- İşaret: açık bir masal kitabının üstünde hilal -->
+<svg th:fragment="mark" viewBox="0 0 200 140" aria-hidden="true"><use th:href="@{/img/art.svg} + '#book'"/></svg>
+
+<header th:fragment="publicNav" class="bar">
+    <a class="brand" th:href="@{/}"><svg th:replace="~{fragments/layout :: mark}"></svg>Masal Dünyası</a>
+    <nav aria-label="Ana menü">
         <a th:href="@{/explore}">Keşfet</a>
         <a th:href="@{/login}">Giriş yap</a>
-        <a class="button" th:href="@{/register}">Kayıt ol</a>
+        <a class="button sun" th:href="@{/register}">Ücretsiz başla</a>
     </nav>
 </header>
-<header th:fragment="appNav(name)" class="nav">
-    <a class="brand" th:href="@{/app}">Masal Dünyası</a>
-    <nav>
+
+<header th:fragment="appNav(name)" class="bar">
+    <a class="brand" th:href="@{/app}"><svg th:replace="~{fragments/layout :: mark}"></svg>Masal Dünyası</a>
+    <nav aria-label="Uygulama menüsü">
         <a th:href="@{/app}">Kütüphanem</a>
         <a th:href="@{/app/children}">Çocuklarım</a>
         <a th:href="@{/explore}">Keşfet</a>
-        <span th:text="${name}">Ebeveyn</span>
-        <form th:action="@{/logout}" method="post"><button class="link">Çıkış</button></form>
+        <span class="wallet-chip" th:if="${wallet != null}" title="Masal kredisi">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><use th:href="@{/img/art.svg} + '#star'"/></svg>
+            <span th:text="${wallet.storyCreditBalance} + ' kredi'">3 kredi</span>
+        </span>
+        <a class="button" th:href="@{/app/stories/new}">Masal oluştur</a>
+        <form th:action="@{/logout}" method="post"><button class="link" th:text="'Çıkış (' + ${name} + ')'">Çıkış</button></form>
     </nav>
 </header>
 </body>

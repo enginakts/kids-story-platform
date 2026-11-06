@@ -4,23 +4,44 @@
 <body>
 <header th:replace="~{fragments/layout :: appNav(${user.displayName})}"></header>
 <main class="page">
-    <h1>Çocuklarım</h1>
-    <ul class="cards">
-        <li class="card" th:each="child : ${children}">
-            <strong th:text="${child.name}">Ad</strong>
-            <span th:text="${child.age} + ' yaş'">4 yaş</span>
-            <a th:href="@{/app/children/{id}/edit(id=${child.id})}">Düzenle</a>
-            <form th:action="@{/app/children/{id}/delete(id=${child.id})}" method="post">
-                <button class="link">Kaldır</button>
-            </form>
+    <div class="page-head">
+        <div>
+            <h1>Çocuklarım</h1>
+            <p>Her çocuğun masalları kendi rafında durur.</p>
+        </div>
+    </div>
+    <p class="alert" th:if="${param.needChild}" role="alert">Masal oluşturmak için önce bir çocuk profili ekleyin.</p>
+
+    <ul class="kids" th:unless="${#lists.isEmpty(children)}">
+        <li class="panel kid" th:each="child : ${children}">
+            <div class="kid-top">
+                <span class="avatar" aria-hidden="true" th:text="${#strings.substring(child.name, 0, 1)}">E</span>
+                <div>
+                    <h2><a th:href="@{/app/children/{id}(id=${child.id})}" th:text="${child.name}">Ad</a></h2>
+                    <small th:text="${child.age} + ' yaş'">4 yaş</small>
+                </div>
+            </div>
+            <p class="muted" th:if="${child.favoriteAnimals}" th:text="'Sevdiği hayvanlar: ' + ${child.favoriteAnimals}">Sevdiği hayvanlar</p>
+            <div class="kid-actions">
+                <a class="button" th:href="@{/app/stories/new(childId=${child.id})}">Masal oluştur</a>
+                <a th:href="@{/app/children/{id}(id=${child.id})}">Masalları</a>
+                <a th:href="@{/app/children/{id}/edit(id=${child.id})}">Düzenle</a>
+                <form th:action="@{/app/children/{id}/delete(id=${child.id})}" method="post"
+                      onsubmit="return confirm('Bu çocuk profili ve rafı kaldırılsın mı?')">
+                    <button class="link">Kaldır</button>
+                </form>
+            </div>
         </li>
     </ul>
-    <h2>Yeni çocuk ekle</h2>
-    <p class="notice">Gerçek ad yerine takma ad kullanabilirsiniz. Soyad veya fotoğraf istemiyoruz.</p>
-    <form th:action="@{/app/children}" th:object="${form}" method="post" class="form">
-        <th:block th:replace="~{fragments/child-fields :: fields}"></th:block>
-        <button class="button">Ekle</button>
-    </form>
+
+    <section class="panel" style="max-width:640px">
+        <h2 style="font-size:var(--step-2);margin-bottom:8px">Yeni çocuk ekle</h2>
+        <p class="notice" style="margin-bottom:16px">Gerçek ad yerine takma ad kullanabilirsiniz. Soyad veya fotoğraf istemiyoruz.</p>
+        <form th:action="@{/app/children}" th:object="${form}" method="post" class="form">
+            <th:block th:replace="~{fragments/child-fields :: fields}"></th:block>
+            <button class="button">Ekle</button>
+        </form>
+    </section>
 </main>
 </body>
 </html>

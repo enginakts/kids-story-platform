@@ -1,12 +1,292 @@
 <!doctype html>
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Ana sayfa')}"></head>
-<body>
-<header th:replace="~{fragments/layout :: publicNav}"></header>
-<main class="page hero">
-    <h1>Çocuğunuza özel, resimli ve sesli masallar</h1>
-    <p>3-7 yaş için güvenli, eğitici ve ebeveyn denetimli masal platformu.</p>
-    <a class="button" th:href="@{/register}">Ücretsiz başla</a>
+<head th:replace="~{fragments/layout :: head('Her gece yepyeni bir masal')}"></head>
+<body class="landing">
+<link rel="stylesheet" th:href="@{/css/landing.css}">
+<div class="scroll-meter" aria-hidden="true"><span></span></div>
+
+<header class="bar">
+    <a class="brand" th:href="@{/}"><svg viewBox="0 0 200 140" aria-hidden="true"><use href="/img/art.svg#book"/></svg>Masal Dünyası</a>
+    <nav aria-label="Ana menü">
+        <a href="#neden">Neden?</a>
+        <a href="#makine">Masal makinesi</a>
+        <a href="#nasil">Nasıl çalışır</a>
+        <a href="#ucret">Ücret</a>
+        <a th:href="@{/login}">Giriş yap</a>
+        <a class="button sun" th:href="@{/register}">Ücretsiz başla</a>
+    </nav>
+</header>
+
+<main>
+    <!-- 1. Giriş sahnesi -->
+    <section class="hero" data-parallax>
+        <div class="hero-sun" data-depth="0.15" aria-hidden="true"><span></span></div>
+        <svg class="cloud c1" data-depth="0.3" viewBox="0 0 120 60" aria-hidden="true"><use href="/img/art.svg#cloud"/></svg>
+        <svg class="cloud c2" data-depth="0.5" viewBox="0 0 120 60" aria-hidden="true"><use href="/img/art.svg#cloud"/></svg>
+        <svg class="cloud c3" data-depth="0.2" viewBox="0 0 120 60" aria-hidden="true"><use href="/img/art.svg#cloud"/></svg>
+        <div class="hero-copy">
+            <h1 class="pop-words"><span>Her</span> <span>gece</span> <span>yepyeni</span> <span>bir</span> <mark>masal</mark></h1>
+            <p class="lead">Kahramanı çocuğunuz seçer, öğretmek istediğiniz değeri siz. Masal Dünyası saniyeler içinde
+                <b>resimli ve sesli</b>, 3–7 yaşa özel bir masal hazırlar.</p>
+            <div class="cta-row">
+                <a class="button sun big" th:href="@{/register}" data-sparkle>
+                    <svg viewBox="0 0 60 60" aria-hidden="true"><use href="/img/art.svg#wand"/></svg>Ücretsiz dene, 3 masal hediye</a>
+                <a class="button quiet big" href="#makine">Masal makinesini dene</a>
+            </div>
+            <ul class="trust">
+                <li><svg viewBox="0 0 40 44" aria-hidden="true"><use href="/img/art.svg#shield"/></svg>Reklam yok</li>
+                <li><svg viewBox="0 0 40 44" aria-hidden="true"><use href="/img/art.svg#shield"/></svg>Kart bilgisi istemez</li>
+                <li><svg viewBox="0 0 40 44" aria-hidden="true"><use href="/img/art.svg#shield"/></svg>Çocuğun adı gizli kalır</li>
+            </ul>
+        </div>
+        <div class="hero-stage" aria-hidden="true">
+            <svg class="hero-castle" data-depth="0.1" viewBox="0 0 140 140"><use href="/img/art.svg#castle"/></svg>
+            <svg class="hero-book" data-depth="0.35" viewBox="0 0 200 140"><use href="/img/art.svg#book"/></svg>
+            <svg class="sparkle s1" viewBox="0 0 40 40"><use href="/img/art.svg#sparkle"/></svg>
+            <svg class="sparkle s2" viewBox="0 0 40 40"><use href="/img/art.svg#sparkle"/></svg>
+            <svg class="sparkle s3" viewBox="0 0 40 40"><use href="/img/art.svg#star"/></svg>
+            <svg class="hero-tree" data-depth="0.12" viewBox="0 0 100 140"><use href="/img/art.svg#tree"/></svg>
+        </div>
+        <div class="hills" aria-hidden="true">
+            <svg viewBox="0 0 1440 220" preserveAspectRatio="none"><path d="M0 120C200 40 420 40 640 110s460 80 800-20V220H0z" fill="#8fe0b7"/><path d="M0 170c260-60 520-50 760 0s480 40 680-30V220H0z" fill="#5fd3a8"/></svg>
+            <div class="cast-row">
+                <svg class="hero-char" style="--d:0s" viewBox="0 0 200 200"><use href="/img/art.svg#pamuk"/></svg>
+                <svg class="hero-char" style="--d:.4s" viewBox="0 0 200 200"><use href="/img/art.svg#leo"/></svg>
+                <svg class="hero-char big" style="--d:.8s" viewBox="0 0 200 200"><use href="/img/art.svg#fikri"/></svg>
+                <svg class="hero-char" style="--d:.2s" viewBox="0 0 200 200"><use href="/img/art.svg#findik"/></svg>
+                <svg class="hero-char" style="--d:.6s" viewBox="0 0 200 200"><use href="/img/art.svg#mavi"/></svg>
+                <svg class="hero-char" style="--d:1s" viewBox="0 0 200 200"><use href="/img/art.svg#bal"/></svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Kayan bant -->
+    <div class="marquee" aria-hidden="true">
+        <div class="marquee-track">
+            <span>Paylaşmak</span><svg viewBox="0 0 40 40"><use href="/img/art.svg#star"/></svg><span>Cesaret</span><svg viewBox="0 0 40 40"><use href="/img/art.svg#star"/></svg>
+            <span>Okulda ilk gün</span><svg viewBox="0 0 40 40"><use href="/img/art.svg#star"/></svg><span>Sabır</span><svg viewBox="0 0 40 40"><use href="/img/art.svg#star"/></svg>
+            <span>Uyku vakti</span><svg viewBox="0 0 40 40"><use href="/img/art.svg#star"/></svg><span>Empati</span><svg viewBox="0 0 40 40"><use href="/img/art.svg#star"/></svg>
+            <span>Yeni kardeş</span><svg viewBox="0 0 40 40"><use href="/img/art.svg#star"/></svg><span>Diş fırçalama</span><svg viewBox="0 0 40 40"><use href="/img/art.svg#star"/></svg>
+            <span>Arkadaşlık</span><svg viewBox="0 0 40 40"><use href="/img/art.svg#star"/></svg><span>Doğa sevgisi</span><svg viewBox="0 0 40 40"><use href="/img/art.svg#star"/></svg>
+        </div>
+    </div>
+
+    <!-- 3. Neden -->
+    <section class="section why" id="neden">
+        <div class="section-head" data-reveal>
+            <h2>Neden Masal Dünyası?</h2>
+            <p>Uyku vakti, çocuğunuzla günün en güzel on dakikası olsun. Her akşam aynı masalı okumak zorunda değilsiniz.</p>
+        </div>
+        <div class="why-grid" data-reveal="stagger">
+            <article class="why-card c-pink" data-tilt><svg viewBox="0 0 40 36" aria-hidden="true"><use href="/img/art.svg#heart"/></svg>
+                <h3>Yalnızca onun için</h3><p>Kahramanı, mekânı ve değeri siz seçersiniz. Ortaya çıkan masal sadece sizin çocuğunuza aittir.</p></article>
+            <article class="why-card c-sun" data-tilt><svg viewBox="0 0 44 40" aria-hidden="true"><use href="/img/art.svg#palette"/></svg>
+                <h3>Resimli ve sesli</h3><p>Her sahne rengârenk çizilir ve seslendirilir. Okunan kelime ekranda parlar, okumayı sevdirir.</p></article>
+            <article class="why-card c-mint" data-tilt><svg viewBox="0 0 40 40" aria-hidden="true"><use href="/img/art.svg#star"/></svg>
+                <h3>Değer öğretir</h3><p>Paylaşmak, sabır, cesaret… Okulda ilk gün ya da yeni kardeş gibi zor anlara masalla hazırlanır.</p></article>
+            <article class="why-card c-sky" data-tilt><svg viewBox="0 0 40 44" aria-hidden="true"><use href="/img/art.svg#shield"/></svg>
+                <h3>Gönül rahatlığı</h3><p>Korku, şiddet, ayrılık yok. Çocuğunuzun adı yapay zekâya gönderilmez, her şey sizin kontrolünüzde.</p></article>
+        </div>
+    </section>
+
+    <!-- 4. Masal makinesi (canlı) -->
+    <section class="section machine" id="makine" data-machine>
+        <div class="section-head" data-reveal>
+            <h2>Masal makinesini deneyin</h2>
+            <p>Bir kahraman, bir yer ve bir duygu seçin; sihirli değneğe dokunun, masalın ilk sayfası belirsin.</p>
+        </div>
+        <div class="machine-grid">
+            <div class="controls" data-reveal>
+                <h3>Kahraman</h3>
+                <div class="avatars" role="radiogroup" aria-label="Kahraman">
+                    <button type="button" role="radio" aria-checked="true" data-hero="Pamuk" data-kind="minik bir tavşan" data-art="pamuk"><svg viewBox="0 0 200 200" aria-hidden="true"><use href="/img/art.svg#pamuk"/></svg><span>Pamuk</span></button>
+                    <button type="button" role="radio" aria-checked="false" data-hero="Leo" data-kind="cesur bir yavru aslan" data-art="leo"><svg viewBox="0 0 200 200" aria-hidden="true"><use href="/img/art.svg#leo"/></svg><span>Leo</span></button>
+                    <button type="button" role="radio" aria-checked="false" data-hero="Fikri" data-kind="düşünceli bir yavru fil" data-art="fikri"><svg viewBox="0 0 200 200" aria-hidden="true"><use href="/img/art.svg#fikri"/></svg><span>Fikri</span></button>
+                    <button type="button" role="radio" aria-checked="false" data-hero="Mavi" data-kind="sabırlı bir yavru penguen" data-art="mavi"><svg viewBox="0 0 200 200" aria-hidden="true"><use href="/img/art.svg#mavi"/></svg><span>Mavi</span></button>
+                    <button type="button" role="radio" aria-checked="false" data-hero="Fındık" data-kind="hareketli bir sincap" data-art="findik"><svg viewBox="0 0 200 200" aria-hidden="true"><use href="/img/art.svg#findik"/></svg><span>Fındık</span></button>
+                    <button type="button" role="radio" aria-checked="false" data-hero="Bal" data-kind="sevecen bir yavru ayı" data-art="bal"><svg viewBox="0 0 200 200" aria-hidden="true"><use href="/img/art.svg#bal"/></svg><span>Bal</span></button>
+                </div>
+                <h3>Yer</h3>
+                <div class="places" role="radiogroup" aria-label="Yer">
+                    <button type="button" role="radio" aria-checked="true" data-place="Çiçekli Orman'da" data-icon="tree" data-sky="#bfe6ff" data-ground="#8fe0b7"><svg viewBox="0 0 100 140" aria-hidden="true"><use href="/img/art.svg#tree"/></svg>Orman</button>
+                    <button type="button" role="radio" aria-checked="false" data-place="Bulut Şatosu'nda" data-icon="castle" data-sky="#ffd9ef" data-ground="#c8b8ff"><svg viewBox="0 0 140 140" aria-hidden="true"><use href="/img/art.svg#castle"/></svg>Şato</button>
+                    <button type="button" role="radio" aria-checked="false" data-place="Kumsal Köyü'nde" data-icon="shell" data-sky="#c4f1ff" data-ground="#ffe2a8"><svg viewBox="0 0 100 80" aria-hidden="true"><use href="/img/art.svg#shell"/></svg>Kumsal</button>
+                    <button type="button" role="radio" aria-checked="false" data-place="Renkli Anaokulu'nda" data-icon="school" data-sky="#d6f0ff" data-ground="#ffd98a"><svg viewBox="0 0 140 130" aria-hidden="true"><use href="/img/art.svg#school"/></svg>Okul</button>
+                    <button type="button" role="radio" aria-checked="false" data-place="Yıldızlı Oda'da" data-icon="bed" data-sky="#2b2f6b" data-ground="#4a3f9e" data-night><svg viewBox="0 0 140 100" aria-hidden="true"><use href="/img/art.svg#bed"/></svg>Yatak odası</button>
+                </div>
+                <h3>Duygu</h3>
+                <div class="feelings" role="radiogroup" aria-label="Duygu">
+                    <button type="button" role="radio" aria-checked="true" data-feel="güne kocaman bir gülümsemeyle uyanmış.">Mutluluk</button>
+                    <button type="button" role="radio" aria-checked="false" data-feel="ilk kez tek başına yeni bir şey denemeye karar vermiş.">Cesaret</button>
+                    <button type="button" role="radio" aria-checked="false" data-feel="en sevdiği salıncağın sırasını sabırla beklemiş.">Sabır</button>
+                    <button type="button" role="radio" aria-checked="false" data-feel="üzgün bir arkadaşını görünce hemen yanına koşmuş.">Empati</button>
+                    <button type="button" role="radio" aria-checked="false" data-feel="çalıların arkasından gelen tatlı bir ses duymuş.">Merak</button>
+                </div>
+                <button type="button" class="button big" data-cast>
+                    <svg viewBox="0 0 60 60" aria-hidden="true"><use href="/img/art.svg#wand"/></svg>Sihri başlat</button>
+            </div>
+            <figure class="stage-card" data-reveal>
+                <div class="stage" style="--sky:#bfe6ff;--ground:#8fe0b7">
+                    <svg class="st-moon" viewBox="0 0 100 100" aria-hidden="true"><use href="/img/art.svg#moon"/></svg>
+                    <svg class="st-cloud" viewBox="0 0 120 60" aria-hidden="true"><use href="/img/art.svg#cloud"/></svg>
+                    <svg class="st-place" viewBox="0 0 140 140" aria-hidden="true"><use href="/img/art.svg#tree" data-place-use/></svg>
+                    <svg class="st-hero" viewBox="0 0 200 200" aria-hidden="true"><use href="/img/art.svg#pamuk" data-hero-use/></svg>
+                    <div class="burst" aria-hidden="true"></div>
+                </div>
+                <figcaption>
+                    <span class="page-tag">Sayfa 1</span>
+                    <p class="story-text" data-story aria-live="polite">Bir varmış bir yokmuş, Çiçekli Orman'da Pamuk adında minik bir tavşan yaşarmış. Bir gün Pamuk güne kocaman bir gülümsemeyle uyanmış.</p>
+                    <a class="button sun" th:href="@{/register}">Bu masalı gerçekten oluştur</a>
+                </figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <!-- 5. Nasıl çalışır: kaydırdıkça değişen ekran -->
+    <section class="section how" id="nasil">
+        <div class="section-head" data-reveal><h2>Üç adımda masal</h2><p>Bir çay demlenene kadar masalınız hazır.</p></div>
+        <div class="how-grid">
+            <ol class="steps">
+                <li class="step is-active" data-step="0"><span class="num">1</span><h3>İşaretleyin</h3>
+                    <p>Çocuğunuzu, kahramanı, yeri, öğretmek istediğiniz değeri ve duyguyu seçin. Yazmanız gereken tek bir kelime bile yok.</p></li>
+                <li class="step" data-step="1"><span class="num">2</span><h3>Sihir çalışsın</h3>
+                    <p>Masal 4–6 kısa sahne olarak yazılır, güvenlik denetiminden geçer, her sahne resimlenir ve seslendirilir.</p></li>
+                <li class="step" data-step="2"><span class="num">3</span><h3>Birlikte okuyun</h3>
+                    <p>Sayfaları çevirin ya da “Baştan sesli oku”ya basın. Okunan kelime parlar, masal çocuğunuzun rafına eklenir.</p></li>
+            </ol>
+            <div class="device-wrap">
+                <div class="device" aria-hidden="true">
+                    <div class="screen sc-0 is-on">
+                        <div class="mini-chips"><span>Pamuk</span><span class="on">Leo</span><span>Fikri</span><span class="on">Orman</span><span>Şato</span><span class="on">Paylaşmak</span><span>Cesaret</span><span class="on">Empati</span></div>
+                        <svg viewBox="0 0 200 200"><use href="/img/art.svg#leo"/></svg>
+                    </div>
+                    <div class="screen sc-1">
+                        <svg class="wand" viewBox="0 0 60 60"><use href="/img/art.svg#wand"/></svg>
+                        <div class="mini-track"><span></span></div>
+                        <p>Masal yazılıyor…</p>
+                    </div>
+                    <div class="screen sc-2">
+                        <div class="mini-scene"><svg viewBox="0 0 100 140"><use href="/img/art.svg#tree"/></svg><svg viewBox="0 0 200 200"><use href="/img/art.svg#leo"/></svg></div>
+                        <p class="karaoke"><span>Leo</span> <span>ormanda</span> <span>yeni</span> <span>bir</span> <span>arkadaş</span> <span>bulmuş.</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Kahramanlar -->
+    <section class="section heroes" id="kahramanlar">
+        <div class="section-head" data-reveal><h2>Kahramanlarla tanışın</h2><p>Her biri sahneden sahneye aynı görünür; çocuğunuz onları hemen tanır. Kartlara dokunun!</p></div>
+        <div class="flip-grid" data-reveal="stagger">
+            <button type="button" class="flip c-sky" data-flip aria-label="Pamuk kartını çevir"><span class="face front"><svg viewBox="0 0 200 200" aria-hidden="true"><use href="/img/art.svg#pamuk"/></svg><b>Pamuk</b></span>
+                <span class="face back"><b>Pamuk · Tavşan</b><span>Meraklı, nazik ve yardımsever. Mavi atkısını hiç çıkarmaz.</span></span></button>
+            <button type="button" class="flip c-sun" data-flip aria-label="Leo kartını çevir"><span class="face front"><svg viewBox="0 0 200 200" aria-hidden="true"><use href="/img/art.svg#leo"/></svg><b>Leo</b></span>
+                <span class="face back"><b>Leo · Yavru aslan</b><span>Cesur, neşeli ve paylaşımcı. Kırmızı papyonu onun uğuru.</span></span></button>
+            <button type="button" class="flip c-pink" data-flip aria-label="Fikri kartını çevir"><span class="face front"><svg viewBox="0 0 200 200" aria-hidden="true"><use href="/img/art.svg#fikri"/></svg><b>Fikri</b></span>
+                <span class="face back"><b>Fikri · Yavru fil</b><span>Düşünceli, sakin ve sevecen. Papatya tacıyla dolaşır.</span></span></button>
+            <button type="button" class="flip c-mint" data-flip aria-label="Mavi kartını çevir"><span class="face front"><svg viewBox="0 0 200 200" aria-hidden="true"><use href="/img/art.svg#mavi"/></svg><b>Mavi</b></span>
+                <span class="face back"><b>Mavi · Yavru penguen</b><span>Sabırlı ve şefkatli. Nane yeşili beresi en sevdiği şey.</span></span></button>
+            <button type="button" class="flip c-coral" data-flip aria-label="Fındık kartını çevir"><span class="face front"><svg viewBox="0 0 200 200" aria-hidden="true"><use href="/img/art.svg#findik"/></svg><b>Fındık</b></span>
+                <span class="face back"><b>Fındık · Sincap</b><span>Hareketli, meraklı ve çok komik. Sırt çantası hep dolu.</span></span></button>
+            <button type="button" class="flip c-grape" data-flip aria-label="Bal kartını çevir"><span class="face front"><svg viewBox="0 0 200 200" aria-hidden="true"><use href="/img/art.svg#bal"/></svg><b>Bal</b></span>
+                <span class="face back"><b>Bal · Yavru ayı</b><span>Sevecen, paylaşımcı ve biraz uykucu. Çizgili tulumuna bayılır.</span></span></button>
+        </div>
+    </section>
+
+    <!-- 7. Neler yapabilirsiniz -->
+    <section class="section can" id="neler">
+        <div class="section-head" data-reveal><h2>Neler yapabilirsiniz?</h2><p>Masal Dünyası bir masal kitabından fazlası: her çocuğunuzun kendi kütüphanesi.</p></div>
+        <div class="counters" data-reveal="stagger">
+            <div><b data-count="6">6</b><span>kahraman</span></div>
+            <div><b data-count="6">6</b><span>masal dünyası</span></div>
+            <div><b data-count="8">8</b><span>öğretilecek değer</span></div>
+            <div><b data-count="10">10</b><span>gündelik durum</span></div>
+            <div><b data-count="8">8</b><span>tanıtılacak duygu</span></div>
+        </div>
+        <div class="bento" data-reveal="stagger">
+            <article class="tile wide c-sky"><h3>Her çocuğa ayrı raf</h3><p>Ela'nın masalları Can'ınkilerle karışmaz. Her çocuğun kendi kütüphanesi büyür.</p>
+                <div class="mini-shelf" aria-hidden="true"><i style="--c:#ff7a59"></i><i style="--c:#ffcf4a"></i><i style="--c:#5fd3a8"></i><i style="--c:#6f61d8"></i><i style="--c:#4aa8ff"></i><i style="--c:#ffb3c7"></i></div></article>
+            <article class="tile c-sun"><h3>Okunan kelime parlar</h3><p>Ses çalarken kelimeler sırayla vurgulanır; çocuklar sesle yazıyı eşleştirir.</p>
+                <p class="karaoke demo" aria-hidden="true"><span>Bir</span> <span>varmış</span> <span>bir</span> <span>yokmuş</span></p></article>
+            <article class="tile c-pink"><h3>Baştan sesli oku</h3><p>Tek dokunuşla masal kendi kendine okunur, sayfalar kendiliğinden çevrilir.</p>
+                <div class="notes" aria-hidden="true"><svg viewBox="0 0 40 40"><use href="/img/art.svg#note"/></svg><svg viewBox="0 0 40 40"><use href="/img/art.svg#note"/></svg><svg viewBox="0 0 40 40"><use href="/img/art.svg#note"/></svg></div></article>
+            <article class="tile c-mint"><h3>Bana sürpriz yap</h3><p>Karar veremediniz mi? Tek tuşla rastgele bir kahraman, yer ve değer seçilir.</p></article>
+            <article class="tile c-grape"><h3>Kısa, sıcak, uyku dostu</h3><p>Her masal 4–6 sahne, her sahne en fazla iki cümle. 2–4 dakikada biter; uykuya tam zamanında.</p>
+                <div class="zzz" aria-hidden="true"><span>z</span><span>z</span><span>z</span></div></article>
+        </div>
+    </section>
+
+    <!-- 8. Ebeveynler -->
+    <section class="section parents" id="ebeveyn">
+        <div class="parents-grid">
+            <div data-reveal>
+                <h2>Ebeveynler için gönül rahatlığı</h2>
+                <ul class="checks">
+                    <li><svg viewBox="0 0 40 44" aria-hidden="true"><use href="/img/art.svg#shield"/></svg><span><b>Ad gizli kalır.</b> Çocuğunuzun adı hiçbir yapay zekâ servisine gönderilmez.</span></li>
+                    <li><svg viewBox="0 0 40 44" aria-hidden="true"><use href="/img/art.svg#shield"/></svg><span><b>Korkutucu içerik yok.</b> Her cümle, çocuğa ulaşmadan önce güvenlik listesinden geçer.</span></li>
+                    <li><svg viewBox="0 0 40 44" aria-hidden="true"><use href="/img/art.svg#shield"/></svg><span><b>Kontrol sizde.</b> Masalları yalnızca ebeveyn hesabı oluşturur; çocuk yanlışlıkla kredi harcayamaz.</span></li>
+                    <li><svg viewBox="0 0 40 44" aria-hidden="true"><use href="/img/art.svg#shield"/></svg><span><b>Kaybolan kredi yok.</b> Bir masal üretilemezse krediniz otomatik iade edilir.</span></li>
+                </ul>
+            </div>
+            <div class="guard" data-reveal aria-hidden="true">
+                <svg class="g-hero" viewBox="0 0 200 200"><use href="/img/art.svg#mavi"/></svg>
+                <svg class="g-shield" viewBox="0 0 40 44"><use href="/img/art.svg#shield"/></svg>
+                <svg class="g-heart" viewBox="0 0 40 36"><use href="/img/art.svg#heart"/></svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- 9. Ücret -->
+    <section class="section price" id="ucret">
+        <div class="price-card" data-reveal>
+            <svg class="pc-star a" viewBox="0 0 40 40" aria-hidden="true"><use href="/img/art.svg#star"/></svg>
+            <svg class="pc-star b" viewBox="0 0 40 40" aria-hidden="true"><use href="/img/art.svg#star"/></svg>
+            <div>
+                <h2>Başlangıç hediyesi</h2>
+                <ul><li>3 masal kredisi</li><li>2 çocuk profili</li><li>Resim ve ses dahil</li><li>Kart bilgisi istenmez</li></ul>
+            </div>
+            <div class="price-side">
+                <p class="amount"><b>0</b> ₺</p>
+                <a class="button sun big" th:href="@{/register}" data-sparkle>Hemen başla</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 10. SSS -->
+    <section class="section faq" id="sss">
+        <div class="section-head" data-reveal><h2>Merak edilenler</h2></div>
+        <div class="faq-list" data-reveal="stagger">
+            <details><summary>Hangi yaşlar için uygun?</summary><p>3 ile 7 yaş arası. Cümleler kısa, sahneler az; dikkat süresine göre 2–4 dakikalık masallar üretilir.</p></details>
+            <details><summary>Masalı kim yazıyor?</summary><p>Bir yapay zekâ modeli, sizin seçtiğiniz kahraman, yer, değer ve duyguyla yazar. Siz yalnızca işaretlersiniz.</p></details>
+            <details><summary>Birden fazla çocuğum var, ne olacak?</summary><p>Her çocuğa ayrı profil açın. Masallar kimin için oluşturulduysa onun rafında durur.</p></details>
+            <details><summary>Resimler neden her sayfada aynı karakteri gösteriyor?</summary><p>Her kahramanın sabit bir görünüş rehberi var; her sahne bu rehberle çizilir, karakter değişmez.</p></details>
+            <details><summary>Üretim başarısız olursa?</summary><p>Masal üç kez denenir. Yine olmazsa harcanan kredi otomatik olarak iade edilir.</p></details>
+            <details><summary>Ne kadar sürer?</summary><p>Çoğu masal bir dakikadan kısa sürede hazırdır; hazırlanırken ilerlemeyi canlı görürsünüz.</p></details>
+        </div>
+    </section>
+
+    <!-- 11. Gece kapanışı -->
+    <section class="night" aria-labelledby="gece-h">
+        <div class="stars" aria-hidden="true"></div>
+        <svg class="night-moon" viewBox="0 0 100 100" aria-hidden="true"><use href="/img/art.svg#moon"/></svg>
+        <div class="night-copy" data-reveal>
+            <h2 id="gece-h">Bu akşamın masalı sizden</h2>
+            <p>Hesap açın, çocuğunuzu ekleyin, ilk kahramanı seçin. İlk üç masal bizden.</p>
+            <a class="button sun big" th:href="@{/register}" data-sparkle>
+                <svg viewBox="0 0 60 60" aria-hidden="true"><use href="/img/art.svg#wand"/></svg>Ücretsiz başla</a>
+        </div>
+        <div class="sleepers" aria-hidden="true">
+            <svg class="bed" viewBox="0 0 140 100"><use href="/img/art.svg#bed"/></svg>
+            <svg class="sleeper" viewBox="0 0 200 200"><use href="/img/art.svg#bal"/></svg>
+            <div class="zzz"><span>z</span><span>z</span><span>z</span></div>
+        </div>
+        <footer class="foot">
+            <a class="brand" th:href="@{/}"><svg viewBox="0 0 200 140" aria-hidden="true"><use href="/img/art.svg#book"/></svg>Masal Dünyası</a>
+            <nav aria-label="Alt menü"><a th:href="@{/register}">Hesap oluştur</a><a th:href="@{/login}">Giriş yap</a><a th:href="@{/explore}">Keşfet</a><a href="#sss">Sorular</a></nav>
+            <p>© 2026 Masal Dünyası · 3–7 yaş için resimli ve sesli masallar</p>
+        </footer>
+    </section>
 </main>
+<script defer th:src="@{/js/landing.js}"></script>
 </body>
 </html>

@@ -2,10 +2,17 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Hata')}"></head>
 <body>
-<main class="page narrow">
-    <h1>Bir sorun oluştu</h1>
-    <p>İstediğiniz sayfa açılamadı.</p>
-    <a th:href="@{/}">Ana sayfaya dön</a>
+<header th:replace="~{fragments/layout :: publicNav}"></header>
+<main class="auth">
+    <section class="panel">
+        <h1>Bu sayfa açılamadı</h1>
+        <p class="lead">Aradığınız sayfa taşınmış ya da hiç var olmamış olabilir.</p>
+        <p><a class="button" th:href="@{/}">Ana sayfaya dön</a></p>
+    </section>
+    <figure>
+        <svg class="art cloud" viewBox="0 0 120 60" aria-hidden="true"><use th:href="@{/img/art.svg} + '#cloud'"/></svg><svg class="art" viewBox="0 0 200 200" aria-hidden="true"><use th:href="@{/img/art.svg} + '#bal'"/></svg>
+        <figcaption>Bal bu sayfayı bulamadı.</figcaption>
+    </figure>
 </main>
 </body>
 </html>

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Masal oluştur')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: appNav(${user.displayName})}"></header>
+<main class="page">
+    <div class="page-head">
+        <div>
+            <h1>Yeni masal</h1>
+            <p>Seçenekleri işaretleyin; masal yazılsın, her sahnesi resimlensin ve seslendirilsin.</p>
+        </div>
+    </div>
+    <p class="alert" th:if="${error}" th:text="${error}" role="alert">Hata</p>
+
+    <form th:action="@{/app/stories}" th:object="${form}" method="post" class="wizard wizard-form">
+        <div>
+            <fieldset>
+                <legend><h2>Masal kimin için?</h2></legend>
+                <label class="sr-only" for="childId">Çocuk</label>
+                <select id="childId" name="childId">
+                    <option th:each="c : ${children}" th:value="${c.id}" th:selected="${c.id == childId}"
+                            th:text="${c.name} + ' · ' + ${c.age} + ' yaş'">Ad</option>
+                </select>
+            </fieldset>
+
+            <fieldset data-required>
+                <legend><h2>Kahraman</h2></legend>
+                <p class="error" th:errors="*{characterId}"></p>
+                <div class="cast">
+                    <label class="pick" th:each="c : ${options.characters}">
+                        <input type="radio" name="characterId" th:value="${c.id}" th:checked="${form.characterId == c.id}" required>
+                        <svg th:if="${c.imageKey}" class="art" viewBox="0 0 200 200" aria-hidden="true"><use th:href="@{/img/art.svg} + '#' + ${c.imageKey}"/></svg>
+                        <strong th:text="${c.name}">Pamuk</strong>
+                        <span th:text="${c.species}">Tavşan</span>
+                        <small th:text="${c.personality}">Meraklı</small>
+                    </label>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend><h2>Arkadaşları <small>isteğe bağlı, en fazla 2</small></h2></legend>
+                <p class="error" th:errors="*{sideCharacterIds}"></p>
+                <div class="chips">
+                    <label class="chip" th:each="c : ${options.characters}">
+                        <input type="checkbox" name="sideCharacterIds" th:value="${c.id}"
+                               th:checked="${form.sideCharacterIds != null and form.sideCharacterIds.contains(c.id)}">
+                        <span th:text="${c.name}">Leo</span>
+                    </label>
+                </div>
+            </fieldset>
+
+            <fieldset data-required>
+                <legend><h2>Nerede geçsin?</h2></legend>
+                <p class="error" th:errors="*{locationId}"></p>
+                <div class="chips">
+                    <label class="chip" th:each="l : ${options.locations}" th:title="${l.atmosphere}">
+                        <input type="radio" name="locationId" th:value="${l.id}" th:checked="${form.locationId == l.id}" required>
+                        <svg viewBox="0 0 140 140" aria-hidden="true"><use th:href="@{/img/art.svg} + '#' + ${l.imageKey}"/></svg>
+                        <span th:text="${l.name}">Orman</span>
+                    </label>
+                </div>
+            </fieldset>
+
+            <fieldset data-required>
+                <legend><h2>Hangi değeri öğretsin?</h2></legend>
+                <p class="error" th:errors="*{theme}"></p>
+                <div class="chips">
+                    <label class="chip" th:each="o : ${options.themes}">
+                        <input type="radio" name="theme" th:value="${o.value}"
+                               th:checked="${form.theme != null and form.theme.name() == o.value}" required>
+                        <span th:text="${o.label}">Paylaşma</span>
+                    </label>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend><h2>Hangi durumu anlatsın? <small>isteğe bağlı</small></h2></legend>
+                <div class="chips">
+                    <label class="chip"><input type="radio" name="situation" value="" th:checked="${form.situation == null}"><span>Fark etmez</span></label>
+                    <label class="chip" th:each="o : ${options.situations}">
+                        <input type="radio" name="situation" th:value="${o.value}"
+                               th:checked="${form.situation != null and form.situation.name() == o.value}">
+                        <span th:text="${o.label}">Uyku vakti</span>
+                    </label>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend><h2>Hangi duyguyu tanıtsın? <small>isteğe bağlı</small></h2></legend>
+                <div class="chips">
+                    <label class="chip"><input type="radio" name="emotion" value="" th:checked="${form.emotion == null}"><span>Fark etmez</span></label>
+                    <label class="chip" th:each="o : ${options.emotions}">
+                        <input type="radio" name="emotion" th:value="${o.value}"
+                               th:checked="${form.emotion != null and form.emotion.name() == o.value}">
+                        <span th:text="${o.label}">Empati</span>
+                    </label>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend><h2>Nasıl anlatılsın?</h2></legend>
+                <div class="chips" style="margin-bottom: 12px">
+                    <label class="chip" th:each="o : ${options.narrationStyles}">
+                        <input type="radio" name="narrationStyle" th:value="${o.value}"
+                               th:checked="${form.narrationStyle != null and form.narrationStyle.name() == o.value}">
+                        <span th:text="${o.label}">Sıcak</span>
+                    </label>
+                </div>
+                <div class="chips">
+                    <label class="chip" th:each="n : ${ {4, 5, 6} }">
+                        <input type="radio" name="sceneCount" th:value="${n}" th:checked="${form.sceneCount == n}">
+                        <span th:text="${n} + ' sahne'">4 sahne</span>
+                    </label>
+                </div>
+            </fieldset>
+        </div>
+
+        <aside class="summary" aria-live="polite">
+            <h2>Masalınız</h2>
+            <div class="plate"><span>Kahraman seçilmedi</span></div>
+            <p class="story-line">Bir kahraman seçin, masalın ilk cümlesi burada belirsin.</p>
+            <ul>
+                <li data-sum="hero"><span>Kahraman</span><span>—</span></li>
+                <li data-sum="friends"><span>Arkadaşları</span><span>—</span></li>
+                <li data-sum="place"><span>Mekân</span><span>—</span></li>
+                <li data-sum="theme"><span>Değer</span><span>—</span></li>
+                <li data-sum="situation"><span>Durum</span><span>—</span></li>
+                <li data-sum="emotion"><span>Duygu</span><span>—</span></li>
+                <li data-sum="scenes"><span>Uzunluk</span><span>—</span></li>
+            </ul>
+            <button type="submit" class="button sun big"><svg viewBox="0 0 60 60" aria-hidden="true"><use th:href="@{/img/art.svg} + '#wand'"/></svg>Masalı üret</button>
+            <button type="button" class="link" data-surprise>Bana sürpriz yap</button>
+            <p class="notice">1 kredi kullanılır; üretim başarısız olursa iade edilir. Çocuğunuzun adı yapay zekâya gönderilmez.</p>
+        </aside>
+    </form>
+</main>
+</body>
+</html>

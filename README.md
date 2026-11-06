@@ -116,6 +116,21 @@ Geliştirmede e-posta gönderilmez; doğrulama ve sıfırlama bağlantıları ko
 | POST | `/api/v1/account/verify-email/resend` | Doğrulama bağlantısını yeniden gönderir |
 | GET, POST | `/api/v1/children` | Çocukları listeler, ekler |
 | PUT, DELETE | `/api/v1/children/{id}` | Çocuğu günceller, pasife alır |
+| GET | `/api/v1/children/{id}/story-options` | Sihirbaz seçenekleri: karakter, mekân, değer, durum, duygu, anlatım |
+| GET | `/api/v1/children/{id}/stories` | Yalnızca o çocuğun masalları |
+| POST | `/api/v1/stories` | Masal üretimini başlatır (1 kredi); 202 döner, üretim asenkrondur |
+| GET | `/api/v1/stories/{id}` | Durum (`PENDING`, `GENERATING`, `COMPLETED`, `FAILED`), ilerleme ve sahneler |
+| GET | `/api/v1/stories/{id}/scenes/{n}/image`, `/audio` | Sahne görseli ve sesi (yalnızca masalın sahibi) |
+
+### Masal üretim hattı
+
+1. Ebeveyn sihirbazda çocuğu, ana ve yan karakterleri, mekânı, öğretilecek değeri, durumu, duyguyu, anlatımı ve sahne sayısını (4-6) işaretler. Serbest metin yoktur.
+2. Bir kredi düşer, `generation_jobs` kuyruğuna `STORY_TEXT` işi eklenir. Çocuğun adı yapay zekâya gönderilmez.
+3. LLM masalı JSON olarak yazar; yanıt şemaya göre doğrulanır ve `content_blacklists` kurallarından geçer. Masal sahnelere bölünür.
+4. Her sahne için `SCENE_IMAGE` ve `SCENE_AUDIO` işleri eklenir. Görsel prompt'u her sahnede aynı stil sabiti, karakter ve mekân rehberinin (bible) görsel tanımları ve karakterin sabit seed'i ile kurulur; LLM yalnızca sahnedeki eylemi yazar.
+5. Hata alan iş artan beklemeyle 3 kez denenir. Denemeler biterse masal `FAILED` olur ve kredi iade edilir.
+
+Gerçek sağlayıcı eklemek için `LlmClient`, `ImageClient` veya `TtsClient` uygulayan bir adaptör ve `ai_providers_config` tablosunda bir satır yeterlidir. Dosyalar `app.storage.dir` (`STORAGE_DIR`) altında tutulur.
 
 Ebeveyn kimliği her zaman token'dan okunur, istekten alınmaz. Erişim token'ı 15 dakika, yenileme token'ı 30 gün geçerlidir.
 

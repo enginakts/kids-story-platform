@@ -4,6 +4,8 @@ import com.kidstory.backend.entity.CreditTransaction;
 import com.kidstory.backend.entity.CreditWallet;
 import com.kidstory.backend.entity.Parent;
 import com.kidstory.backend.entity.ParentSubscription;
+import com.kidstory.backend.entity.Story;
+import com.kidstory.backend.exception.ConflictException;
 import com.kidstory.backend.entity.SubscriptionPlan;
 import com.kidstory.backend.repository.CreditTransactionRepository;
 import com.kidstory.backend.repository.CreditWalletRepository;
@@ -46,6 +48,39 @@ public class BillingService {
         transaction.setStoryCreditAmount(free.getMonthlyStoryCredits());
         transaction.setInteractiveCreditAmount(free.getInteractiveCredits());
         transaction.setDescription("Hoş geldin kredileri");
+        transactions.save(transaction);
+    }
+
+    /**
+     * Masal başına bir kredi düşer. Cüzdandaki @Version, aynı kredinin eşzamanlı iki istekte
+     * harcanmasını engeller; veritabanı kısıtı da bakiyenin eksiye düşmesine izin vermez.
+     */
+    @Transactional
+    public void spendStoryCredit(Long parentId, Story story) {
+        CreditWallet wallet = wallets.findByParentId(parentId).orElseThrow();
+        if (wallet.getStoryCreditBalance() < 1) {
+            throw new ConflictException("Masal krediniz kalmadı");
+        }
+        wallet.setStoryCreditBalance(wallet.getStoryCreditBalance() - 1);
+        record(wallet, story, CreditTransaction.Type.STORY_SPEND, -1, "Masal oluşturma");
+    }
+
+    /** Üretim kalıcı olarak başarısız olursa harcanan kredi geri verilir. */
+    @Transactional
+    public void refundStoryCredit(Story story) {
+        CreditWallet wallet = wallets.findByParentId(story.getParent().getId()).orElseThrow();
+        wallet.setStoryCreditBalance(wallet.getStoryCreditBalance() + 1);
+        record(wallet, story, CreditTransaction.Type.REFUND, 1, "Masal üretilemedi, kredi iade edildi");
+    }
+
+    private void record(CreditWallet wallet, Story story, CreditTransaction.Type type, int amount, String description) {
+        CreditTransaction transaction = new CreditTransaction();
+        transaction.setWallet(wallet);
+        transaction.setStory(story);
+        transaction.setTransactionType(type);
+        transaction.setStoryCreditAmount(amount);
+        transaction.setInteractiveCreditAmount(0);
+        transaction.setDescription(description);
         transactions.save(transaction);
     }
 

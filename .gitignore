@@ -35,3 +35,10 @@ Thumbs.db
 # Yerel gömülü PostgreSQL verisi ve gizli dosyalar
 .devdb/
 .env
+
+# Üretilen masal görselleri ve sesleri (yerel)
+.media/
+
+# Tasarım skill'lerinin çalışma dosyaları (ölçüm görüntüleri, ham görsel indirmeleri)
+.taste-skill/
+/assets/

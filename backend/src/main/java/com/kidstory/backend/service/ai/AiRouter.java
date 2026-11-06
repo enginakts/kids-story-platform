@@ -23,8 +23,17 @@ public class AiRouter {
     private final AiProviderConfigRepository configs;
     private final List<AiClient> clients;
 
+    /** Sonuç ve onu üreten sağlayıcının adı. */
+    public record Outcome<R>(R value, String providerName) {
+    }
+
     public <C extends AiClient, R> R call(AiProviderConfig.Type type, Class<C> clientType,
                                           BiFunction<C, AiProviderConfig, R> action) {
+        return invoke(type, clientType, action).value();
+    }
+
+    public <C extends AiClient, R> Outcome<R> invoke(AiProviderConfig.Type type, Class<C> clientType,
+                                                     BiFunction<C, AiProviderConfig, R> action) {
         RuntimeException last = null;
         for (AiProviderConfig config : configs.findByProviderTypeAndActiveTrueOrderByPriorityAsc(type)) {
             C client = find(clientType, config.getProviderName());
@@ -32,7 +41,7 @@ public class AiRouter {
                 continue;
             }
             try {
-                return action.apply(client, config);
+                return new Outcome<>(action.apply(client, config), config.getProviderName());
             } catch (RuntimeException e) {
                 log.warn("{} sağlayıcısı başarısız: {}", config.getProviderName(), e.toString());
                 last = e;

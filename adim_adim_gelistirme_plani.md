@@ -15,10 +15,10 @@ Proje küçük, test edilebilir adımlarla ilerler. Her adım hem web arayüzün
 | 1 | Kimlik doğrulama: kayıt, giriş, ayrı yönetici girişi | Vize | İncelemede |
 | 2 | Çocuk profilleri ve veri izolasyonu | Vize | İncelemede |
 | 3 | Hesap tamamlama: e-posta doğrulama, parola sıfırlama, mobil yenileme token'ı, giriş hız sınırı | Vize | İncelemede |
-| 4 | Karakter ve mekân rehberleri | Vize | Sıradaki |
-| 5 | Masal sihirbazı ve metin üretimi (ilk gerçek LLM adaptörü, içerik güvenliği, kredi harcama) | Vize | Planlandı |
-| 6 | Görsel üretimi ve dosya depolama | Vize | Planlandı |
-| 7 | TTS ve masal okuyucu | Vize | Planlandı |
+| 4 | Karakter ve mekân rehberleri (6 hazır karakter, 6 mekân, sabit seed) | Vize | İncelemede |
+| 5 | Masal sihirbazı, üretim kuyruğu, içerik güvenliği, kredi harcama/iade, çocuğa göre kütüphane | Vize | İncelemede (gerçek LLM adaptörü bekliyor) |
+| 6 | Görsel üretimi ve dosya depolama (yerel disk; bible ile tutarlı prompt) | Vize | İncelemede (gerçek görsel adaptörü ve S3/R2 bekliyor) |
+| 7 | TTS ve kelime vurgulamalı masal okuyucu | Vize | İncelemede (gerçek TTS adaptörü bekliyor) |
 | 8 | Kütüphane, favoriler ve ebeveyn kilidi | Vize | Planlandı |
 | 9 | Özel/herkese açık masal, keşfet, denetim kuyruğu | Vize | Planlandı |
 | 10 | Yönetim paneli: kullanıcı, masal, kara liste, prompt, sağlayıcı yönetimi | Vize | Planlandı |

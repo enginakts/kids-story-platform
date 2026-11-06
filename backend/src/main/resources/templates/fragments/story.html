@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Bir çocuğun rafı: masallar yatay kayar -->
+<ul th:fragment="row(stories)" class="row">
+    <li th:each="s : ${stories}">
+        <a class="book" th:href="@{/app/stories/{id}(id=${s.id})}">
+            <figure>
+                <img th:if="${s.hasCover}" th:src="@{/app/stories/{id}/cover(id=${s.id})}" alt="" width="768" height="512" loading="lazy">
+                <span th:unless="${s.hasCover}" class="book-wait">Kapak hazırlanıyor</span>
+            </figure>
+            <strong th:text="${s.title}">Başlık</strong>
+            <span class="meta">
+                <span class="tag" th:text="${s.themeLabel}">Paylaşma</span>
+                <span th:replace="~{fragments/story :: status(${s.status})}"></span>
+            </span>
+        </a>
+    </li>
+</ul>
+
+<span th:fragment="status(status)" th:switch="${status.name()}" class="status">
+    <span th:case="'COMPLETED'" class="status-done">Hazır</span>
+    <span th:case="'FAILED'" class="status-failed">Üretilemedi</span>
+    <span th:case="*" class="status-wait"><span class="wait-dot" aria-hidden="true"></span>Hazırlanıyor</span>
+</span>
+</body>
+</html>

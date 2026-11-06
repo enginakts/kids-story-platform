@@ -3,22 +3,33 @@
 <head th:replace="~{fragments/layout :: head('Kayıt ol')}"></head>
 <body>
 <header th:replace="~{fragments/layout :: publicNav}"></header>
-<main class="page narrow">
-    <h1>Ebeveyn kaydı</h1>
-    <form th:action="@{/register}" th:object="${form}" method="post" class="form">
-        <label>Ad <input th:field="*{firstName}" required></label>
-        <p class="error" th:errors="*{firstName}"></p>
-        <label>Soyad <input th:field="*{lastName}" required></label>
-        <p class="error" th:errors="*{lastName}"></p>
-        <label>E-posta <input type="email" th:field="*{email}" autocomplete="email" required></label>
-        <p class="error" th:errors="*{email}"></p>
-        <label>Parola <input type="password" name="password" minlength="8" maxlength="72" autocomplete="new-password" required></label>
-        <p class="error" th:errors="*{password}"></p>
-        <label class="check"><input type="checkbox" name="consent" value="true" required>
-            18 yaşından büyük olduğumu ve çocuğum adına KVKK aydınlatma metnini onayladığımı kabul ediyorum.</label>
-        <p class="error" th:errors="*{consent}"></p>
-        <button class="button">Hesap oluştur</button>
-    </form>
+<main class="auth">
+    <section class="panel">
+        <h1>Ebeveyn hesabı</h1>
+        <p class="lead">Üç ücretsiz masal kredisiyle başlayın. Kart bilgisi istemiyoruz.</p>
+        <form th:action="@{/register}" th:object="${form}" method="post" class="form">
+            <div class="two">
+                <label>Ad <input th:field="*{firstName}" autocomplete="given-name" required></label>
+                <label>Soyad <input th:field="*{lastName}" autocomplete="family-name" required></label>
+            </div>
+            <p class="error" th:errors="*{firstName}"></p>
+            <p class="error" th:errors="*{lastName}"></p>
+            <label>E-posta <input type="email" th:field="*{email}" autocomplete="email" required></label>
+            <p class="error" th:errors="*{email}"></p>
+            <label>Parola <input type="password" name="password" minlength="8" maxlength="72" autocomplete="new-password" required aria-describedby="pw-hint"></label>
+            <small id="pw-hint">En az 8 karakter.</small>
+            <p class="error" th:errors="*{password}"></p>
+            <label class="check"><input type="checkbox" name="consent" value="true" required>
+                <span>18 yaşından büyük olduğumu ve çocuğum adına KVKK aydınlatma metnini onayladığımı kabul ediyorum.</span></label>
+            <p class="error" th:errors="*{consent}"></p>
+            <button class="button big">Hesap oluştur</button>
+        </form>
+        <p style="margin-top:20px">Hesabınız var mı? <a th:href="@{/login}">Giriş yapın</a></p>
+    </section>
+    <figure>
+        <svg class="art cloud" viewBox="0 0 120 60" aria-hidden="true"><use th:href="@{/img/art.svg} + '#cloud'"/></svg><svg class="art" viewBox="0 0 200 200" aria-hidden="true"><use th:href="@{/img/art.svg} + '#leo'"/></svg>
+        <figcaption>İlk üç masal bizden.</figcaption>
+    </figure>
 </main>
 </body>
 </html>
