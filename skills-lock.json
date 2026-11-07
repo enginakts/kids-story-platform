@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "animate": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/animate/SKILL.md",
+      "computedHash": "a909574f78e6196a8b76428b76e30f34a71a8fe367a22ee62f924b62478f03b6"
+    },
+    "emilkowalski-motion": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/emilkowalski-motion/SKILL.md",
+      "computedHash": "aae0a243bd8fb3ef2da24cef006b0017e35e6329ff03ccad560d0ff3a1c0cdef"
+    }
+  }
+}

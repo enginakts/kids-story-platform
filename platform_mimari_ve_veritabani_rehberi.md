@@ -1,6 +1,8 @@
 # 3-7 Yaş Yapay Zekâ Masal Platformu - Mimari, Veritabanı ve İlişki Şeması (Faz 1 MVP)
 
-Bu doküman; 3-7 yaş çocuklar için ebeveyn denetimli, tek seferlik ve etkileşimli masal platformunun **1. Etabı (MVP)** için optimize edilmiş 20 tabloluk veritabanı şemasını, sütun detaylarını, ilişkilerini ve PostgreSQL DDL kodlarını içerir.
+Bu doküman; 3-7 yaş çocuklar için ebeveyn denetimli, tek seferlik ve etkileşimli masal platformunun **1. Etabı (MVP)** için tasarlanan ilk 20 tablonun amacını, sütunlarını ve ilişkilerini Türkçe olarak açıklar.
+
+> **Durum:** Güncel ve bağlayıcı şema **29 tablodur** ve yalnızca Flyway dosyalarındadır (`backend/src/main/resources/db/migration`). Bu dokümanda DDL kodu yoktur. Bölüm 2 ve 3 ilk tasarımı anlatır; sonradan yapılan değişiklikler Bölüm 4'tedir. Sütun adlarında iki dil görünür: Türkçe ad açıklama içindir, parantez içindeki İngilizce ad veritabanındaki gerçek addır.
 
 
 ---
@@ -37,7 +39,7 @@ Bu doküman; 3-7 yaş çocuklar için ebeveyn denetimli, tek seferlik ve etkile�
 
 ### 👶 Modül 2: Çocuk Profili & İzolasyon
 * **`cocuk_profilleri (child_profiles)`:** Her çocuğun izole masal kitaplığı ve kişiselleştirme tercihleri.
-  * `id` [PK], `ebeveyn_id (parent_id)` [FK -> ebeveynler], `ad (name)`, `yas (age: 3-7)`, `cinsiyet (gender)`, `sevdigi_hayvanlar`, `sevdigi_renkler`, `ozel_ilgi_alanlari`, `uyku_saati (bedtime_hour)`, `avatar_url`, `aktif_mi`
+  * `id` [PK], `ebeveyn_id (parent_id)` [FK -> ebeveynler], `ad (name)`, `yas (age: 3-7)`, `cinsiyet (gender)`, `sevdigi_hayvanlar`, `sevdigi_renkler`, `ozel_ilgi_alanlari`, `uyku_saati (bedtime_hour)`, ~~`avatar_url`~~ (yerine `avatar_key`, bkz. Bölüm 4), `aktif_mi`
 * **`okuma_seanslari (child_reading_sessions)`:** Çocuğun masalı dinleme süresi ve tamamlama geçmişi.
   * `id` [PK], `cocuk_id (child_id)` [FK -> cocuk_profilleri], `masal_id (story_id)` [FK -> masallar], `dinleme_suresi_sn (duration_seconds)`, `tamamlandi_mi (is_completed)`, `seans_tarihi`
 
@@ -49,7 +51,7 @@ Bu doküman; 3-7 yaş çocuklar için ebeveyn denetimli, tek seferlik ve etkile�
 
 ### 📖 Modül 4: Masal ve Dallanma Motoru
 * **`masallar (stories)`:** Masalların ana kaydı (kesinlikle tek bir `cocuk_id`'ye bağlıdır).
-  * `id` [PK], `cocuk_id` [FK -> cocuk_profilleri], `ebeveyn_id` [FK -> ebeveynler], `ana_karakter_id` [FK -> karakter_rehberi], `ana_mekan_id` [FK -> mekan_rehberi], `baslik (title)`, `tema (theme)`, `masal_modu (SINGLE_SHOT / INTERACTIVE)`, `kisisellestirildi_mi`, `toplam_sahne_sayisi (4-6)`, `durum (PENDING / GENERATING / COMPLETED)`, `kapak_gorseli_url`, `saklama_son_tarih`, `favori_mi`
+  * `id` [PK], `cocuk_id` [FK -> cocuk_profilleri], `ebeveyn_id` [FK -> ebeveynler], `ana_karakter_id` [FK -> karakter_rehberi], `ana_mekan_id` [FK -> mekan_rehberi], `baslik (title)`, `tema (theme)`, `masal_modu (SINGLE_SHOT / INTERACTIVE)`, `kisisellestirildi_mi`, `toplam_sahne_sayisi (4-6)`, `durum (PENDING / GENERATING / COMPLETED)`, `kapak_gorseli_url`, `saklama_son_tarih`, ~~`favori_mi`~~ (kaldırıldı, yerine `story_favorites`, bkz. Bölüm 4)
 * **`masal_sahneleri (story_scenes)`:** 4-6 sahnelik metin, WebP görsel, MP3 ses ve kelime zaman damgaları.
   * `id` [PK], `masal_id` [FK -> masallar], `mekan_id` [FK -> mekan_rehberi], `sahne_sirasi`, `sahne_metni`, `ses_metni`, `gorsel_promptu`, `negatif_prompt`, `gorsel_url`, `ses_url`, `ses_suresi_sn`, `karaoke_zaman_damgalari (timestamps_json)`, `uretim_seed`
 * **`etkilesimli_dugumler (interactive_nodes)`:** Çocuğun masal akışını yönettiği A/B karar noktaları.
@@ -92,7 +94,7 @@ Bu doküman; 3-7 yaş çocuklar için ebeveyn denetimli, tek seferlik ve etkile�
 * `kredi_cuzdanlari` ──▶ `kredi_hareketleri` (1-e-Çok, `cuzdan_id`)
 * `ebeveynler` ──▶ `ebeveyn_kilidi_kayitlari` (1-e-Çok, `ebeveyn_id`)
 * `cocuk_profilleri` ──▶ `masallar` (1-e-Çok, `cocuk_id` - **Veri İzolasyonu**)
-* `cocuk_profilleri` ──▶ `karakter_rehberi` (1-e-Çok, `cocuk_id`)
+* `ebeveynler` ──▶ `karakter_rehberi` (1-e-Çok, `parent_id`; Adım 4'te `cocuk_id` yerine geldi, bkz. Bölüm 4)
 * `cocuk_profilleri` ──▶ `okuma_seanslari` (1-e-Çok, `cocuk_id`)
 * `karakter_rehberi` ──▶ `masallar` (1-e-Çok, `ana_karakter_id` - **Karakter Tutarlılığı**)
 * `mekan_rehberi` ──▶ `masallar` (1-e-Çok, `ana_mekan_id` - **Mekân Tutarlılığı**)
@@ -134,3 +136,14 @@ Güncel ve bağlayıcı şema Flyway dosyalarıdır: `backend/src/main/resources
 | `parent_subscriptions` | `end_date` boş olabilir | Süresiz ücretsiz plan |
 
 Ücretli planların fiyatı henüz belirlenmediği için `STANDARD_MONTHLY` ve `FAMILY_VIP` kapalı başlar.
+
+### Adım 4 değişiklikleri (V4, uygulandı)
+
+| Tablo | Değişiklik | Neden |
+| :--- | :--- | :--- |
+| `character_bibles` | `parent_id` eklendi (FK, `parents`); `child_id` kaldırıldı | Karakter ebeveyne aittir, kardeşler paylaşabilir. Masallar yine tek çocuğa bağlıdır, veri izolasyonu `stories.child_id` üzerinden korunur |
+| `character_bibles` | `is_active` eklendi | Masalda kullanılmış karakter silinemez; pasife alınır |
+| `character_bibles` | `species_code`, `color_code`, `outfit_code`, `accessory_code` eklendi | Ebeveyn görünümü listelerden seçer; seçimler düzenleme için saklanır. `visual_anchor_tokens` bu kodlardan sistemce üretilir |
+| `character_bibles` | `chk_character_owner` kısıtı | Sistem şablonunun sahibi yoktur (`parent_id` boş), ebeveyn karakterinin sahibi vardır |
+| `system_settings` | `character.max_per_parent` = 20 | Ebeveyn başına karakter sınırı koddan değil ayardan okunur |
+| `location_bibles` | Değişmedi | Mekânlar yalnızca sistem şablonlarıdır, ebeveyn mekân oluşturmaz |

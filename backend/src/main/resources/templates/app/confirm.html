@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Silme gibi geri alınması zor işlemlerden önce onay ister. -->
+<script th:fragment="script">
+document.addEventListener('submit', function (e) {
+    var message = e.target.getAttribute('data-confirm');
+    if (message && !window.confirm(message)) { e.preventDefault(); }
+});
+</script>
+</body>
+</html>

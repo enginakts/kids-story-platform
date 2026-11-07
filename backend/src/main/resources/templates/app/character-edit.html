@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Karakteri düzenle')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<header th:replace="~{fragments/layout :: appNav(${user.displayName}, 'characters')}"></header>
+<main id="main" class="narrow">
+    <a class="btn btn-ghost btn-sm" th:href="@{/app/characters}"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>Karakterler</a>
+    <section class="card">
+        <h1 style="font-size:var(--text-2xl)">Karakteri düzenle</h1>
+        <form th:action="@{/app/characters/{id}(id=${characterId})}" th:object="${form}" method="post" class="form">
+            <th:block th:replace="~{fragments/forms :: character-fields}"></th:block>
+            <button class="btn btn-primary" type="submit">Kaydet</button>
+        </form>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -2,20 +2,26 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Yönetim')}"></head>
 <body>
-<header class="nav">
-    <span class="brand">Masal Dünyası Yönetim</span>
-    <nav>
-        <span th:text="${user.displayName}">Yönetici</span>
-        <form th:action="@{/admin/logout}" method="post"><button class="link">Çıkış</button></form>
-    </nav>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<header class="site-header">
+    <div class="header-inner">
+        <span class="brand"><span class="brand-mark" aria-hidden="true"><svg class="icon"><use href="#i-shield"/></svg></span>Yönetim</span>
+        <div class="header-user">
+            <span class="user-name" th:text="${user.displayName}">Yönetici</span>
+            <form th:action="@{/admin/logout}" method="post"><button class="btn btn-ghost btn-sm" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg>Çıkış</button></form>
+        </div>
+    </div>
 </header>
-<main class="page">
+<main id="main">
     <h1>Yönetim paneli</h1>
-    <ul class="cards">
-        <li class="card"><span>Ebeveyn</span><strong th:text="${parentCount}">0</strong></li>
-        <li class="card"><span>Masal</span><strong th:text="${storyCount}">0</strong></li>
-        <li class="card"><span>Onay bekleyen</span><strong th:text="${pendingCount}">0</strong></li>
-    </ul>
+    <div class="grid">
+        <div class="card stat"><div class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg></div>
+            <div><div class="stat-value" th:text="${parentCount}">0</div><div class="stat-label">ebeveyn</div></div></div>
+        <div class="card stat"><div class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg></div>
+            <div><div class="stat-value" th:text="${storyCount}">0</div><div class="stat-label">masal</div></div></div>
+        <div class="card stat"><div class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></div>
+            <div><div class="stat-value" th:text="${pendingCount}">0</div><div class="stat-label">onay bekleyen masal</div></div></div>
+    </div>
 </main>
 </body>
 </html>

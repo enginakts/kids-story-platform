@@ -4,6 +4,7 @@ import com.kidstory.backend.dto.ForgotPasswordRequest;
 import com.kidstory.backend.dto.ParentRegisterRequest;
 import com.kidstory.backend.dto.ResetPasswordRequest;
 import com.kidstory.backend.exception.ConflictException;
+import com.kidstory.backend.exception.EmailDeliveryException;
 import com.kidstory.backend.exception.InvalidTokenException;
 import com.kidstory.backend.security.AppUser;
 import com.kidstory.backend.service.AccountService;
@@ -73,7 +74,11 @@ public class AuthPageController {
 
     @PostMapping("/app/verify-email/resend")
     String resendVerification(@AuthenticationPrincipal AppUser user) {
-        accounts.sendVerification(user.id());
+        try {
+            accounts.sendVerification(user.id());
+        } catch (EmailDeliveryException e) {
+            return "redirect:/app?verificationFailed";
+        }
         return "redirect:/app?verificationSent";
     }
 

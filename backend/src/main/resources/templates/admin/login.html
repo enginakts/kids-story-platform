@@ -2,15 +2,19 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Yönetici girişi')}"></head>
 <body>
-<main class="page narrow">
-    <h1>Yönetici girişi</h1>
-    <p class="error" th:if="${param.error}">Bilgiler hatalı.</p>
-    <p class="error" th:if="${param.locked}">Çok fazla hatalı deneme yapıldı. Lütfen 15 dakika sonra tekrar deneyin.</p>
-    <form th:action="@{/admin/login}" method="post" class="form">
-        <label>Kullanıcı adı veya e-posta <input name="username" autocomplete="username" required></label>
-        <label>Parola <input type="password" name="password" autocomplete="current-password" required></label>
-        <button class="button">Giriş yap</button>
-    </form>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<main id="main" class="auth">
+    <div class="card">
+        <span class="stat-icon" aria-hidden="true" style="margin-bottom:var(--space-4)"><svg class="icon"><use href="#i-shield"/></svg></span>
+        <h1>Yönetici girişi</h1>
+        <p class="alert alert-danger" role="alert" th:if="${param.error}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>Bilgiler hatalı.</p>
+        <p class="alert alert-danger" role="alert" th:if="${param.locked}"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>Çok fazla hatalı deneme yapıldı. Lütfen 15 dakika sonra tekrar deneyin.</p>
+        <form th:action="@{/admin/login}" method="post" class="form">
+            <div class="field"><label for="username">Kullanıcı adı veya e-posta</label><input id="username" name="username" autocomplete="username" required></div>
+            <div class="field"><label for="password">Parola</label><input id="password" type="password" name="password" autocomplete="current-password" required></div>
+            <button class="btn btn-primary btn-block" type="submit">Giriş yap</button>
+        </form>
+    </div>
 </main>
 </body>
 </html>

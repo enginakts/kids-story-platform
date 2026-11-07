@@ -12,7 +12,8 @@ Proje tek bir Spring Boot uygulamasıdır. Web arayüzü Thymeleaf ile sunucuda 
 | Web | Thymeleaf | `/`, `/app/**`, `/admin/**`; oturum ve CSRF korumalı |
 | Mobil | REST API | `/api/v1/**`; JWT, oturumsuz. Mobil istemci sonraki aşamada |
 | Veritabanı | PostgreSQL 16 | Şema yalnızca Flyway ile yönetilir |
-| LLM | Hibrit, değiştirilebilir | `AiRouter`, `ai_providers_config` öncelik sırasıyla sağlayıcı dener |
+| Masal metni | Trendyol LLM (`Trendyol-LLM-8B-T1`), Featherless AI | `AiRouter`, `ai_providers_config` (`LLM`) öncelik sırasıyla sağlayıcı dener |
+| Sahnelere bölme | Google Gemini Flash (`gemini-3.6-flash`) | Aynı yönlendirici, `SCENE` rolü; JSON şemalı çıktı |
 | Görsel ve TTS | Dış API | `ImageClient`, `TtsClient` arayüzleri; şu an yalnızca taslak adaptörler var |
 | Üretim kuyruğu | Veritabanı kuyruğu | `generation_jobs`; ücretsiz katmanda Redis gerektirmez |
 | Giriş | E-posta ve parola | Ebeveyn ve yönetici ayrı tablo, ayrı giriş |
@@ -45,7 +46,7 @@ kids-story-platform/
 └── adim_adim_gelistirme_plani.md              # Yol haritası
 ```
 
-`exception/` ve `service/ai/` eski yapıya eklenen iki yeni klasördür. Web arayüzü Thymeleaf ile sunucuda üretildiği için ayrı bir React `frontend/` uygulaması yoktur; sayfalar `backend/src/main/resources/templates` altındadır.
+`exception/` ve `service/ai/` eski yapıya eklenen iki yeni klasördür. Arayüz kuralları [tasarim_sistemi.md](./tasarim_sistemi.md) dosyasındadır. Web arayüzü Thymeleaf ile sunucuda üretildiği için ayrı bir React `frontend/` uygulaması yoktur; sayfalar `backend/src/main/resources/templates` altındadır.
 
 Şema `backend/src/main/resources/db/migration` altındadır ve 29 tablodan oluşur. Tablo açıklamaları için [platform_mimari_ve_veritabani_rehberi.md](./platform_mimari_ve_veritabani_rehberi.md) dosyasına bakın.
 
@@ -100,6 +101,8 @@ Testler Docker olmadan gerçek PostgreSQL üzerinde çalışır.
 
 Geliştirmede e-posta gönderilmez; doğrulama ve sıfırlama bağlantıları konsol log'una yazılır.
 
+Masal üretimi iki aşamalıdır: metni **Trendyol LLM** (Featherless AI) yazar, **Gemini Flash** sahnelere böler. Üretimde `FEATHERLESS_API_KEY` ve `GEMINI_API_KEY` zorunludur. Geliştirmede anahtarı olmayan aşama için sabit bir taslak kullanılır. Yerelde gerçek sağlayıcılarla denemek için uygulamayı başlatmadan önce PowerShell'de: `$env:FEATHERLESS_API_KEY="..."; $env:GEMINI_API_KEY="..."`.
+
 İlk yönetici için `ADMIN_USERNAME`, `ADMIN_EMAIL` ve `ADMIN_PASSWORD` verilir. Taslak yapay zekâ adaptörleri `prod` profilinde yüklenmez.
 
 ## REST API
@@ -116,6 +119,14 @@ Geliştirmede e-posta gönderilmez; doğrulama ve sıfırlama bağlantıları ko
 | POST | `/api/v1/account/verify-email/resend` | Doğrulama bağlantısını yeniden gönderir |
 | GET, POST | `/api/v1/children` | Çocukları listeler, ekler |
 | PUT, DELETE | `/api/v1/children/{id}` | Çocuğu günceller, pasife alır |
+| GET, POST | `/api/v1/characters` | Ebeveynin karakterleri ve hazır karakterler; yeni karakter |
+| PUT, DELETE | `/api/v1/characters/{id}` | Karakteri günceller, pasife alır |
+| GET | `/api/v1/characters/options` | Tür, renk, kıyafet ve aksesuar seçenekleri |
+| GET | `/api/v1/locations` | Sistem mekân şablonları |
+| POST | `/api/v1/stories` | Masal ister (1 kredi); 202 döner, masal arka planda hazırlanır |
+| GET | `/api/v1/stories` | Ebeveynin masalları ve durumları |
+| GET | `/api/v1/stories/{id}` | Masalın sahneleri |
+| GET | `/api/v1/stories/options` | Tema, anlatım biçimi ve uzunluk seçenekleri |
 
 Ebeveyn kimliği her zaman token'dan okunur, istekten alınmaz. Erişim token'ı 15 dakika, yenileme token'ı 30 gün geçerlidir.
 

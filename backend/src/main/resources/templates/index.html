@@ -2,11 +2,67 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Ana sayfa')}"></head>
 <body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
 <header th:replace="~{fragments/layout :: publicNav}"></header>
-<main class="page hero">
-    <h1>Çocuğunuza özel, resimli ve sesli masallar</h1>
-    <p>3-7 yaş için güvenli, eğitici ve ebeveyn denetimli masal platformu.</p>
-    <a class="button" th:href="@{/register}">Ücretsiz başla</a>
+<main id="main">
+    <section class="hero">
+        <div>
+            <span class="eyebrow"><svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg>3-7 yaş için</span>
+            <h1>Çocuğunuza özel, resimli ve sesli masallar</h1>
+            <p class="lead">Çocuğunuzu, sevdiği karakterleri ve öğrenmesini istediğiniz değerleri seçin. Masal Dünyası her seferinde ona özel, 4-6 sahnelik güvenli bir masal hazırlar.</p>
+            <div class="hero-actions">
+                <a class="btn btn-primary" th:href="@{/register}">Ücretsiz başla</a>
+                <a class="btn btn-secondary" th:href="@{/explore}">Masalları keşfet</a>
+            </div>
+        </div>
+        <svg class="hero-art" viewBox="0 0 440 340" role="img" aria-label="Ay ve yıldızların altında açık bir masal kitabı">
+            <circle class="art-moon" cx="330" cy="80" r="46"/><circle class="art-moon-cut" cx="350" cy="68" r="40"/>
+            <path class="art-pink" d="M90 60l6 14 14 6-14 6-6 14-6-14-14-6 14-6z"/>
+            <path class="art-lavender" d="M210 30l4 9 9 4-9 4-4 9-4-9-9-4 9-4z"/>
+            <path class="art-mint" d="M390 170l4 9 9 4-9 4-4 9-4-9-9-4 9-4z"/>
+            <ellipse class="art-shadow" cx="220" cy="300" rx="170" ry="18"/>
+            <path class="art-lavender art-page" d="M220 130c-40-26-96-30-150-18v170c54-12 110-8 150 18z"/>
+            <path class="art-cream art-page" d="M220 130c40-26 96-30 150-18v170c-54-12-110-8-150 18z"/>
+            <path class="art-lines" d="M100 160c30-6 62-4 92 6M100 190c30-6 62-4 92 6M100 220c30-6 62-4 92 6"/>
+            <ellipse class="art-peach" cx="276" cy="150" rx="9" ry="22"/><ellipse class="art-peach" cx="314" cy="150" rx="9" ry="22"/>
+            <circle class="art-peach" cx="295" cy="190" r="34"/>
+            <circle class="art-ink" cx="284" cy="184" r="4"/><circle class="art-ink" cx="306" cy="184" r="4"/>
+            <path class="art-smile" d="M286 198c6 6 12 6 18 0"/>
+            <circle class="art-blush" cx="276" cy="198" r="5"/><circle class="art-blush" cx="314" cy="198" r="5"/>
+        </svg>
+    </section>
+
+    <section class="section" aria-labelledby="features-title">
+        <h2 id="features-title">Her masal ona özel</h2>
+        <div class="grid-3">
+            <article class="card feature">
+                <div class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg></div>
+                <h3>Kişiselleştirilmiş</h3>
+                <p>Kahramanı, yan karakterleri, mekânı ve temayı siz seçersiniz: dostluk, paylaşma, cesaret, doğa sevgisi.</p>
+            </article>
+            <article class="card feature">
+                <div class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-image"/></svg></div>
+                <h3>Resimli sahneler</h3>
+                <p>Her sahne için yumuşak suluboya bir görsel. Karakter, sahneden sahneye aynı görünür.</p>
+            </article>
+            <article class="card feature">
+                <div class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-volume"/></svg></div>
+                <h3>Sesli anlatım</h3>
+                <p>Masal sıcak bir sesle okunur; okumayı henüz bilmeyen çocuklar da kolayca takip eder.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="section trust" aria-labelledby="trust-title">
+        <h2 id="trust-title">Önce güvenlik</h2>
+        <ul>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>Korku, şiddet ve ayrılık temaları masallara giremez; her metin denetimden geçer.</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>Ayarlar ve masal oluşturma yalnızca ebeveyn tarafından yapılır.</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>Çocuğunuzdan soyad veya fotoğraf istemeyiz; takma ad yeterlidir.</span></li>
+        </ul>
+    </section>
 </main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 </body>
 </html>

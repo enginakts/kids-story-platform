@@ -2,6 +2,7 @@ package com.kidstory.backend.service;
 
 import com.kidstory.backend.entity.AccountToken;
 import com.kidstory.backend.entity.Parent;
+import com.kidstory.backend.exception.EmailDeliveryException;
 import com.kidstory.backend.exception.InvalidTokenException;
 import com.kidstory.backend.repository.AccountTokenRepository;
 import com.kidstory.backend.repository.ParentRepository;
@@ -84,9 +85,14 @@ public class AccountService {
                 .filter(Parent::isActive)
                 .ifPresent(parent -> {
                     String raw = issue(parent, AccountToken.Type.PASSWORD_RESET, RESET_TTL);
-                    email.send(parent.getEmail(), "Masal Dünyası: parola sıfırlama",
-                            "Parolanızı sıfırlamak için bağlantıyı açın:\n" + baseUrl + "/reset-password?token=" + raw
-                                    + "\n\nBağlantı 1 saat geçerlidir. Bu isteği siz yapmadıysanız e-postayı yok sayın.");
+                    try {
+                        email.send(parent.getEmail(), "Masal Dünyası: parola sıfırlama",
+                                "Parolanızı sıfırlamak için bağlantıyı açın:\n" + baseUrl + "/reset-password?token=" + raw
+                                        + "\n\nBağlantı 1 saat geçerlidir. Bu isteği siz yapmadıysanız e-postayı yok sayın.");
+                    } catch (EmailDeliveryException e) {
+                        // Yanıt değişmez; aksi hâlde hesabın kayıtlı olduğu anlaşılırdı.
+                        log.warn("Parola sıfırlama e-postası gönderilemedi (parentId={})", parent.getId());
+                    }
                 });
     }
 

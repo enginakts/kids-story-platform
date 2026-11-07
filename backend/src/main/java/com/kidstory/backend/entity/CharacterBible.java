@@ -10,18 +10,32 @@ public class CharacterBible extends CreatedEntity {
 
     /** Boşsa herkesin kullanabildiği sistem şablonudur. */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "child_id")
-    private ChildProfile child;
+    @JoinColumn(name = "parent_id")
+    private Parent parent;
 
     @Column(nullable = false, length = 100)
     private String name;
 
+    /** Türkçe tür adı (ör. "Tavşan"); arayüzde gösterilir. */
     @Column(nullable = false, length = 50)
     private String species;
+
+    @Column(name = "species_code", length = 30)
+    private String speciesCode;
+
+    @Column(name = "color_code", length = 30)
+    private String colorCode;
+
+    @Column(name = "outfit_code", length = 30)
+    private String outfitCode;
+
+    @Column(name = "accessory_code", length = 30)
+    private String accessoryCode;
 
     @Column(name = "personality_traits", columnDefinition = "TEXT")
     private String personalityTraits;
 
+    /** Görsel üretimde her sahneye eklenen İngilizce tanım. Ebeveynden alınmaz, sistemce üretilir. */
     @Column(name = "visual_anchor_tokens", nullable = false, columnDefinition = "TEXT")
     private String visualAnchorTokens;
 
@@ -39,4 +53,7 @@ public class CharacterBible extends CreatedEntity {
 
     @Column(name = "is_system_preset", nullable = false)
     private boolean systemPreset;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
 }

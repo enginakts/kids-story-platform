@@ -1,6 +1,7 @@
 package com.kidstory.backend.exception;
 
 import com.kidstory.backend.controller.ApiController;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -31,9 +32,31 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
     }
 
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    ProblemDetail concurrent() {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "İşlem aynı anda başka bir istekle çakıştı. Lütfen tekrar deneyin.");
+    }
+
+    @ExceptionHandler(EmailDeliveryException.class)
+    ProblemDetail emailDelivery(EmailDeliveryException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, e.getMessage());
+    }
+
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    ProblemDetail emailNotVerified(EmailNotVerifiedException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
+    }
+
     @ExceptionHandler(InvalidTokenException.class)
     ProblemDetail invalidToken(InvalidTokenException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(FieldValidationException.class)
+    ProblemDetail fieldRule(FieldValidationException e) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Girilen bilgiler geçersiz");
+        body.setProperty("errors", Map.of(e.getField(), e.getMessage()));
+        return body;
     }
 
     @ExceptionHandler(LockedException.class)

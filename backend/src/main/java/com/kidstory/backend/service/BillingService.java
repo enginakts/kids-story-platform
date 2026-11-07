@@ -4,7 +4,9 @@ import com.kidstory.backend.entity.CreditTransaction;
 import com.kidstory.backend.entity.CreditWallet;
 import com.kidstory.backend.entity.Parent;
 import com.kidstory.backend.entity.ParentSubscription;
+import com.kidstory.backend.entity.Story;
 import com.kidstory.backend.entity.SubscriptionPlan;
+import com.kidstory.backend.exception.InsufficientCreditsException;
 import com.kidstory.backend.repository.CreditTransactionRepository;
 import com.kidstory.backend.repository.CreditWalletRepository;
 import com.kidstory.backend.repository.ParentSubscriptionRepository;
@@ -40,17 +42,46 @@ public class BillingService {
         wallet.setInteractiveCreditBalance(free.getInteractiveCredits());
         wallets.save(wallet);
 
-        CreditTransaction transaction = new CreditTransaction();
-        transaction.setWallet(wallet);
-        transaction.setTransactionType(CreditTransaction.Type.WELCOME_BONUS);
-        transaction.setStoryCreditAmount(free.getMonthlyStoryCredits());
-        transaction.setInteractiveCreditAmount(free.getInteractiveCredits());
-        transaction.setDescription("Hoş geldin kredileri");
-        transactions.save(transaction);
+        record(wallet, null, CreditTransaction.Type.WELCOME_BONUS, free.getMonthlyStoryCredits(),
+                free.getInteractiveCredits(), "Hoş geldin kredileri");
     }
 
     @Transactional(readOnly = true)
     public Optional<CreditWallet> wallet(Long parentId) {
         return wallets.findByParentId(parentId);
+    }
+
+    /**
+     * Masal için 1 kredi harcar. Cüzdan @Version ile korunur: aynı anda iki istek gelirse
+     * biri OptimisticLockingFailureException alır ve kredi iki kez harcanmaz.
+     */
+    @Transactional
+    public void spendStoryCredit(Long parentId, Story story) {
+        CreditWallet wallet = wallets.findByParentId(parentId).orElseThrow(InsufficientCreditsException::new);
+        if (wallet.getStoryCreditBalance() < 1) {
+            throw new InsufficientCreditsException();
+        }
+        wallet.setStoryCreditBalance(wallet.getStoryCreditBalance() - 1);
+        record(wallet, story, CreditTransaction.Type.STORY_SPEND, -1, 0, "Masal oluşturma");
+    }
+
+    /** Üretim kalıcı olarak başarısız olursa harcanan kredi iade edilir. */
+    @Transactional
+    public void refundStoryCredit(Long parentId, Story story) {
+        CreditWallet wallet = wallets.findByParentId(parentId).orElseThrow();
+        wallet.setStoryCreditBalance(wallet.getStoryCreditBalance() + 1);
+        record(wallet, story, CreditTransaction.Type.REFUND, 1, 0, "Masal oluşturulamadı, kredi iadesi");
+    }
+
+    private void record(CreditWallet wallet, Story story, CreditTransaction.Type type, int storyAmount,
+                        int interactiveAmount, String description) {
+        CreditTransaction transaction = new CreditTransaction();
+        transaction.setWallet(wallet);
+        transaction.setStory(story);
+        transaction.setTransactionType(type);
+        transaction.setStoryCreditAmount(storyAmount);
+        transaction.setInteractiveCreditAmount(interactiveAmount);
+        transaction.setDescription(description);
+        transactions.save(transaction);
     }
 }

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Yeni masal')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<header th:replace="~{fragments/layout :: appNav(${user.displayName}, 'library')}"></header>
+<main id="main" class="wizard">
+    <h1>Yeni masal</h1>
+    <p class="lead">Seçimlerinizi yapın; masal birkaç saniye içinde hazırlanır. <span th:if="${wallet}" th:text="'Kalan masal krediniz: ' + ${wallet.storyCreditBalance}">Kalan masal krediniz: 3</span></p>
+
+    <div class="banner" th:unless="${emailVerified}" role="alert">
+        <span>Masal oluşturmak için önce e-posta adresinizi doğrulayın.</span>
+        <form th:action="@{/app/verify-email/resend}" method="post"><button class="btn btn-ghost btn-sm" type="submit">
+            <svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>Bağlantıyı yeniden gönder</button></form>
+    </div>
+    <p class="alert alert-danger" role="alert" th:if="${formError}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span th:text="${formError}"></span></p>
+
+    <div class="empty" th:if="${#lists.isEmpty(children)}">
+        <svg class="icon icon-lg" aria-hidden="true"><use href="#i-users"/></svg>
+        <h2>Önce bir çocuk profili ekleyin</h2>
+        <p>Masallar çocuğunuzun yaşına göre hazırlanır.</p>
+        <a class="btn btn-primary" th:href="@{/app/children}">Çocuk ekle</a>
+    </div>
+
+    <form th:unless="${#lists.isEmpty(children)}" th:action="@{/app/stories}" th:object="${form}" method="post" class="form wizard-form">
+        <fieldset class="card step">
+            <legend><span class="step-number" aria-hidden="true">1</span>Masal kimin için?</legend>
+            <div class="choice-grid">
+                <label class="choice" th:each="c : ${children}">
+                    <input type="radio" th:field="*{childId}" th:value="${c.id}" required>
+                    <span th:class="'avatar avatar-sm avatar-' + ${c.id % 6}" aria-hidden="true" th:text="${#strings.substring(c.name, 0, 1)}">A</span>
+                    <span><strong th:text="${c.name}">Ada</strong><br><span class="muted" th:text="${c.age} + ' yaş'">4 yaş</span></span>
+                </label>
+            </div>
+            <p th:replace="~{fragments/forms :: error('childId')}"></p>
+            <label class="check" style="margin-top:var(--space-4)">
+                <input type="checkbox" th:field="*{includeChild}">
+                <span>Çocuğum da masalda yer alsın <span class="hint" style="display:block">Adı yapay zekâya gönderilmez; masal hazırlandıktan sonra eklenir.</span></span>
+            </label>
+        </fieldset>
+
+        <fieldset class="card step">
+            <legend><span class="step-number" aria-hidden="true">2</span>Kahramanlar</legend>
+            <p class="field-label">Ana karakter <span class="req" aria-hidden="true">*</span></p>
+            <div class="choice-grid">
+                <label class="choice" th:each="c : ${own}">
+                    <input type="radio" th:field="*{primaryCharacterId}" th:value="${c.id}" required>
+                    <span class="avatar avatar-sm swatch" aria-hidden="true" th:style="'--swatch:' + ${c.colorHex}" th:text="${#strings.substring(c.name, 0, 1)}">P</span>
+                    <span><strong th:text="${c.name}">Pıtırcık</strong><br><span class="muted" th:text="${c.species}">Tavşan</span></span>
+                </label>
+                <label class="choice" th:each="c : ${presets}">
+                    <input type="radio" th:field="*{primaryCharacterId}" th:value="${c.id}" required>
+                    <span th:class="'avatar avatar-sm avatar-' + ${c.id % 6}" aria-hidden="true" th:text="${#strings.substring(c.name, 0, 1)}">L</span>
+                    <span><strong th:text="${c.name}">Leo</strong><br><span class="muted" th:text="${c.species}">Yavru Aslan</span></span>
+                </label>
+            </div>
+            <p th:replace="~{fragments/forms :: error('primaryCharacterId')}"></p>
+            <p class="field-label" style="margin-top:var(--space-5)">Yan karakterler <span class="hint" style="display:inline">(isteğe bağlı, en fazla 2)</span></p>
+            <div class="choice-grid">
+                <label class="choice" th:each="c : ${own}">
+                    <input type="checkbox" th:field="*{sideCharacterIds}" th:value="${c.id}">
+                    <span th:text="${c.name}">Pıtırcık</span>
+                </label>
+                <label class="choice" th:each="c : ${presets}">
+                    <input type="checkbox" th:field="*{sideCharacterIds}" th:value="${c.id}">
+                    <span th:text="${c.name}">Leo</span>
+                </label>
+            </div>
+            <p th:replace="~{fragments/forms :: error('sideCharacterIds')}"></p>
+            <p class="hint" style="margin-top:var(--space-3)">Kendi karakterinizi <a th:href="@{/app/characters}">Karakterler</a> sayfasında oluşturabilirsiniz.</p>
+        </fieldset>
+
+        <fieldset class="card step">
+            <legend><span class="step-number" aria-hidden="true">3</span>Nerede ve ne hakkında?</legend>
+            <p class="field-label">Mekân <span class="req" aria-hidden="true">*</span></p>
+            <div class="choice-grid">
+                <label class="choice" th:each="l : ${locations}">
+                    <input type="radio" th:field="*{locationId}" th:value="${l.id}" required>
+                    <span class="stat-icon" aria-hidden="true" style="width:40px;height:40px"><svg class="icon"><use href="#i-map-pin"/></svg></span>
+                    <span><strong th:text="${l.name}">Çiçekli Orman</strong><br><span class="muted" th:text="${l.environmentType}">Orman</span></span>
+                </label>
+            </div>
+            <p th:replace="~{fragments/forms :: error('locationId')}"></p>
+            <p class="field-label" style="margin-top:var(--space-5)">Tema <span class="req" aria-hidden="true">*</span></p>
+            <div class="choice-grid choice-grid-sm">
+                <label class="choice" th:each="o : ${options.themes}">
+                    <input type="radio" th:field="*{theme}" th:value="${o.code}" required><span th:text="${o.label}">Paylaşma</span>
+                </label>
+            </div>
+            <p th:replace="~{fragments/forms :: error('theme')}"></p>
+        </fieldset>
+
+        <fieldset class="card step">
+            <legend><span class="step-number" aria-hidden="true">4</span>Nasıl anlatılsın?</legend>
+            <p class="field-label">Anlatım biçimi</p>
+            <div class="choice-grid choice-grid-sm">
+                <label class="choice" th:each="o : ${options.narrationStyles}">
+                    <input type="radio" th:field="*{narrationStyle}" th:value="${o.code}" required><span th:text="${o.label}">Sıcak</span>
+                </label>
+            </div>
+            <p class="field-label" style="margin-top:var(--space-5)">Uzunluk</p>
+            <div class="choice-grid choice-grid-sm">
+                <label class="choice" th:each="o : ${options.lengths}">
+                    <input type="radio" th:field="*{length}" th:value="${o.code}" required><span th:text="${o.label}">Orta</span>
+                </label>
+            </div>
+        </fieldset>
+
+        <div class="wizard-submit">
+            <button class="btn btn-primary" type="submit" th:disabled="${!emailVerified or (wallet != null and wallet.storyCreditBalance < 1)}">
+                <svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg>Masalı oluştur (1 kredi)</button>
+            <p class="hint">Masal oluşturulamazsa krediniz otomatik iade edilir.</p>
+        </div>
+    </form>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

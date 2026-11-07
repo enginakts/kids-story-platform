@@ -2,23 +2,44 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Kayıt ol')}"></head>
 <body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
 <header th:replace="~{fragments/layout :: publicNav}"></header>
-<main class="page narrow">
-    <h1>Ebeveyn kaydı</h1>
-    <form th:action="@{/register}" th:object="${form}" method="post" class="form">
-        <label>Ad <input th:field="*{firstName}" required></label>
-        <p class="error" th:errors="*{firstName}"></p>
-        <label>Soyad <input th:field="*{lastName}" required></label>
-        <p class="error" th:errors="*{lastName}"></p>
-        <label>E-posta <input type="email" th:field="*{email}" autocomplete="email" required></label>
-        <p class="error" th:errors="*{email}"></p>
-        <label>Parola <input type="password" name="password" minlength="8" maxlength="72" autocomplete="new-password" required></label>
-        <p class="error" th:errors="*{password}"></p>
-        <label class="check"><input type="checkbox" name="consent" value="true" required>
-            18 yaşından büyük olduğumu ve çocuğum adına KVKK aydınlatma metnini onayladığımı kabul ediyorum.</label>
-        <p class="error" th:errors="*{consent}"></p>
-        <button class="button">Hesap oluştur</button>
-    </form>
+<main id="main" class="auth">
+    <div class="card">
+        <h1>Ebeveyn hesabı oluşturun</h1>
+        <p class="muted">3 masal ve 1 etkileşimli masal hediye.</p>
+        <form th:action="@{/register}" th:object="${form}" method="post" class="form" novalidate>
+            <div class="form-row">
+                <div class="field">
+                    <label for="firstName">Ad</label>
+                    <input id="firstName" th:field="*{firstName}" autocomplete="given-name" required th:attr="aria-invalid=${#fields.hasErrors('firstName')}">
+                    <p th:replace="~{fragments/forms :: error('firstName')}"></p>
+                </div>
+                <div class="field">
+                    <label for="lastName">Soyad</label>
+                    <input id="lastName" th:field="*{lastName}" autocomplete="family-name" required th:attr="aria-invalid=${#fields.hasErrors('lastName')}">
+                    <p th:replace="~{fragments/forms :: error('lastName')}"></p>
+                </div>
+            </div>
+            <div class="field">
+                <label for="email">E-posta</label>
+                <input id="email" type="email" th:field="*{email}" autocomplete="email" required th:attr="aria-invalid=${#fields.hasErrors('email')}">
+                <p th:replace="~{fragments/forms :: error('email')}"></p>
+            </div>
+            <div class="field">
+                <label for="password">Parola</label>
+                <input id="password" type="password" name="password" minlength="8" maxlength="72" autocomplete="new-password" required aria-describedby="password-hint">
+                <p class="hint" id="password-hint">En az 8 karakter.</p>
+                <p th:replace="~{fragments/forms :: error('password')}"></p>
+            </div>
+            <label class="check"><input type="checkbox" name="consent" value="true" required>
+                <span>18 yaşından büyük olduğumu ve çocuğum adına KVKK aydınlatma metnini onayladığımı kabul ediyorum.</span></label>
+            <p th:replace="~{fragments/forms :: error('consent')}"></p>
+            <button class="btn btn-primary btn-block" type="submit">Hesap oluştur</button>
+        </form>
+        <p class="auth-foot">Hesabınız var mı? <a th:href="@{/login}">Giriş yapın</a></p>
+    </div>
 </main>
 </body>
 </html>

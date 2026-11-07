@@ -2,25 +2,56 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Çocuklarım')}"></head>
 <body>
-<header th:replace="~{fragments/layout :: appNav(${user.displayName})}"></header>
-<main class="page">
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<header th:replace="~{fragments/layout :: appNav(${user.displayName}, 'children')}"></header>
+<main id="main">
     <h1>Çocuklarım</h1>
-    <ul class="cards">
-        <li class="card" th:each="child : ${children}">
-            <strong th:text="${child.name}">Ad</strong>
-            <span th:text="${child.age} + ' yaş'">4 yaş</span>
-            <a th:href="@{/app/children/{id}/edit(id=${child.id})}">Düzenle</a>
-            <form th:action="@{/app/children/{id}/delete(id=${child.id})}" method="post">
-                <button class="link">Kaldır</button>
+    <p class="lead">Masallar her çocuğun yaşına ve ilgi alanlarına göre hazırlanır. Her çocuğun kütüphanesi ayrıdır.</p>
+    <div class="split">
+        <section aria-labelledby="list-title">
+            <h2 id="list-title" class="visually-hidden">Çocuk profilleri</h2>
+            <div class="empty" th:if="${#lists.isEmpty(children)}">
+                <svg class="icon icon-lg" aria-hidden="true"><use href="#i-users"/></svg>
+                <h3>Henüz çocuk profili yok</h3>
+                <p>Yandaki formla ilk profili ekleyin.</p>
+            </div>
+            <ul class="grid" th:unless="${#lists.isEmpty(children)}" style="list-style:none;padding:0;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))">
+                <li class="card" th:each="child : ${children}">
+                    <div class="card-row">
+                        <span th:class="'avatar avatar-' + ${child.id % 6}" aria-hidden="true" th:text="${#strings.substring(child.name, 0, 1)}">D</span>
+                        <div>
+                            <h3 class="card-title" th:text="${child.name}">Deniz</h3>
+                            <span class="muted" th:text="${child.age} + ' yaş'">4 yaş</span>
+                        </div>
+                    </div>
+                    <ul class="chips">
+                        <li class="chip" th:if="${!#strings.isEmpty(child.favoriteAnimals)}" th:text="${child.favoriteAnimals}">Kedi</li>
+                        <li class="chip chip-secondary" th:if="${child.bedtimeHour}"><svg class="icon" aria-hidden="true" style="width:16px;height:16px"><use href="#i-moon"/></svg><span th:text="${#temporals.format(child.bedtimeHour, 'HH:mm')}">20:30</span></li>
+                    </ul>
+                    <div class="card-actions">
+                        <a class="btn btn-secondary btn-sm" th:href="@{/app/children/{id}/edit(id=${child.id})}"
+                           th:attr="aria-label=${child.name} + ' profilini düzenle'"><svg class="icon" aria-hidden="true"><use href="#i-pencil"/></svg>Düzenle</a>
+                        <form th:action="@{/app/children/{id}/delete(id=${child.id})}" method="post"
+                              th:attr="data-confirm=${child.name} + ' profilini kaldırmak istediğinize emin misiniz?'">
+                            <button class="btn btn-danger btn-sm" type="submit" th:attr="aria-label=${child.name} + ' profilini kaldır'">
+                                <svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg>Kaldır</button>
+                        </form>
+                    </div>
+                </li>
+            </ul>
+        </section>
+        <section class="card" aria-labelledby="add-title">
+            <h2 id="add-title">Yeni çocuk ekle</h2>
+            <p class="hint" style="margin-bottom:var(--space-4)">Soyad veya fotoğraf istemiyoruz.</p>
+            <form th:action="@{/app/children}" th:object="${form}" method="post" class="form">
+                <th:block th:replace="~{fragments/forms :: child-fields}"></th:block>
+                <button class="btn btn-primary" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Ekle</button>
             </form>
-        </li>
-    </ul>
-    <h2>Yeni çocuk ekle</h2>
-    <p class="notice">Gerçek ad yerine takma ad kullanabilirsiniz. Soyad veya fotoğraf istemiyoruz.</p>
-    <form th:action="@{/app/children}" th:object="${form}" method="post" class="form">
-        <th:block th:replace="~{fragments/child-fields :: fields}"></th:block>
-        <button class="button">Ekle</button>
-    </form>
+        </section>
+    </div>
 </main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:replace="~{app/confirm :: script}"></script>
 </body>
 </html>

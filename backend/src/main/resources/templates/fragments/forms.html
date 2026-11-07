@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Alan hatası: aria-describedby ile alana bağlanır -->
+<p th:fragment="error(field)" class="field-error" th:id="${field} + '-error'" role="alert" th:if="${#fields.hasErrors(field)}">
+    <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span th:errors="*{__${field}__}"></span>
+</p>
+
+<th:block th:fragment="child-fields">
+    <div class="form-row">
+        <div class="field">
+            <label for="name">Takma ad <span class="req" aria-hidden="true">*</span></label>
+            <input id="name" th:field="*{name}" maxlength="100" autocomplete="off" required
+                   th:attr="aria-invalid=${#fields.hasErrors('name')},aria-describedby=${#fields.hasErrors('name')} ? 'name-error' : 'name-hint'">
+            <p class="hint" id="name-hint">Gerçek ad yerine takma ad da olur.</p>
+            <p th:replace="~{fragments/forms :: error('name')}"></p>
+        </div>
+        <div class="field">
+            <label for="age">Yaş <span class="req" aria-hidden="true">*</span></label>
+            <input id="age" type="number" min="3" max="7" inputmode="numeric" th:field="*{age}" required
+                   th:attr="aria-invalid=${#fields.hasErrors('age')},aria-describedby=${#fields.hasErrors('age')} ? 'age-error' : null">
+            <p th:replace="~{fragments/forms :: error('age')}"></p>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="field"><label for="favoriteAnimals">Sevdiği hayvanlar</label><input id="favoriteAnimals" th:field="*{favoriteAnimals}" placeholder="Kedi, tavşan"></div>
+        <div class="field"><label for="favoriteColors">Sevdiği renkler</label><input id="favoriteColors" th:field="*{favoriteColors}" placeholder="Mavi, sarı"></div>
+    </div>
+    <div class="form-row">
+        <div class="field"><label for="specialInterests">İlgi alanları</label><input id="specialInterests" th:field="*{specialInterests}" placeholder="Uzay, resim yapmak"></div>
+        <div class="field"><label for="bedtimeHour">Uyku saati</label><input id="bedtimeHour" type="time" th:field="*{bedtimeHour}"></div>
+    </div>
+</th:block>
+
+<th:block th:fragment="character-fields">
+    <div class="field">
+        <label for="name">Karakter adı <span class="req" aria-hidden="true">*</span></label>
+        <input id="name" th:field="*{name}" maxlength="40" autocomplete="off" required
+               th:attr="aria-invalid=${#fields.hasErrors('name')},aria-describedby=${#fields.hasErrors('name')} ? 'name-error' : 'name-hint'">
+        <p class="hint" id="name-hint">Çocuğunuzun adı olamaz; masallarda çocuğunuz zaten kendisi olarak yer alabilir.</p>
+        <p th:replace="~{fragments/forms :: error('name')}"></p>
+    </div>
+    <fieldset>
+        <legend>Görünüm</legend>
+        <div class="form-row">
+            <div class="field">
+                <label for="speciesCode">Tür <span class="req" aria-hidden="true">*</span></label>
+                <select id="speciesCode" th:field="*{speciesCode}" required th:attr="aria-invalid=${#fields.hasErrors('speciesCode')}">
+                    <option value="">Seçin</option>
+                    <option th:each="o : ${options.species}" th:value="${o.code}" th:text="${o.label}">Tavşan</option>
+                </select>
+                <p th:replace="~{fragments/forms :: error('speciesCode')}"></p>
+            </div>
+            <div class="field">
+                <label for="colorCode">Renk <span class="req" aria-hidden="true">*</span></label>
+                <select id="colorCode" th:field="*{colorCode}" required th:attr="aria-invalid=${#fields.hasErrors('colorCode')}">
+                    <option value="">Seçin</option>
+                    <option th:each="o : ${options.colors}" th:value="${o.code}" th:text="${o.label}">Mavi</option>
+                </select>
+                <p th:replace="~{fragments/forms :: error('colorCode')}"></p>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="field">
+                <label for="outfitCode">Kıyafet</label>
+                <select id="outfitCode" th:field="*{outfitCode}">
+                    <option th:each="o : ${options.outfits}" th:value="${o.code}" th:text="${o.label}">Atkı</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="accessoryCode">Aksesuar</label>
+                <select id="accessoryCode" th:field="*{accessoryCode}">
+                    <option th:each="o : ${options.accessories}" th:value="${o.code}" th:text="${o.label}">Şapka</option>
+                </select>
+            </div>
+        </div>
+    </fieldset>
+    <div class="field">
+        <label for="personalityTraits">Kişilik</label>
+        <textarea id="personalityTraits" th:field="*{personalityTraits}" maxlength="300" placeholder="Meraklı, yardımsever, biraz utangaç"
+                  th:attr="aria-invalid=${#fields.hasErrors('personalityTraits')},aria-describedby='traits-hint'"></textarea>
+        <p class="hint" id="traits-hint">Masallarda karakterin nasıl davranacağını belirler. En fazla 300 karakter.</p>
+        <p th:replace="~{fragments/forms :: error('personalityTraits')}"></p>
+    </div>
+</th:block>
+</body>
+</html>

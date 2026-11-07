@@ -2,25 +2,55 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Kütüphanem')}"></head>
 <body>
-<header th:replace="~{fragments/layout :: appNav(${user.displayName})}"></header>
-<main class="page">
-    <div class="banner" th:unless="${emailVerified}">
-        <span th:if="${param.verificationSent}">Doğrulama bağlantısı gönderildi.</span>
-        <span th:unless="${param.verificationSent}">E-posta adresiniz henüz doğrulanmadı.</span>
-        <form th:action="@{/app/verify-email/resend}" method="post"><button class="link">Bağlantıyı yeniden gönder</button></form>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<header th:replace="~{fragments/layout :: appNav(${user.displayName}, 'library')}"></header>
+<main id="main">
+    <div class="banner" th:unless="${emailVerified}" role="status">
+        <span th:if="${param.verificationSent}">Doğrulama bağlantısı gönderildi. Gelen kutunuzu ve gereksiz (spam) klasörünü kontrol edin.</span>
+        <span th:if="${param.verificationFailed}">E-posta şu anda gönderilemedi. Lütfen biraz sonra tekrar deneyin.</span>
+        <span th:unless="${param.verificationSent or param.verificationFailed}">E-posta adresinizi doğrulayın; masal oluşturmak için gerekiyor.</span>
+        <form th:action="@{/app/verify-email/resend}" method="post"><button class="btn btn-ghost btn-sm" type="submit">
+            <svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>Bağlantıyı yeniden gönder</button></form>
     </div>
-    <h1>Kütüphanem</h1>
-    <p th:if="${wallet}">
-        Masal kredisi: <strong th:text="${wallet.storyCreditBalance}">0</strong>,
-        etkileşimli kredi: <strong th:text="${wallet.interactiveCreditBalance}">0</strong>
-    </p>
-    <p th:if="${#lists.isEmpty(stories)}">Henüz masalınız yok. Masal oluşturma sihirbazı sonraki adımda eklenecek.</p>
-    <ul class="cards">
-        <li class="card" th:each="story : ${stories}">
-            <strong th:text="${story.title}">Başlık</strong>
-            <span th:text="${story.status}">Durum</span>
-        </li>
-    </ul>
+    <div class="section-head">
+        <h1 th:text="'Merhaba ' + ${user.displayName}" style="margin:0">Merhaba</h1>
+        <a class="btn btn-primary" th:href="@{/app/stories/new}"><svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg>Yeni masal</a>
+    </div>
+    <div class="grid" th:if="${wallet}">
+        <div class="card stat">
+            <div class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg></div>
+            <div><div class="stat-value" th:text="${wallet.storyCreditBalance}">3</div><div class="stat-label">masal kredisi</div></div>
+        </div>
+        <div class="card stat">
+            <div class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg></div>
+            <div><div class="stat-value" th:text="${wallet.interactiveCreditBalance}">1</div><div class="stat-label">etkileşimli masal kredisi</div></div>
+        </div>
+    </div>
+    <section class="section" aria-labelledby="library-title">
+        <div class="section-head"><h2 id="library-title">Masallarım</h2></div>
+        <div class="empty" th:if="${#lists.isEmpty(stories)}">
+            <svg class="icon icon-lg" aria-hidden="true"><use href="#i-book"/></svg>
+            <h3>Henüz masalınız yok</h3>
+            <p>Çocuğunuzu, kahramanı ve temayı seçin; masalınız birkaç saniyede hazırlansın.</p>
+            <div class="hero-actions" style="justify-content:center">
+                <a class="btn btn-primary" th:href="@{/app/stories/new}">İlk masalı oluştur</a>
+                <a class="btn btn-secondary" th:href="@{/app/children}">Çocuk ekle</a>
+            </div>
+        </div>
+        <ul class="grid" th:unless="${#lists.isEmpty(stories)}" style="list-style:none;padding:0">
+            <li th:each="story : ${stories}">
+                <a class="card card-interactive story-card" th:href="@{/app/stories/{id}(id=${story.id})}">
+                    <span class="card-title" th:text="${story.title}">Başlık</span>
+                    <span class="muted" th:text="${story.childName} + ' için · ' + ${story.theme}">Ada için · Paylaşma</span>
+                    <ul class="chips">
+                        <li th:class="'chip status-' + ${#strings.toLowerCase(story.status)}" th:text="${story.statusLabel}">Hazır</li>
+                    </ul>
+                </a>
+            </li>
+        </ul>
+    </section>
 </main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 </body>
 </html>

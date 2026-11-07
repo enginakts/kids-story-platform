@@ -35,3 +35,6 @@ Thumbs.db
 # Yerel gömülü PostgreSQL verisi ve gizli dosyalar
 .devdb/
 .env
+
+# Yerel gizli ayarlar (SMTP parolası, API anahtarları)
+backend/config/

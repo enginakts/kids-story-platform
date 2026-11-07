@@ -1,7 +1,12 @@
 package com.kidstory.backend.service.ai;
 
+import com.kidstory.backend.entity.AiProviderConfig;
+
 public interface LlmClient extends AiClient {
 
-    /** Modelin ham JSON yanıtını döner; şema ve güvenlik denetimi çağıranda yapılır. */
-    String complete(String systemPrompt, String userPrompt, int timeoutMs);
+    /**
+     * Şemaya uygun ham JSON metnini döner. Model ve zaman aşımı yönetimdeki sağlayıcı satırından (config) gelir.
+     * İçerik güvenliği ve şema doğrulaması çağıranda yapılır.
+     */
+    String complete(LlmRequest request, AiProviderConfig config);
 }

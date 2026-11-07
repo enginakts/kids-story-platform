@@ -13,7 +13,8 @@ import java.time.Instant;
 @Entity @Table(name = "ai_providers_config")
 public class AiProviderConfig extends IdEntity {
 
-    public enum Type { LLM, IMAGE, TTS }
+    /** LLM: masal metni (Trendyol), SCENE: sahnelere bölme (Gemini), IMAGE: görsel, TTS: seslendirme. */
+    public enum Type { LLM, SCENE, IMAGE, TTS }
 
     @Enumerated(EnumType.STRING)
     @Column(name = "provider_type", nullable = false, length = 50)

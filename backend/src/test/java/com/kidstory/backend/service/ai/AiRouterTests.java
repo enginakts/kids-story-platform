@@ -4,7 +4,9 @@ import com.kidstory.backend.entity.AiProviderConfig;
 import com.kidstory.backend.repository.AiProviderConfigRepository;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,12 +32,12 @@ class AiRouterTests {
     }
 
     private String call(AiRouter router) {
-        return router.call(AiProviderConfig.Type.LLM, LlmClient.class,
-                (client, config) -> client.complete("sistem", "kullanıcı", config.getTimeoutMs()));
+        LlmRequest request = new LlmRequest("sistem", "kullanıcı", "s", Map.of());
+        return router.call(AiProviderConfig.Type.LLM, LlmClient.class, (client, config) -> client.complete(request, config));
     }
 
     private void configure(String... names) {
-        List<AiProviderConfig> configs = java.util.Arrays.stream(names).map(name -> {
+        List<AiProviderConfig> configs = Arrays.stream(names).map(name -> {
             AiProviderConfig config = new AiProviderConfig();
             config.setProviderName(name);
             return config;
@@ -56,7 +58,7 @@ class AiRouterTests {
             }
 
             @Override
-            public String complete(String systemPrompt, String userPrompt, int timeoutMs) {
+            public String complete(LlmRequest request, AiProviderConfig config) {
                 if (answer == null) {
                     throw new IllegalStateException("kapalı");
                 }
