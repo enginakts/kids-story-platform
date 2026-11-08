@@ -10,4 +10,8 @@ public interface AdminRepository extends JpaRepository<Admin, Long> {
 
     @EntityGraph(attributePaths = "role")
     Optional<Admin> findByUsernameOrEmail(String username, String email);
+
+    boolean existsByUsernameIgnoreCase(String username);
+
+    boolean existsByEmailIgnoreCase(String email);
 }

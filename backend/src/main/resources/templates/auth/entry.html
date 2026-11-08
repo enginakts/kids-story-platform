@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<!-- Giriş ve kayıt aynı kitabın iki sayfasıdır. /login ve /register aynı şablonu açar; "mode" hangi sayfanın açık olduğunu söyler.
+     "Hesap oluştur" / "Giriş yapın" bağlantıları betik varken sayfayı çevirir (motion.js: bookTurn), yoksa normal bağlantıdır. -->
+<head th:replace="~{fragments/layout :: head(${mode == 'register'} ? 'Kayıt ol' : 'Giriş yap')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<header th:replace="~{fragments/layout :: publicNav}"></header>
+<main id="main" class="auth-page">
+    <section class="book-spread" data-book th:attr="data-mode=${mode}">
+        <div th:replace="~{fragments/layout :: bookPlate(${mode == 'register'} ? 'paylasma' : 'aile', 'Masal kitabından bir tavşan resmi')}"></div>
+
+        <!-- Sayfa 13: giriş -->
+        <div class="book-page book-form" data-leaf="login" data-title="Giriş yap" data-plate="aile" data-folio="12" th:hidden="${mode != 'login'}">
+            <p class="running-head">Bir varmış, bir yokmuş</p>
+            <div class="book-copy auth-copy">
+                <h1 class="auth-title" tabindex="-1">Tekrar hoş geldiniz</h1>
+                <p class="auth-lead">Bir varmış, bir yokmuş... Kaldığınız masaldan devam edin.</p>
+                <p class="alert alert-danger" role="alert" th:if="${param.error}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>E-posta veya parola hatalı.</p>
+                <p class="alert alert-danger" role="alert" th:if="${param.locked}"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>Çok fazla hatalı deneme yapıldı. Lütfen 15 dakika sonra tekrar deneyin.</p>
+                <p class="alert alert-info" role="status" th:if="${param.logout}"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Çıkış yapıldı.</p>
+                <p class="alert alert-success" role="status" th:if="${param.reset}"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Parolanız değiştirildi. Yeni parolanızla giriş yapabilirsiniz.</p>
+                <form th:action="@{/login}" method="post" class="form" data-stagger>
+                    <div class="field"><label for="username">E-posta</label><input id="username" type="email" name="username" autocomplete="email" required></div>
+                    <div class="field"><label for="password">Parola</label><input id="password" type="password" name="password" autocomplete="current-password" required></div>
+                    <button class="btn btn-primary btn-block" type="submit">Giriş yap</button>
+                </form>
+                <p class="auth-foot"><a th:href="@{/forgot-password}">Parolamı unuttum</a> · <a th:href="@{/register}" data-turn="register">Hesap oluştur</a></p>
+                <section th:replace="~{fragments/layout :: quickLogin(${quickParents}, '/login')}"></section>
+            </div>
+            <p class="folio" aria-hidden="true">13</p>
+        </div>
+
+        <!-- Sayfa 15: kayıt -->
+        <div class="book-page book-form" data-leaf="register" data-title="Kayıt ol" data-plate="paylasma" data-folio="14" th:hidden="${mode != 'register'}">
+            <p class="running-head">Bir varmış, bir yokmuş</p>
+            <div class="book-copy auth-copy">
+                <h1 class="auth-title" tabindex="-1">Ebeveyn hesabı oluşturun</h1>
+                <p class="muted">3 masal ve 1 etkileşimli masal hediye.</p>
+                <form th:action="@{/register}" th:object="${form}" method="post" class="form" data-stagger novalidate>
+                    <div class="form-row">
+                        <div class="field">
+                            <label for="firstName">Ad</label>
+                            <input id="firstName" th:field="*{firstName}" autocomplete="given-name" required th:attr="aria-invalid=${#fields.hasErrors('firstName')}">
+                            <p th:replace="~{fragments/forms :: error('firstName')}"></p>
+                        </div>
+                        <div class="field">
+                            <label for="lastName">Soyad</label>
+                            <input id="lastName" th:field="*{lastName}" autocomplete="family-name" required th:attr="aria-invalid=${#fields.hasErrors('lastName')}">
+                            <p th:replace="~{fragments/forms :: error('lastName')}"></p>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="email">E-posta</label>
+                        <input id="email" type="email" th:field="*{email}" autocomplete="email" required th:attr="aria-invalid=${#fields.hasErrors('email')}">
+                        <p th:replace="~{fragments/forms :: error('email')}"></p>
+                    </div>
+                    <div class="field">
+                        <label for="new-password">Parola</label>
+                        <input id="new-password" type="password" name="password" minlength="8" maxlength="72" autocomplete="new-password" required aria-describedby="password-hint">
+                        <p class="hint" id="password-hint">En az 8 karakter.</p>
+                        <p th:replace="~{fragments/forms :: error('password')}"></p>
+                    </div>
+                    <label class="check"><input type="checkbox" name="consent" value="true" required>
+                        <span>18 yaşından büyük olduğumu ve çocuğum adına KVKK aydınlatma metnini onayladığımı kabul ediyorum.</span></label>
+                    <p th:replace="~{fragments/forms :: error('consent')}"></p>
+                    <button class="btn btn-primary btn-block" type="submit">Hesap oluştur</button>
+                </form>
+                <p class="auth-foot">Hesabınız var mı? <a th:href="@{/login}" data-turn="login">Giriş yapın</a></p>
+            </div>
+            <p class="folio" aria-hidden="true">15</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

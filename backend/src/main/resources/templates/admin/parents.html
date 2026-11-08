@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Ebeveynler · Yönetim')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<div th:replace="~{fragments/admin :: adminNav('parents')}"></div>
+<main id="main">
+    <div th:replace="~{fragments/admin :: messages}"></div>
+    <header class="page-head">
+        <div>
+            <h1 class="page-title">Ebeveynler</h1>
+            <p class="page-lead">Hesapları arayın, kredi ekleyin ya da bir hesabı askıya alın. Askıya alınan ebeveyn giriş yapamaz; verileri silinmez.</p>
+        </div>
+        <form class="search" th:action="@{/admin/parents}" method="get" role="search">
+            <label for="q" class="visually-hidden">E-posta veya ad ara</label>
+            <input id="q" name="q" type="search" th:value="${q}" placeholder="E-posta veya ad ara">
+            <button class="btn btn-primary" type="submit">Ara</button>
+        </form>
+    </header>
+    <p class="empty-line" th:if="${#lists.isEmpty(parents)}">Eşleşen ebeveyn yok.</p>
+    <div class="table-wrap" th:unless="${#lists.isEmpty(parents)}">
+        <table class="data-table">
+            <thead><tr><th>Ebeveyn</th><th>E-posta</th><th class="num">Çocuk</th><th class="num">Masal</th><th class="num">Kredi</th><th>Durum</th><th>Kredi ekle</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="p : ${parents}" th:classappend="${!p.active} ? 'is-off'">
+                <td><strong th:text="${p.name}">Ad Soyad</strong><br><small th:text="${#temporals.format(p.createdAt, 'dd.MM.yyyy')}">tarih</small></td>
+                <td th:text="${p.email}">e-posta</td>
+                <td class="num" th:text="${p.children}">0</td>
+                <td class="num" th:text="${p.stories}">0</td>
+                <td class="num" th:text="${p.storyCredits} + ' / ' + ${p.interactiveCredits}">3 / 1</td>
+                <td>
+                    <span class="chip status-completed" th:if="${p.active and p.verified}">Doğrulanmış</span>
+                    <span class="chip status-pending" th:if="${p.active and !p.verified}">E-posta bekliyor</span>
+                    <span class="chip status-failed" th:unless="${p.active}">Askıda</span>
+                </td>
+                <td>
+                    <form class="inline-form" th:action="@{/admin/parents/{id}/credits(id=${p.id})}" method="post">
+                        <label class="visually-hidden" th:for="'amount-' + ${p.id}" th:text="${p.email} + ' için kredi miktarı'">Miktar</label>
+                        <input th:id="'amount-' + ${p.id}" name="amount" type="number" min="1" th:max="${maxCredits}" value="3" required>
+                        <button class="btn btn-secondary btn-sm" type="submit">Ekle</button>
+                    </form>
+                </td>
+                <td>
+                    <form th:action="@{/admin/parents/{id}/active(id=${p.id})}" method="post"
+                          th:attr="data-confirm=${p.active} ? ${p.email} + ' hesabını askıya almak istediğinize emin misiniz?' : null">
+                        <input type="hidden" name="active" th:value="${!p.active}">
+                        <button class="btn btn-sm" th:classappend="${p.active} ? 'btn-danger' : 'btn-secondary'" type="submit"
+                                th:text="${p.active} ? 'Askıya al' : 'Yeniden aç'">Askıya al</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:replace="~{app/confirm :: script}"></script>
+</body>
+</html>

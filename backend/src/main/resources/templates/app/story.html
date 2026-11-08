@@ -10,7 +10,7 @@
 
     <th:block th:if="${s.status == 'PENDING' or s.status == 'GENERATING'}">
         <section class="card generating" role="status" aria-live="polite">
-            <span class="spinner" aria-hidden="true"></span>
+            <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
             <h1>Masalınız hazırlanıyor</h1>
             <p class="muted" th:text="${s.childName} + ' için ' + ${#strings.toLowerCase(s.theme)} + ' temalı bir masal yazılıyor. Bu sayfa kendiliğinden yenilenir.'">Yazılıyor.</p>
         </section>
@@ -24,24 +24,35 @@
     </section>
 
     <th:block th:if="${s.status == 'COMPLETED'}">
-        <header class="story-head">
-            <h1 th:text="${s.title}">Masal başlığı</h1>
+        <header class="page-head story-head">
+            <div>
+            <h1 class="page-title" th:text="${s.title}">Masal başlığı</h1>
             <ul class="chips">
                 <li class="chip chip-primary" th:text="${s.childName} + ' için'">Ada için</li>
                 <li class="chip" th:text="${s.theme}">Paylaşma</li>
                 <li class="chip" th:text="${detail.narrationStyle}">Sıcak</li>
             </ul>
+            </div>
         </header>
         <ol class="scenes">
-            <li class="scene card" th:each="scene : ${detail.scenes}">
+            <li class="scene" th:each="scene : ${detail.scenes}">
                 <div class="scene-art" aria-hidden="true">
-                    <svg class="icon icon-lg"><use href="#i-image"/></svg>
-                    <span>Görsel bir sonraki adımda eklenecek</span>
+                    <svg class="apple"><use href="#apple"/></svg>
+                    <p class="scene-note">Bu sahnenin resmi bir sonraki adımda eklenecek.</p>
                 </div>
-                <p class="scene-text" th:text="${scene.text}">Sahne metni</p>
-                <span class="scene-number" th:text="${scene.sceneNumber} + ' / ' + ${#lists.size(detail.scenes)}">1 / 5</span>
+                <div>
+                    <p class="scene-text" th:text="${scene.text}">Sahne metni</p>
+                    <span class="scene-number" th:text="'Sahne ' + ${scene.sceneNumber} + ' / ' + ${#lists.size(detail.scenes)}">Sahne 1 / 5</span>
+                </div>
             </li>
         </ol>
+        <div class="story-end">
+            <div class="three-apples" aria-hidden="true">
+                <svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg>
+            </div>
+            <p>Gökten üç elma düştü.</p>
+            <a class="btn btn-secondary" th:href="@{/app/stories/new}">Yeni bir masal</a>
+        </div>
     </th:block>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>

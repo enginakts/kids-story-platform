@@ -38,3 +38,6 @@ Thumbs.db
 
 # Yerel gizli ayarlar (SMTP parolası, API anahtarları)
 backend/config/
+
+# Tasarım denetleyicisinin ekran görüntüleri ve raporları
+.taste-skill/

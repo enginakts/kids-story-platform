@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 360" fill="none" stroke="#0e0d0d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Masal Dünyası için çizildi: küçük, yuvarlak, yardımsever bir robot (gravür gibi tarama çizgileriyle) -->
+  <line x1="150" y1="58" x2="150" y2="30"/>
+  <circle cx="150" cy="22" r="10" fill="#0e0d0d"/>
+  <rect x="88" y="58" width="124" height="96" rx="34"/>
+  <circle cx="124" cy="104" r="14"/><circle cx="124" cy="104" r="5" fill="#0e0d0d"/>
+  <circle cx="176" cy="104" r="14"/><circle cx="176" cy="104" r="5" fill="#0e0d0d"/>
+  <path d="M128 132 q22 16 44 0"/>
+  <path d="M84 96 h-14 M216 96 h14"/>
+  <rect x="96" y="166" width="108" height="112" rx="26"/>
+  <path d="M150 246 C138 232 118 226 120 210 C122 196 140 196 150 208 C160 196 178 196 180 210 C182 226 162 232 150 246Z"/>
+  <path d="M96 194 C70 198 58 216 62 238 M204 194 C230 198 242 216 238 238"/>
+  <circle cx="62" cy="246" r="9"/><circle cx="238" cy="246" r="9"/>
+  <path d="M120 278 v28 M180 278 v28"/>
+  <rect x="98" y="306" width="44" height="24" rx="12"/><rect x="158" y="306" width="44" height="24" rx="12"/>
+  <g stroke-width="2.5" opacity="0.7">
+    <path d="M100 176 l-2 12 M110 172 l-3 16 M188 266 l8 -10 M196 268 l6 -8 M98 70 l-6 10 M104 64 l-8 14"/>
+    <path d="M40 340 h220 M70 350 h160"/>
+  </g>
+</svg>

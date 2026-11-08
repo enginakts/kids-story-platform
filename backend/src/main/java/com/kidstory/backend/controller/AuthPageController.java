@@ -34,28 +34,37 @@ public class AuthPageController {
         return "index";
     }
 
+    /** Giriş ve kayıt aynı kitabın iki sayfasıdır; ikisi de auth/entry şablonunu açar, "mode" açık sayfayı seçer. */
     @GetMapping("/login")
-    String login() {
-        return "auth/login";
+    String login(Model model) {
+        return entry(model, "login", new ParentRegisterRequest("", "", "", "", false));
     }
 
     @GetMapping("/register")
     String registerForm(Model model) {
-        model.addAttribute("form", new ParentRegisterRequest("", "", "", "", false));
-        return "auth/register";
+        return entry(model, "register", new ParentRegisterRequest("", "", "", "", false));
+    }
+
+    private static String entry(Model model, String mode, ParentRegisterRequest form) {
+        model.addAttribute("mode", mode);
+        model.addAttribute("plateFolio", "register".equals(mode) ? "14" : "12");
+        if (!model.containsAttribute("form")) {
+            model.addAttribute("form", form);
+        }
+        return "auth/entry";
     }
 
     @PostMapping("/register")
     String register(@Valid @ModelAttribute("form") ParentRegisterRequest form, BindingResult result,
-                    HttpServletRequest http) throws ServletException {
+                    HttpServletRequest http, Model model) throws ServletException {
         if (result.hasErrors()) {
-            return "auth/register";
+            return entry(model, "register", form);
         }
         try {
             authService.register(form, http.getRemoteAddr());
         } catch (ConflictException e) {
             result.rejectValue("email", "duplicate", e.getMessage());
-            return "auth/register";
+            return entry(model, "register", form);
         }
         http.login(form.email().trim(), form.password());
         return "redirect:/app";

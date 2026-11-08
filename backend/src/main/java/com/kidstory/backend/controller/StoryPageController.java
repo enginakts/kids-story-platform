@@ -7,7 +7,6 @@ import com.kidstory.backend.entity.StoryEnums;
 import com.kidstory.backend.exception.ConflictException;
 import com.kidstory.backend.exception.EmailNotVerifiedException;
 import com.kidstory.backend.exception.FieldValidationException;
-import com.kidstory.backend.repository.StoryRepository;
 import com.kidstory.backend.security.AppUser;
 import com.kidstory.backend.service.BillingService;
 import com.kidstory.backend.service.CharacterService;
@@ -31,7 +30,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StoryPageController {
 
-    private final StoryRepository storyRepository;
     private final StoryService stories;
     private final BillingService billing;
     private final ChildProfileService children;
@@ -76,12 +74,6 @@ public class StoryPageController {
         model.addAttribute("user", user);
         model.addAttribute("detail", stories.get(user.id(), id));
         return "app/story";
-    }
-
-    @GetMapping("/explore")
-    String explore(Model model) {
-        model.addAttribute("stories", storyRepository.findTop50ByPublishedAtNotNullOrderByPublishedAtDesc());
-        return "explore";
     }
 
     private String wizardPage(AppUser user, Model model) {

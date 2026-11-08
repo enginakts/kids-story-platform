@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Durum, onay ve tema kodlarının Türkçe etiketleri. Kullanım: th:replace="~{admin/labels :: status(${s.status})}" -->
+<span th:fragment="status(code)" th:class="'chip status-' + ${#strings.toLowerCase(code)}"
+      th:text="${ {'PENDING':'Sırada','GENERATING':'Hazırlanıyor','COMPLETED':'Hazır','FAILED':'Oluşturulamadı'}.get(code) ?: code }">Hazır</span>
+<span th:fragment="moderation(code)" th:class="'chip mod-' + ${#strings.toLowerCase(code)}"
+      th:text="${ {'NOT_REQUESTED':'İstenmedi','PENDING':'Onay bekliyor','APPROVED':'Onaylandı','REJECTED':'Reddedildi'}.get(code) ?: code }">İstenmedi</span>
+<span th:fragment="theme(code)"
+      th:text="${ {'FRIENDSHIP':'Dostluk','HELPING':'Yardımlaşma','SHARING':'Paylaşma','NATURE_LOVE':'Doğa sevgisi','EMOTIONS':'Duyguları tanıma','COURAGE':'Cesaret','SELF_CARE':'Kişisel bakım','DAILY_HABITS':'Günlük alışkanlıklar'}.get(code) ?: code }">Paylaşma</span>
+<span th:fragment="action(code)"
+      th:text="${ {'ADMIN_CREATED':'Yönetici eklendi','ADMIN_ACTIVATED':'Yönetici açıldı','ADMIN_SUSPENDED':'Yönetici askıya alındı','PARENT_CREDITS':'Kredi eklendi','PARENT_ACTIVATED':'Ebeveyn açıldı','PARENT_SUSPENDED':'Ebeveyn askıya alındı','PROVIDER_UPDATED':'Sağlayıcı güncellendi','STORY_APPROVED':'Masal onaylandı','STORY_REJECTED':'Masal reddedildi'}.get(code) ?: code }">İşlem</span>
+</body>
+</html>

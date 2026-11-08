@@ -3,25 +3,62 @@
 <head th:replace="~{fragments/layout :: head('Yönetim')}"></head>
 <body>
 <svg th:replace="~{fragments/layout :: icons}"></svg>
-<header class="site-header">
-    <div class="header-inner">
-        <span class="brand"><span class="brand-mark" aria-hidden="true"><svg class="icon"><use href="#i-shield"/></svg></span>Yönetim</span>
-        <div class="header-user">
-            <span class="user-name" th:text="${user.displayName}">Yönetici</span>
-            <form th:action="@{/admin/logout}" method="post"><button class="btn btn-ghost btn-sm" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg>Çıkış</button></form>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<div th:replace="~{fragments/admin :: adminNav('overview')}"></div>
+<main id="main" th:with="o=${overview}">
+    <header class="page-head">
+        <div>
+            <h1 class="page-title">Yönetim paneli</h1>
+            <p class="page-lead" th:text="'Merhaba ' + ${user.displayName} + '. Masal Dünyası bugün böyle görünüyor.'">Merhaba.</p>
         </div>
-    </div>
-</header>
-<main id="main">
-    <h1>Yönetim paneli</h1>
-    <div class="grid">
-        <div class="card stat"><div class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg></div>
-            <div><div class="stat-value" th:text="${parentCount}">0</div><div class="stat-label">ebeveyn</div></div></div>
-        <div class="card stat"><div class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg></div>
-            <div><div class="stat-value" th:text="${storyCount}">0</div><div class="stat-label">masal</div></div></div>
-        <div class="card stat"><div class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></div>
-            <div><div class="stat-value" th:text="${pendingCount}">0</div><div class="stat-label">onay bekleyen masal</div></div></div>
+        <div class="page-head-side">
+            <a class="btn btn-primary" th:href="@{/admin/stories(filter='review')}" th:if="${o.pendingModeration > 0}"
+               th:text="${o.pendingModeration} + ' masal onay bekliyor'">Onay bekleyenler</a>
+        </div>
+    </header>
+
+    <section aria-labelledby="kpi-title">
+        <h2 id="kpi-title" class="visually-hidden">Sayılar</h2>
+        <ul class="kpi-board" data-stagger>
+            <li class="kpi kpi-lead"><strong th:text="${o.parents}">0</strong><span>ebeveyn</span><small th:text="${o.verifiedParents} + ' doğrulanmış e-posta'">0</small></li>
+            <li class="kpi"><strong th:text="${o.children}">0</strong><span>çocuk profili</span></li>
+            <li class="kpi"><strong th:text="${o.stories}">0</strong><span>masal</span><small th:text="'Son 7 günde ' + ${o.storiesThisWeek}">0</small></li>
+            <li class="kpi" th:classappend="${o.failedStories > 0} ? 'kpi-warn'"><strong th:text="${o.failedStories}">0</strong><span>oluşturulamayan masal</span></li>
+            <li class="kpi" th:classappend="${o.pendingModeration > 0} ? 'kpi-warn'"><strong th:text="${o.pendingModeration}">0</strong><span>onay bekleyen</span></li>
+        </ul>
+    </section>
+
+    <div class="split section">
+        <section aria-labelledby="recent-title">
+            <div class="section-head"><h2 id="recent-title">Son masallar</h2><a class="flash" th:href="@{/admin/stories}">Tümü</a></div>
+            <p class="empty-line" th:if="${#lists.isEmpty(o.recentStories)}">Henüz masal yok.</p>
+            <div class="table-wrap" th:unless="${#lists.isEmpty(o.recentStories)}">
+                <table class="data-table">
+                    <thead><tr><th>Masal</th><th>Çocuk</th><th>Durum</th><th class="num">Tarih</th></tr></thead>
+                    <tbody>
+                    <tr th:each="s : ${o.recentStories}">
+                        <td><a th:href="@{/admin/stories/{id}(id=${s.id})}" th:text="${s.title}">Başlık</a></td>
+                        <td th:text="${s.childName}">Ece</td>
+                        <td><span th:replace="~{admin/labels :: status(${s.status})}"></span></td>
+                        <td class="num" th:text="${#temporals.format(s.createdAt, 'dd.MM HH:mm')}">08.11 13:00</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="panel-ink" aria-labelledby="audit-title">
+            <h2 id="audit-title">Son işlemler</h2>
+            <p class="hint" th:if="${#lists.isEmpty(o.recentAudits)}">Henüz yönetici işlemi yok.</p>
+            <ul class="audit-list">
+                <li th:each="a : ${o.recentAudits}">
+                    <strong th:text="${a.admin}">admin</strong>
+                    <span th:replace="~{admin/labels :: action(${a.action})}"></span>
+                    <small th:text="${(a.details != null ? a.details + ' · ' : '') + #temporals.format(a.at, 'dd.MM HH:mm')}">ayrıntı</small>
+                </li>
+            </ul>
+        </section>
     </div>
 </main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 </body>
 </html>

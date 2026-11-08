@@ -4,14 +4,28 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#f2f0e4">
     <title th:text="${title} + ' · Masal Dünyası'">Masal Dünyası</title>
+    <!-- Gizli başlangıç durumları yalnızca betik çalışıyorsa uygulanır; betik yoksa içerik görünür kalır. -->
+    <script>document.documentElement.classList.add('js');setTimeout(function(){if(!window.motionReady)document.documentElement.classList.remove('js')},3000)</script>
+    <link rel="preload" th:href="@{/fonts/fraunces-latin.woff2}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" th:href="@{/fonts/lora-latin.woff2}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" th:href="@{/fonts/nunito-latin.woff2}" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" th:href="@{/img/apple-mask.svg}" type="image/svg+xml">
     <link rel="stylesheet" th:href="@{/css/app.css}">
+    <!-- Motion (motion.dev, Framer Motion'ın React gerektirmeyen sürümü), uygulama sunucusundan verilir. -->
+    <script defer th:src="@{/js/vendor/motion-14.6.0.min.js}"></script>
+    <script defer th:src="@{/js/motion.js}"></script>
 </head>
 <body>
 
-<!-- Tek ikon seti (Lucide çizgi stili, 2px). Kullanım: <svg class="icon"><use href="#i-book"/></svg> -->
+<!-- Tek ikon seti (Lucide çizgi stili, 2px) ve marka elması. Kullanım: <svg class="icon"><use href="#i-book"/></svg>, <svg class="apple"><use href="#apple"/></svg> -->
 <svg th:fragment="icons" xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+    <symbol id="apple" viewBox="0 0 100 100">
+        <path d="M50 26C40 14 16 12 8 34C1 54 8 78 24 91C32 98 42 99 50 94C58 99 68 98 76 91C92 78 99 54 92 34C84 12 60 14 50 26Z"/>
+        <path style="fill: var(--stem, #0e0d0d)" d="M47.5 28c0-9 2.5-17.5 7.5-23.5l4.5 3.2C55 13.6 53 20 53 28z"/>
+        <path style="fill: var(--leaf, #0e0d0d)" d="M58 15.5C63 3.5 78.5 0 89.5 4.5C83.5 15.5 69 21 58 15.5Z"/>
+    </symbol>
     <symbol id="i-book" viewBox="0 0 24 24"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></symbol>
     <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
     <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
@@ -31,6 +45,8 @@
     <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></symbol>
     <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
     <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+    <symbol id="i-arrow-up-right" viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></symbol>
 </svg>
 
 <a th:fragment="skip" class="skip-link" href="#main">İçeriğe geç</a>
@@ -38,50 +54,114 @@
 <header th:fragment="publicNav" class="site-header">
     <div class="header-inner">
         <a class="brand" th:href="@{/}" aria-label="Masal Dünyası ana sayfa">
-            <span class="brand-mark" aria-hidden="true"><svg class="icon"><use href="#i-moon"/></svg></span>
+            <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
             <span>Masal Dünyası</span>
         </a>
         <nav class="public-nav" aria-label="Genel">
-            <a class="nav-link" th:href="@{/explore}">Keşfet</a>
-            <a class="nav-link" th:href="@{/login}">Giriş yap</a>
+            <a class="nav-link flash" th:href="@{/login}">Giriş yap</a>
             <a class="btn btn-primary btn-sm" th:href="@{/register}">Kayıt ol</a>
         </nav>
     </div>
 </header>
 
-<header th:fragment="appNav(name, active)" class="site-header">
-    <div class="header-inner">
-        <a class="brand" th:href="@{/app}" aria-label="Masal Dünyası kütüphanem">
-            <span class="brand-mark" aria-hidden="true"><svg class="icon"><use href="#i-moon"/></svg></span>
-            <span>Masal Dünyası</span>
-        </a>
-        <nav class="app-nav" aria-label="Ana menü">
-            <a th:href="@{/app}" th:attr="aria-current=${active == 'library'} ? 'page' : null">
-                <svg class="icon" aria-hidden="true"><use href="#i-book"/></svg><span>Kütüphanem</span></a>
-            <a th:href="@{/app/children}" th:attr="aria-current=${active == 'children'} ? 'page' : null">
-                <svg class="icon" aria-hidden="true"><use href="#i-users"/></svg><span>Çocuklarım</span></a>
-            <a th:href="@{/app/characters}" th:attr="aria-current=${active == 'characters'} ? 'page' : null">
-                <svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg><span>Karakterler</span></a>
-            <a th:href="@{/explore}" th:attr="aria-current=${active == 'explore'} ? 'page' : null">
-                <svg class="icon" aria-hidden="true"><use href="#i-compass"/></svg><span>Keşfet</span></a>
-        </nav>
-        <div class="header-user">
-            <span class="user-name" th:text="${name}">Ebeveyn</span>
-            <form th:action="@{/logout}" method="post">
-                <button class="btn btn-ghost btn-sm" type="submit">
-                    <svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg><span>Çıkış</span></button>
-            </form>
+<!-- Ebeveyn sayfalarının gezinmesi. Masaüstünde ana sayfadaki gibi sağda mürekkep menü (aktif öğe kırmızıya dolar,
+     üzerinden ışık şeridi geçer); dar ekranda üst bar ve dört öğeli alt çubuk. -->
+<div th:fragment="appNav(name, active)" class="app-chrome">
+    <header class="site-header app-top">
+        <div class="header-inner">
+            <a class="brand" th:href="@{/app}" aria-label="Masal Dünyası kütüphanem">
+                <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
+                <span>Masal Dünyası</span>
+            </a>
+            <nav class="app-nav" aria-label="Ana menü">
+                <a th:href="@{/app}" th:attr="aria-current=${active == 'library'} ? 'page' : null">
+                    <svg class="icon" aria-hidden="true"><use href="#i-book"/></svg><span>Kütüphanem</span></a>
+                <a th:href="@{/app/children}" th:attr="aria-current=${active == 'children'} ? 'page' : null">
+                    <svg class="icon" aria-hidden="true"><use href="#i-users"/></svg><span>Çocuklarım</span></a>
+                <a th:href="@{/app/characters}" th:attr="aria-current=${active == 'characters'} ? 'page' : null">
+                    <svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg><span>Karakterler</span></a>
+                <a th:href="@{/app/stories/new}" th:attr="aria-current=${active == 'new'} ? 'page' : null">
+                    <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg><span>Yeni masal</span></a>
+            </nav>
+            <div class="header-user">
+                <form th:action="@{/logout}" method="post">
+                    <button class="btn btn-ghost btn-sm" type="submit">
+                        <svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg><span>Çıkış</span></button>
+                </form>
+            </div>
         </div>
-    </div>
-</header>
+    </header>
+    <aside class="rail rail-app" aria-label="Ana menü">
+        <a class="rail-brand" th:href="@{/app}" aria-label="Masal Dünyası kütüphanem">
+            <svg class="apple" aria-hidden="true"><use href="#apple"/></svg><span>Masal Dünyası</span>
+        </a>
+        <nav>
+            <ul class="rail-nav">
+                <li><a th:href="@{/app}" th:classappend="${active == 'library'} ? 'is-active'" th:attr="aria-current=${active == 'library'} ? 'page' : null"><span>Kütüphanem</span></a></li>
+                <li><a th:href="@{/app/children}" th:classappend="${active == 'children'} ? 'is-active'" th:attr="aria-current=${active == 'children'} ? 'page' : null"><span>Çocuklarım</span></a></li>
+                <li><a th:href="@{/app/characters}" th:classappend="${active == 'characters'} ? 'is-active'" th:attr="aria-current=${active == 'characters'} ? 'page' : null"><span>Karakterler</span></a></li>
+                <li><a th:href="@{/app/stories/new}" th:classappend="${active == 'new'} ? 'is-active'" th:attr="aria-current=${active == 'new'} ? 'page' : null"><span>Yeni masal</span></a></li>
+            </ul>
+        </nav>
+        <div class="rail-user">
+            <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
+            <span th:text="${name}">Ebeveyn</span>
+        </div>
+        <form class="rail-actions" th:action="@{/logout}" method="post">
+            <button class="btn btn-ghost-light btn-block" type="submit">Çıkış yap</button>
+        </form>
+    </aside>
+</div>
 
 <div th:fragment="flash" class="flash-area">
     <p class="alert alert-success" role="status" th:if="${notice}">
         <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span th:text="${notice}">Kaydedildi.</span></p>
 </div>
 
+<!-- Ana sayfadaki basılı kartın üstündeki elma şeridi -->
+<div th:fragment="appleBand" class="apple-band" aria-hidden="true" data-stagger>
+    <svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg>
+    <svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg>
+    <svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg>
+    <svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg>
+</div>
+
+<!-- Giriş sayfalarındaki açık kitabın sol sayfası: eski kitaplardaki gibi çerçeveli bir levha, altında künyesi.
+     Levhalar yavaşça değişir. Görseller: Virginia Albert, Peter Rabbit (1918), kamu malı. İlk levha sayfaya göre seçilir. -->
+<div th:fragment="bookPlate(file, alt)" class="book-page book-plate" aria-hidden="false">
+    <p class="running-head">Masal Dünyası</p>
+    <figure class="plate">
+        <div class="plate-frame" data-crossfade>
+            <img class="is-shown" th:src="@{'/img/tales/' + ${file} + '-900.webp'}" th:alt="${alt}" th:attr="data-file=${file}" width="874" height="1158" fetchpriority="high">
+            <th:block th:each="other : ${ {'aile', 'paylasma', 'sepet', 'kapi', 'cayir'} }" th:unless="${other == file}">
+                <img th:src="@{'/img/tales/' + ${other} + '-900.webp'}" alt="" th:attr="data-file=${other}" width="874" height="1158" loading="lazy">
+            </th:block>
+        </div>
+        <figcaption>Levha I · Virginia Albert, tavşan masalı resimleri, 1918</figcaption>
+    </figure>
+    <p class="folio" aria-hidden="true" th:text="${plateFolio} ?: '12'">12</p>
+</div>
+
+<!-- Hızlı giriş: YALNIZCA geliştirme ortamında görünür (QuickLoginAdvice, "dev" profili). Hesaplar application-dev.properties'tedir.
+     Her düğme küçük bir form: JavaScript gerekmez, CSRF anahtarı Thymeleaf tarafından eklenir. Üretimde liste yoktur ve kutu çizilmez. -->
+<section th:fragment="quickLogin(accounts, action)" class="quick-login" th:if="${accounts != null and !#lists.isEmpty(accounts)}" aria-labelledby="quick-title">
+    <h2 id="quick-title">Hızlı giriş</h2>
+    <p class="quick-note">Geliştirme ortamı: tek tıkla test hesabıyla girin. Bu kutu canlı sitede görünmez.</p>
+    <div class="quick-grid">
+        <form th:each="a : ${accounts}" th:action="@{${action}}" method="post">
+            <input type="hidden" name="username" th:value="${a.login}">
+            <input type="hidden" name="password" th:value="${a.password}">
+            <button type="submit" class="quick-btn">
+                <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
+                <span class="quick-text"><strong th:text="${a.label}">Hesap</strong><small th:text="${a.login}">e-posta</small></span>
+                <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </button>
+        </form>
+    </div>
+</section>
+
 <footer th:fragment="footer" class="site-footer">
-    <p>Masal Dünyası · 3-7 yaş için güvenli, ebeveyn denetimli masallar</p>
+    <p>Masal Dünyası · 3-7 yaş için güvenli, ebeveyn denetimli masallar · Gökten üç elma düştü.</p>
 </footer>
 </body>
 </html>

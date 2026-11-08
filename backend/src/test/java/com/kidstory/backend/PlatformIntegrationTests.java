@@ -132,9 +132,25 @@ class PlatformIntegrationTests {
 
     @Test
     void publicPagesRender() throws Exception {
-        for (String path : new String[] {"/", "/login", "/register", "/explore", "/admin/login"}) {
+        for (String path : new String[] {"/", "/login", "/register", "/admin/login"}) {
             mvc.perform(get(path)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML));
         }
+    }
+
+    @Test
+    void quickLoginIsNotShownOutsideDevelopment() throws Exception {
+        // Hızlı giriş yalnızca "dev" profilinde vardır; test ve üretimde giriş sayfalarında parola sızmamalı
+        for (String path : new String[] {"/login", "/admin/login"}) {
+            mvc.perform(get(path)).andExpect(status().isOk())
+                    .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Hızlı giriş"))))
+                    .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Deneme123!"))));
+        }
+    }
+
+    @Test
+    void explorePageIsRemoved() throws Exception {
+        // Keşfet sayfası kaldırıldı: artık herkese açık değil, girişe yönlendirir
+        mvc.perform(get("/explore")).andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login"));
     }
 
     @Test

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Yapay zekâ · Yönetim')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<div th:replace="~{fragments/admin :: adminNav('ai')}"></div>
+<main id="main">
+    <div th:replace="~{fragments/admin :: messages}"></div>
+    <header class="page-head">
+        <div>
+            <h1 class="page-title">Yapay zekâ</h1>
+            <p class="page-lead">Her görev için açık sağlayıcılar öncelik sırasıyla denenir; küçük sayı önce gelir. API anahtarları burada değil, sunucunun ortam değişkenlerindedir (.env).</p>
+        </div>
+    </header>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Görev</th><th>Sağlayıcı</th><th>Model</th><th class="num">Zaman aşımı</th><th>Açık</th><th>Öncelik</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="p : ${providers}" th:classappend="${!p.active} ? 'is-off'">
+                <td th:text="${ {'LLM':'Masal metni','SCENE':'Sahnelere bölme','IMAGE':'Görsel','TTS':'Seslendirme'}.get(p.type) ?: p.type }">Masal metni</td>
+                <td><strong th:text="${p.name}">groq</strong></td>
+                <td th:text="${p.model}">model</td>
+                <td class="num" th:text="${p.timeoutMs / 1000} + ' sn'">60 sn</td>
+                <td colspan="3">
+                    <form class="inline-form" th:action="@{/admin/ai/{id}(id=${p.id})}" method="post">
+                        <label class="check"><input type="checkbox" name="active" value="true" th:checked="${p.active}"><span class="visually-hidden" th:text="${p.name} + ' açık'">Açık</span></label>
+                        <label class="visually-hidden" th:for="'priority-' + ${p.id}" th:text="${p.name} + ' önceliği'">Öncelik</label>
+                        <input th:id="'priority-' + ${p.id}" name="priority" type="number" min="1" max="100" th:value="${p.priority}" required>
+                        <button class="btn btn-secondary btn-sm" type="submit">Kaydet</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

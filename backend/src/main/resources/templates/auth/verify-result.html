@@ -5,18 +5,25 @@
 <svg th:replace="~{fragments/layout :: icons}"></svg>
 <a th:replace="~{fragments/layout :: skip}"></a>
 <header th:replace="~{fragments/layout :: publicNav}"></header>
-<main id="main" class="auth">
-    <div class="card">
-        <th:block th:if="${success}">
-            <p class="alert alert-success" role="status"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>E-posta adresiniz doğrulandı</p>
-            <a class="btn btn-primary btn-block" th:href="@{/app}">Kütüphaneme git</a>
-        </th:block>
-        <th:block th:unless="${success}">
-            <h1>Bağlantı geçersiz</h1>
-            <p class="muted">Bağlantı kullanılmış veya süresi dolmuş. Giriş yaptıktan sonra yeni bağlantı isteyebilirsiniz.</p>
-            <a class="btn btn-secondary btn-block" th:href="@{/login}">Giriş yap</a>
-        </th:block>
-    </div>
+<main id="main" class="auth-page">
+    <section class="book-spread" data-book>
+        <div th:replace="~{fragments/layout :: bookPlate('cayir', 'Tavşan yeşil bir çayırın üzerinden zıplayarak geçiyor')}"></div>
+        <div class="book-page book-form">
+            <p class="running-head">Bir varmış, bir yokmuş</p>
+            <div class="book-copy auth-copy">
+                <th:block th:if="${success}">
+                    <p class="alert alert-success" role="status"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>E-posta adresiniz doğrulandı</p>
+                    <a class="btn btn-primary btn-block" th:href="@{/app}">Kütüphaneme git</a>
+                </th:block>
+                <th:block th:unless="${success}">
+                    <h1 class="auth-title">Bağlantı geçersiz</h1>
+                    <p class="muted">Bağlantı kullanılmış veya süresi dolmuş. Giriş yaptıktan sonra yeni bağlantı isteyebilirsiniz.</p>
+                    <a class="btn btn-secondary btn-block" th:href="@{/login}">Giriş yap</a>
+                </th:block>
+            </div>
+            <p class="folio" aria-hidden="true">13</p>
+        </div>
+    </section>
 </main>
 </body>
 </html>

@@ -16,8 +16,5 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
     @EntityGraph(attributePaths = "child")
     Optional<Story> findByIdAndParentId(Long id, Long parentId);
 
-    /** Keşfet yalnızca onaylanıp yayımlanmış masalları gösterir. */
-    List<Story> findTop50ByPublishedAtNotNullOrderByPublishedAtDesc();
-
     long countByModerationStatus(StoryEnums.ModerationStatus status);
 }

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Yönetim panelinin gezinmesi: ebeveyn sayfalarıyla aynı sağ menü (masaüstü) ve üst bar + alt çubuk (dar ekran).
+     Yapay zekâ ve Yöneticiler yalnızca süper yöneticiye görünür; yetki SecurityConfig'te de denetlenir. -->
+<div th:fragment="adminNav(active)" class="app-chrome">
+    <header class="site-header app-top">
+        <div class="header-inner">
+            <a class="brand" th:href="@{/admin}" aria-label="Masal Dünyası yönetim">
+                <svg class="apple" aria-hidden="true"><use href="#apple"/></svg><span>Yönetim</span>
+            </a>
+            <nav class="app-nav" aria-label="Yönetim menüsü">
+                <a th:href="@{/admin}" th:attr="aria-current=${active == 'overview'} ? 'page' : null">
+                    <svg class="icon" aria-hidden="true"><use href="#i-compass"/></svg><span>Genel</span></a>
+                <a th:href="@{/admin/stories}" th:attr="aria-current=${active == 'stories'} ? 'page' : null">
+                    <svg class="icon" aria-hidden="true"><use href="#i-book"/></svg><span>Masallar</span></a>
+                <a th:href="@{/admin/parents}" th:attr="aria-current=${active == 'parents'} ? 'page' : null">
+                    <svg class="icon" aria-hidden="true"><use href="#i-users"/></svg><span>Ebeveynler</span></a>
+                <a th:if="${superAdmin}" th:href="@{/admin/admins}" th:attr="aria-current=${active == 'admins'} ? 'page' : null">
+                    <svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><span>Yöneticiler</span></a>
+            </nav>
+            <div class="header-user">
+                <form th:action="@{/admin/logout}" method="post">
+                    <button class="btn btn-ghost btn-sm" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg><span>Çıkış</span></button>
+                </form>
+            </div>
+        </div>
+    </header>
+    <aside class="rail rail-app" aria-label="Yönetim menüsü">
+        <a class="rail-brand" th:href="@{/admin}" aria-label="Masal Dünyası yönetim">
+            <svg class="apple" aria-hidden="true"><use href="#apple"/></svg><span>Yönetim</span>
+        </a>
+        <nav>
+            <ul class="rail-nav">
+                <li><a th:href="@{/admin}" th:classappend="${active == 'overview'} ? 'is-active'" th:attr="aria-current=${active == 'overview'} ? 'page' : null"><span>Genel bakış</span></a></li>
+                <li><a th:href="@{/admin/stories}" th:classappend="${active == 'stories'} ? 'is-active'" th:attr="aria-current=${active == 'stories'} ? 'page' : null"><span>Masallar</span></a></li>
+                <li><a th:href="@{/admin/parents}" th:classappend="${active == 'parents'} ? 'is-active'" th:attr="aria-current=${active == 'parents'} ? 'page' : null"><span>Ebeveynler</span></a></li>
+                <li th:if="${superAdmin}"><a th:href="@{/admin/ai}" th:classappend="${active == 'ai'} ? 'is-active'" th:attr="aria-current=${active == 'ai'} ? 'page' : null"><span>Yapay zekâ</span></a></li>
+                <li th:if="${superAdmin}"><a th:href="@{/admin/admins}" th:classappend="${active == 'admins'} ? 'is-active'" th:attr="aria-current=${active == 'admins'} ? 'page' : null"><span>Yöneticiler</span></a></li>
+            </ul>
+        </nav>
+        <div class="rail-user">
+            <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
+            <span><span th:text="${user.displayName}">Yönetici</span><br><small th:text="${superAdmin} ? 'Süper yönetici' : 'Yönetici'">Yönetici</small></span>
+        </div>
+        <form class="rail-actions" th:action="@{/admin/logout}" method="post">
+            <button class="btn btn-ghost-light btn-block" type="submit">Çıkış yap</button>
+        </form>
+    </aside>
+</div>
+
+<!-- Bildirim ve hata mesajları (yönlendirme sonrası) -->
+<div th:fragment="messages" class="flash-area">
+    <p class="alert alert-success" role="status" th:if="${notice}"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span th:text="${notice}">Kaydedildi.</span></p>
+    <p class="alert alert-danger" role="alert" th:if="${problem}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span th:text="${problem}">Hata.</span></p>
+</div>
+</body>
+</html>

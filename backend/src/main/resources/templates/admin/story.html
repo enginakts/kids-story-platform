@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${story.title} + ' · Yönetim')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<div th:replace="~{fragments/admin :: adminNav('stories')}"></div>
+<main id="main" th:with="s=${story}">
+    <div th:replace="~{fragments/admin :: messages}"></div>
+    <header class="page-head">
+        <div>
+            <h1 class="page-title" th:text="${s.title}">Masal</h1>
+            <ul class="chips">
+                <li class="chip chip-primary" th:text="${s.childName} + ' için'">Ece için</li>
+                <li class="chip"><span th:replace="~{admin/labels :: theme(${s.theme})}"></span></li>
+                <li><span th:replace="~{admin/labels :: status(${s.status})}"></span></li>
+                <li><span th:replace="~{admin/labels :: moderation(${s.moderation})}"></span></li>
+            </ul>
+            <p class="page-lead" th:text="${s.parentEmail} + ' · ' + ${#temporals.format(s.createdAt, 'dd.MM.yyyy HH:mm')}">e-posta</p>
+        </div>
+        <div class="page-head-side"><a class="btn btn-ghost-light" th:href="@{/admin/stories}">Tüm masallar</a></div>
+    </header>
+
+    <div class="split">
+        <section aria-labelledby="scenes-title">
+            <h2 id="scenes-title">Sahneler</h2>
+            <p class="empty-line" th:if="${#lists.isEmpty(scenes)}">Bu masalın henüz sahnesi yok.</p>
+            <ol class="scene-list" data-stagger>
+                <li th:each="sc : ${scenes}"><span class="scene-no" th:text="${sc.number}">1</span><p th:text="${sc.text}">Sahne</p></li>
+            </ol>
+        </section>
+        <section class="panel-ink" aria-labelledby="mod-title">
+            <h2 id="mod-title">İçerik onayı</h2>
+            <p class="hint">Sahneleri okuyun. Onaylanan masal paylaşıma uygun sayılır; reddedilen masal paylaşılamaz. Karar ve gerekçe kaydedilir.</p>
+            <form th:action="@{/admin/stories/{id}/moderate(id=${s.id})}" method="post" class="form">
+                <div class="field">
+                    <label for="reason">Gerekçe (isteğe bağlı)</label>
+                    <textarea id="reason" name="reason" maxlength="500" placeholder="Örn. ayrılık teması içeriyor"></textarea>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" type="submit" name="decision" value="APPROVED">Onayla</button>
+                    <button class="btn btn-ghost-light" type="submit" name="decision" value="REJECTED">Reddet</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

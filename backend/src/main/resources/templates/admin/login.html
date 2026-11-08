@@ -3,18 +3,28 @@
 <head th:replace="~{fragments/layout :: head('Yönetici girişi')}"></head>
 <body>
 <svg th:replace="~{fragments/layout :: icons}"></svg>
-<main id="main" class="auth">
-    <div class="card">
-        <span class="stat-icon" aria-hidden="true" style="margin-bottom:var(--space-4)"><svg class="icon"><use href="#i-shield"/></svg></span>
-        <h1>Yönetici girişi</h1>
-        <p class="alert alert-danger" role="alert" th:if="${param.error}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>Bilgiler hatalı.</p>
-        <p class="alert alert-danger" role="alert" th:if="${param.locked}"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>Çok fazla hatalı deneme yapıldı. Lütfen 15 dakika sonra tekrar deneyin.</p>
-        <form th:action="@{/admin/login}" method="post" class="form">
-            <div class="field"><label for="username">Kullanıcı adı veya e-posta</label><input id="username" name="username" autocomplete="username" required></div>
-            <div class="field"><label for="password">Parola</label><input id="password" type="password" name="password" autocomplete="current-password" required></div>
-            <button class="btn btn-primary btn-block" type="submit">Giriş yap</button>
-        </form>
-    </div>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<main id="main" class="auth-page">
+    <section class="book-spread" data-book>
+        <div th:replace="~{fragments/layout :: bookPlate('kapi', 'Beyaz tavşan bir kapının önünde küçük bir fareyle karşılaşıyor')}"></div>
+        <div class="book-page book-form">
+            <p class="running-head">Bir varmış, bir yokmuş</p>
+            <div class="book-copy auth-copy">
+                <h1 class="auth-title">Yönetici girişi</h1>
+                <p class="auth-lead">Masal Dünyası yönetim paneli. Yalnızca yetkili ekip üyeleri içindir.</p>
+                <p class="alert alert-danger" role="alert" th:if="${param.error}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>Bilgiler hatalı.</p>
+                <p class="alert alert-danger" role="alert" th:if="${param.locked}"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>Çok fazla hatalı deneme yapıldı. Lütfen 15 dakika sonra tekrar deneyin.</p>
+                <p class="alert alert-info" role="status" th:if="${param.logout}"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Çıkış yapıldı.</p>
+                <form th:action="@{/admin/login}" method="post" class="form" data-stagger>
+                    <div class="field"><label for="username">Kullanıcı adı veya e-posta</label><input id="username" name="username" autocomplete="username" required></div>
+                    <div class="field"><label for="password">Parola</label><input id="password" type="password" name="password" autocomplete="current-password" required></div>
+                    <button class="btn btn-primary btn-block" type="submit">Giriş yap</button>
+                </form>
+                <section th:replace="~{fragments/layout :: quickLogin(${quickAdmins}, '/admin/login')}"></section>
+            </div>
+            <p class="folio" aria-hidden="true">13</p>
+        </div>
+    </section>
 </main>
 </body>
 </html>

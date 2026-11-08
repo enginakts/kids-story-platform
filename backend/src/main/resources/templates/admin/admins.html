@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Yöneticiler · Yönetim')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<div th:replace="~{fragments/admin :: adminNav('admins')}"></div>
+<main id="main">
+    <div th:replace="~{fragments/admin :: messages}"></div>
+    <header class="page-head">
+        <div>
+            <h1 class="page-title">Yöneticiler</h1>
+            <p class="page-lead">Yöneticiler masalları ve ebeveynleri yönetir. Süper yönetici ayrıca yapay zekâ sağlayıcılarını ve yönetici hesaplarını yönetir.</p>
+        </div>
+    </header>
+    <div class="split">
+        <section aria-labelledby="list-title">
+            <h2 id="list-title">Hesaplar</h2>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Yönetici</th><th>Rol</th><th>Son giriş</th><th></th></tr></thead>
+                    <tbody>
+                    <tr th:each="a : ${admins}" th:classappend="${!a.active} ? 'is-off'">
+                        <td><strong th:text="${a.fullName}">Ad</strong><br><small th:text="${a.username} + ' · ' + ${a.email}">kullanıcı</small></td>
+                        <td th:text="${a.role == 'ROLE_SUPER_ADMIN'} ? 'Süper yönetici' : 'Yönetici'">Yönetici</td>
+                        <td th:text="${a.lastLoginAt} ? ${#temporals.format(a.lastLoginAt, 'dd.MM.yyyy HH:mm')} : '—'">—</td>
+                        <td>
+                            <span class="muted" th:if="${a.id == user.id}">Siz</span>
+                            <form th:unless="${a.id == user.id}" th:action="@{/admin/admins/{id}/active(id=${a.id})}" method="post"
+                                  th:attr="data-confirm=${a.active} ? ${a.username} + ' hesabını askıya almak istediğinize emin misiniz?' : null">
+                                <input type="hidden" name="active" th:value="${!a.active}">
+                                <button class="btn btn-sm" th:classappend="${a.active} ? 'btn-danger' : 'btn-secondary'" type="submit"
+                                        th:text="${a.active} ? 'Askıya al' : 'Yeniden aç'">Askıya al</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="panel-ink" aria-labelledby="new-title">
+            <h2 id="new-title">Yeni yönetici</h2>
+            <form th:action="@{/admin/admins}" th:object="${form}" method="post" class="form" novalidate>
+                <div class="field">
+                    <label for="fullName">Ad soyad <span class="req" aria-hidden="true">*</span></label>
+                    <input id="fullName" th:field="*{fullName}" maxlength="150" required th:attr="aria-invalid=${#fields.hasErrors('fullName')}">
+                    <p th:replace="~{fragments/forms :: error('fullName')}"></p>
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="username">Kullanıcı adı <span class="req" aria-hidden="true">*</span></label>
+                        <input id="username" th:field="*{username}" maxlength="100" autocomplete="off" required th:attr="aria-invalid=${#fields.hasErrors('username')}">
+                        <p th:replace="~{fragments/forms :: error('username')}"></p>
+                    </div>
+                    <div class="field">
+                        <label for="role">Rol</label>
+                        <select id="role" th:field="*{role}">
+                            <option value="ROLE_ADMIN">Yönetici</option>
+                            <option value="ROLE_SUPER_ADMIN">Süper yönetici</option>
+                        </select>
+                        <p th:replace="~{fragments/forms :: error('role')}"></p>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="email">E-posta <span class="req" aria-hidden="true">*</span></label>
+                    <input id="email" type="email" th:field="*{email}" required th:attr="aria-invalid=${#fields.hasErrors('email')}">
+                    <p th:replace="~{fragments/forms :: error('email')}"></p>
+                </div>
+                <div class="field">
+                    <label for="password">Parola <span class="req" aria-hidden="true">*</span></label>
+                    <input id="password" type="password" name="password" minlength="10" maxlength="72" autocomplete="new-password" required aria-describedby="pw-hint"
+                           th:attr="aria-invalid=${#fields.hasErrors('password')}">
+                    <p class="hint" id="pw-hint">En az 10 karakter. Yöneticiye güvenli bir yoldan iletin.</p>
+                    <p th:replace="~{fragments/forms :: error('password')}"></p>
+                </div>
+                <button class="btn btn-primary" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Yönetici ekle</button>
+            </form>
+        </section>
+    </div>
+
+    <section class="section" aria-labelledby="audit-title">
+        <h2 id="audit-title">İşlem geçmişi</h2>
+        <p class="empty-line" th:if="${#lists.isEmpty(audits)}">Henüz kayıt yok.</p>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(audits)}">
+            <table class="data-table">
+                <thead><tr><th>Zaman</th><th>Yönetici</th><th>İşlem</th><th>Kayıt</th><th>Ayrıntı</th></tr></thead>
+                <tbody>
+                <tr th:each="l : ${audits}">
+                    <td th:text="${#temporals.format(l.at, 'dd.MM.yyyy HH:mm')}">zaman</td>
+                    <td th:text="${l.admin}">admin</td>
+                    <td><span th:replace="~{admin/labels :: action(${l.action})}"></span></td>
+                    <td th:text="${l.target} + (${l.targetId} != null ? ' #' + ${l.targetId} : '')">kayıt</td>
+                    <td th:text="${l.details} ?: '—'">—</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:replace="~{app/confirm :: script}"></script>
+</body>
+</html>

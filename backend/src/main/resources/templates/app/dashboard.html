@@ -13,39 +13,42 @@
         <form th:action="@{/app/verify-email/resend}" method="post"><button class="btn btn-ghost btn-sm" type="submit">
             <svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>Bağlantıyı yeniden gönder</button></form>
     </div>
-    <div class="section-head">
-        <h1 th:text="'Merhaba ' + ${user.displayName}" style="margin:0">Merhaba</h1>
-        <a class="btn btn-primary" th:href="@{/app/stories/new}"><svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg>Yeni masal</a>
-    </div>
-    <div class="grid" th:if="${wallet}">
-        <div class="card stat">
-            <div class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg></div>
-            <div><div class="stat-value" th:text="${wallet.storyCreditBalance}">3</div><div class="stat-label">masal kredisi</div></div>
+    <header class="page-head">
+        <div>
+            <h1 class="page-title">Kütüphanem</h1>
+            <p class="page-lead" th:text="'Merhaba ' + ${user.displayName} + '. Bir varmış, bir yokmuş... Bu gece hangi masal?'">Merhaba.</p>
         </div>
-        <div class="card stat">
-            <div class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg></div>
-            <div><div class="stat-value" th:text="${wallet.interactiveCreditBalance}">1</div><div class="stat-label">etkileşimli masal kredisi</div></div>
+        <div class="page-head-side">
+            <div class="ledger" th:if="${wallet}">
+                <div><strong th:text="${wallet.storyCreditBalance}">3</strong><span>masal kredisi</span></div>
+                <div><strong th:text="${wallet.interactiveCreditBalance}">1</strong><span>etkileşimli masal kredisi</span></div>
+            </div>
+            <a class="btn btn-primary" th:href="@{/app/stories/new}"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Yeni masal</a>
         </div>
-    </div>
-    <section class="section" aria-labelledby="library-title">
-        <div class="section-head"><h2 id="library-title">Masallarım</h2></div>
+    </header>
+    <section aria-labelledby="library-title">
+        <div class="section-head"><h2 id="library-title">Masallarım</h2>
+            <span class="muted" th:unless="${#lists.isEmpty(stories)}" th:text="${#lists.size(stories)} + ' masal'">2 masal</span></div>
         <div class="empty" th:if="${#lists.isEmpty(stories)}">
-            <svg class="icon icon-lg" aria-hidden="true"><use href="#i-book"/></svg>
+            <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
             <h3>Henüz masalınız yok</h3>
             <p>Çocuğunuzu, kahramanı ve temayı seçin; masalınız birkaç saniyede hazırlansın.</p>
-            <div class="hero-actions" style="justify-content:center">
+            <div class="empty-actions">
                 <a class="btn btn-primary" th:href="@{/app/stories/new}">İlk masalı oluştur</a>
                 <a class="btn btn-secondary" th:href="@{/app/children}">Çocuk ekle</a>
             </div>
         </div>
-        <ul class="grid" th:unless="${#lists.isEmpty(stories)}" style="list-style:none;padding:0">
+        <ul class="shelf" th:unless="${#lists.isEmpty(stories)}" data-stagger>
             <li th:each="story : ${stories}">
-                <a class="card card-interactive story-card" th:href="@{/app/stories/{id}(id=${story.id})}">
-                    <span class="card-title" th:text="${story.title}">Başlık</span>
-                    <span class="muted" th:text="${story.childName} + ' için · ' + ${story.theme}">Ada için · Paylaşma</span>
-                    <ul class="chips">
-                        <li th:class="'chip status-' + ${#strings.toLowerCase(story.status)}" th:text="${story.statusLabel}">Hazır</li>
-                    </ul>
+                <a class="book" th:href="@{/app/stories/{id}(id=${story.id})}">
+                    <span th:class="'book-cover cover-' + ${story.id % 4}">
+                        <span class="book-title" th:text="${story.title}">Başlık</span>
+                        <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
+                    </span>
+                    <span class="book-meta">
+                        <span class="muted" th:text="${story.childName} + ' için · ' + ${story.theme}">Ada için · Paylaşma</span>
+                        <span><span th:class="'chip status-' + ${#strings.toLowerCase(story.status)}" th:text="${story.statusLabel}">Hazır</span></span>
+                    </span>
                 </a>
             </li>
         </ul>

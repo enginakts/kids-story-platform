@@ -79,6 +79,8 @@ public class SecurityConfig {
                 .authenticationProvider(provider)
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/admin/login").permitAll()
+                        // Yapay zekâ sağlayıcıları ve yönetici hesapları yalnızca süper yöneticiye açıktır
+                        .requestMatchers("/admin/ai", "/admin/ai/**", "/admin/admins", "/admin/admins/**").hasAuthority(Role.SUPER_ADMIN)
                         .anyRequest().hasAnyAuthority(Role.ADMIN, Role.SUPER_ADMIN))
                 .formLogin(f -> f.loginPage("/admin/login").defaultSuccessUrl("/admin", true)
                         .failureHandler(failureHandler("/admin/login")).permitAll())
@@ -93,8 +95,8 @@ public class SecurityConfig {
         return http
                 .authenticationProvider(provider)
                 .authorizeHttpRequests(a -> a
-                        .requestMatchers("/", "/login", "/register", "/explore", "/verify-email",
-                                "/forgot-password", "/reset-password", "/css/**", "/fonts/**", "/error").permitAll()
+                        .requestMatchers("/", "/login", "/register", "/verify-email",
+                                "/forgot-password", "/reset-password", "/css/**", "/fonts/**", "/js/**", "/img/**", "/error").permitAll()
                         .requestMatchers("/app/**").hasAuthority(Role.PARENT)
                         .anyRequest().denyAll())
                 .formLogin(f -> f.loginPage("/login").defaultSuccessUrl("/app", true)

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Masallar · Yönetim')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<div th:replace="~{fragments/admin :: adminNav('stories')}"></div>
+<main id="main">
+    <header class="page-head">
+        <div>
+            <h1 class="page-title">Masallar</h1>
+            <p class="page-lead">Son 100 masal. Onay bekleyenleri açıp okuyabilir, onaylayabilir ya da reddedebilirsiniz.</p>
+        </div>
+    </header>
+    <nav class="filter-row" aria-label="Masal filtresi">
+        <a th:each="f : ${ {'all','completed','running','failed','review'} }" class="filter flash" th:href="@{/admin/stories(filter=${f})}"
+           th:classappend="${filter == f} ? 'is-on'" th:attr="aria-current=${filter == f} ? 'page' : null"
+           th:text="${ {'all':'Tümü','completed':'Hazır','running':'Sırada / hazırlanıyor','failed':'Oluşturulamayan','review':'Onay bekleyen'}.get(f) }">Tümü</a>
+    </nav>
+    <p class="empty-line" th:if="${#lists.isEmpty(stories)}">Bu filtrede masal yok.</p>
+    <div class="table-wrap" th:unless="${#lists.isEmpty(stories)}">
+        <table class="data-table">
+            <thead><tr><th>Masal</th><th>Çocuk</th><th>Ebeveyn</th><th>Tema</th><th>Durum</th><th>Onay</th><th class="num">Tarih</th></tr></thead>
+            <tbody>
+            <tr th:each="s : ${stories}">
+                <td><a th:href="@{/admin/stories/{id}(id=${s.id})}" th:text="${s.title}">Başlık</a></td>
+                <td th:text="${s.childName}">Ece</td>
+                <td th:text="${s.parentEmail}">e-posta</td>
+                <td><span th:replace="~{admin/labels :: theme(${s.theme})}"></span></td>
+                <td><span th:replace="~{admin/labels :: status(${s.status})}"></span></td>
+                <td><span th:replace="~{admin/labels :: moderation(${s.moderation})}"></span></td>
+                <td class="num" th:text="${#temporals.format(s.createdAt, 'dd.MM.yyyy HH:mm')}">08.11.2026</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

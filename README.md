@@ -78,6 +78,7 @@ cd backend
 | `http://localhost:8080/` | Ana sayfa |
 | `http://localhost:8080/register` | Ebeveyn kaydı |
 | `http://localhost:8080/admin/login` | Yönetici girişi (`dev`: `superadmin` / `DevAdmin123!`) |
+| `http://localhost:8080/admin` | Yönetim paneli: genel bakış, masallar ve içerik onayı, ebeveynler (kredi ekleme, askıya alma). Süper yönetici ayrıca yapay zekâ sağlayıcılarını ve yönetici hesaplarını yönetir. Her değişiklik `admin_audit_logs` tablosuna yazılır |
 
 Bu yönetici hesabı yalnızca `dev` profiline aittir.
 
@@ -101,7 +102,7 @@ Testler Docker olmadan gerçek PostgreSQL üzerinde çalışır.
 
 Geliştirmede e-posta gönderilmez; doğrulama ve sıfırlama bağlantıları konsol log'una yazılır.
 
-Masal üretimi iki aşamalıdır: metni **Trendyol LLM** (Featherless AI) yazar, **Gemini Flash** sahnelere böler. Üretimde `FEATHERLESS_API_KEY` ve `GEMINI_API_KEY` zorunludur. Geliştirmede anahtarı olmayan aşama için sabit bir taslak kullanılır. Yerelde gerçek sağlayıcılarla denemek için uygulamayı başlatmadan önce PowerShell'de: `$env:FEATHERLESS_API_KEY="..."; $env:GEMINI_API_KEY="..."`.
+Masal üretimi iki aşamalıdır: metni **Trendyol LLM** (Featherless AI) yazar, **Gemini Flash** sahnelere böler. Üretimde `FEATHERLESS_API_KEY` ve `GEMINI_API_KEY` zorunludur. Geliştirmede anahtarı olmayan aşama için sabit bir taslak kullanılır. Yerelde gerçek sağlayıcılarla denemek için `backend/.env.example` dosyasını `backend/.env` adıyla kopyalayıp anahtarları yazın (`GROQ_API_KEY=...` biçiminde). `.env` git'e girmez ve uygulama `backend` klasöründen çalıştırıldığında kendiliğinden okunur. Aynı adlı ortam değişkenleri `.env`'deki değerleri ezer.
 
 İlk yönetici için `ADMIN_USERNAME`, `ADMIN_EMAIL` ve `ADMIN_PASSWORD` verilir. Taslak yapay zekâ adaptörleri `prod` profilinde yüklenmez.
 

@@ -7,6 +7,7 @@ import com.kidstory.backend.entity.ParentSubscription;
 import com.kidstory.backend.entity.Story;
 import com.kidstory.backend.entity.SubscriptionPlan;
 import com.kidstory.backend.exception.InsufficientCreditsException;
+import com.kidstory.backend.exception.NotFoundException;
 import com.kidstory.backend.repository.CreditTransactionRepository;
 import com.kidstory.backend.repository.CreditWalletRepository;
 import com.kidstory.backend.repository.ParentSubscriptionRepository;
@@ -71,6 +72,15 @@ public class BillingService {
         CreditWallet wallet = wallets.findByParentId(parentId).orElseThrow();
         wallet.setStoryCreditBalance(wallet.getStoryCreditBalance() + 1);
         record(wallet, story, CreditTransaction.Type.REFUND, 1, 0, "Masal oluşturulamadı, kredi iadesi");
+    }
+
+    /** Yönetici, bir ebeveynin masal kredisini artırır. İşlem cüzdan geçmişine ADMIN_ADJUSTMENT olarak yazılır. */
+    @Transactional
+    public CreditWallet grantStoryCredits(Long parentId, int amount, String description) {
+        CreditWallet wallet = wallets.findByParentId(parentId).orElseThrow(() -> new NotFoundException("Cüzdan bulunamadı"));
+        wallet.setStoryCreditBalance(wallet.getStoryCreditBalance() + amount);
+        record(wallet, null, CreditTransaction.Type.ADMIN_ADJUSTMENT, amount, 0, description);
+        return wallet;
     }
 
     private void record(CreditWallet wallet, Story story, CreditTransaction.Type type, int storyAmount,

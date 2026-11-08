@@ -8,11 +8,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.ApplicationArguments;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /** İlk yönetici, parola kod veya migration içinde olmadan ortam ayarlarından oluşturulur. */
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE) // geliştirme hesaplarından önce: ilk süper yönetici her zaman oluşturulur
 @RequiredArgsConstructor
 class AdminBootstrap implements ApplicationRunner {
 
