@@ -41,13 +41,15 @@
         <ul class="shelf" th:unless="${#lists.isEmpty(stories)}" data-stagger>
             <li th:each="story : ${stories}">
                 <a class="book" th:href="@{/app/stories/{id}(id=${story.id})}">
-                    <span th:class="'book-cover cover-' + ${story.id % 4}">
+                    <span th:class="'book-cover cover-' + ${story.id % 4} + (${story.coverReady} ? ' has-art' : '')">
                         <span class="book-title" th:text="${story.title}">Başlık</span>
-                        <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
+                        <img class="book-art" th:if="${story.coverReady}" th:src="@{/app/stories/{id}/scenes/1/image(id=${story.id})}"
+                             alt="" width="1024" height="768" loading="lazy" decoding="async">
+                        <svg class="apple" aria-hidden="true" th:unless="${story.coverReady}"><use href="#apple"/></svg>
                     </span>
                     <span class="book-meta">
                         <span class="muted" th:text="${story.childName} + ' için · ' + ${story.theme}">Ada için · Paylaşma</span>
-                        <span><span th:class="'chip status-' + ${#strings.toLowerCase(story.status)}" th:text="${story.statusLabel}">Hazır</span></span>
+                        <span class="book-chips"><span th:class="'chip status-' + ${#strings.toLowerCase(story.status)}" th:text="${story.statusLabel}">Hazır</span><span class="chip chip-audio" th:if="${story.audioReady}"><svg class="icon" aria-hidden="true"><use href="#i-volume"/></svg>Sesli</span></span>
                     </span>
                 </a>
             </li>

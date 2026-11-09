@@ -41,3 +41,10 @@ backend/config/
 
 # Tasarım denetleyicisinin ekran görüntüleri ve raporları
 .taste-skill/
+
+# Ses servisi sanal ortamı
+tts-service/.venv/
+__pycache__/
+
+# Masal ses dosyaları (yerel)
+backend/media/

@@ -1074,3 +1074,78 @@ body:has(.auth-page) { height: 100dvh; overflow: hidden; }
 .book-form:is([data-fit="3"], [data-fit="4"]) .book-copy .auth-foot { margin-top: 6px; }
 .book-form[data-fit="4"] .book-copy .auth-title { font-size: 26px; }
 .book-form[data-fit="4"] .quick-text small { display: none; }
+
+/* ---------- Masal okuyucu ve seslendirme (Adım 7) ---------- */
+.icon-play, .icon-pause { fill: currentColor; stroke: none; }
+.listen { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-6); align-items: center; justify-content: space-between;
+    margin: 0 0 var(--space-7); }
+.listen-copy { flex: 1 1 320px; min-width: 0; }
+.listen-title { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-1); font-size: var(--fs-2); }
+.listen-title .icon { width: 26px; height: 26px; color: var(--red); }
+.listen-note { margin: 0; }
+.listen-progress { height: 8px; margin-top: var(--space-3); border-radius: var(--pill); background: var(--paper-2); overflow: hidden; }
+.listen-progress span { display: block; height: 100%; min-width: 8px; border-radius: inherit; background: var(--orange); transition: width var(--t-reveal) var(--ease-out); }
+.listen-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.listen-actions form { margin: 0; }
+.listen .btn .icon-play { width: 18px; height: 18px; }
+
+.scene-body { min-width: 0; }
+.scene-body .scene-number { display: block; margin-bottom: var(--space-3); }
+.scene-audio { display: block; width: 100%; max-width: 420px; margin-top: var(--space-4); }
+
+/* Sayfa sayfa okuma: yalnızca betik açıkken (reader.js .is-paged ekler) */
+.reader.is-paged .scenes { display: block; }
+.reader.is-paged .scene[hidden] { display: none; }
+/* Sayfa sayfa okumada son, masal bitince görünür */
+.reader.is-paged ~ .story-end:not(.is-shown) { display: none; }
+.reader.is-paged .scene { min-height: clamp(320px, 46vw, 460px); }
+.reader.is-paged .scene-text { font-size: clamp(26px, 3vw, 40px); }
+.reader-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4);
+    margin-top: var(--space-6); padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--ink); color: var(--paper); }
+.reader-btn, .reader-play { display: grid; place-items: center; flex: none; border: 0; border-radius: var(--pill); cursor: pointer; touch-action: manipulation;
+    transition: background-color var(--t-hover) var(--ease-out), transform var(--t-press) var(--ease-out); }
+.reader-btn { width: 48px; height: 48px; background: #2a2826; color: var(--paper); }
+.reader-play { width: 64px; height: 64px; background: var(--red); color: var(--ink); }
+.reader-play .icon { width: 26px; height: 26px; }
+.reader-play .icon-pause, .reader.is-playing .reader-play .icon-play { display: none; }
+.reader.is-playing .reader-play .icon-pause { display: block; }
+.reader-btn:active, .reader-play:active { transform: scale(0.94); }
+.reader-btn:disabled, .reader-play:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.reader-bar :focus-visible { outline-color: var(--orange); }
+@media (hover: hover) { .reader-btn:not(:disabled):hover { background: var(--paper); color: var(--ink); }
+    .reader-play:not(:disabled):hover { background: var(--orange); } }
+.reader-dots { display: flex; flex-wrap: wrap; gap: 2px; margin: 0; padding: 0; list-style: none; }
+/* Nokta küçük görünür, dokunma alanı 32px */
+.reader-dot { position: relative; width: 32px; height: 32px; border: 0; background: none; cursor: pointer; }
+.reader-dot::before { content: ""; position: absolute; inset: 10px; border-radius: 50%; border: 2px solid var(--paper-3); }
+.reader-dot.has-audio::before { border-color: var(--orange); }
+.reader-dot.is-current::before { inset: 8px; background: var(--orange); border-color: var(--orange); }
+.reader-auto { margin-left: auto; font-size: var(--fs-small); font-weight: 700; color: var(--paper-2); }
+.reader-auto input { accent-color: var(--orange); }
+.reader.is-playing .scene.is-current .scene-art .apple { animation: sway 1.6s var(--ease-in-out) infinite alternate; transform-origin: 50% 100%; }
+@media (prefers-reduced-motion: reduce) { .reader.is-playing .scene.is-current .scene-art .apple { animation: none; } }
+@media (max-width: 560px) {
+    .reader-bar { justify-content: center; }
+    .reader-dots { order: 4; width: 100%; justify-content: center; }
+    .reader-auto { order: 5; margin: 0 auto; }
+    /* Telefonda kontroller ekranda kalsın: resim alanı kısalır */
+    .reader.is-paged .scene { min-height: 0; }
+    .reader.is-paged .scene-art { aspect-ratio: 16 / 9; }
+    .reader.is-paged .scene-art .apple { width: 30%; }
+    .reader.is-paged .scene-note { display: none; }
+}
+.story-end-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); }
+.credit { margin: var(--space-5) 0 var(--space-6); text-align: center; font-size: var(--fs-small); color: var(--ink-soft); }
+.book-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.chip-audio { background: var(--ink); color: var(--paper); }
+.chip-audio .icon { width: 14px; height: 14px; }
+
+/* ---------- Sahne resimleri ve kapak (Adım 6) ---------- */
+.scene-art.has-art { background: var(--paper-2); }
+.scene-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.art-note { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-3) 0 0; font-size: var(--fs-small); color: var(--ink-soft); }
+.art-note .icon { width: 18px; height: 18px; }
+.book-cover.has-art { justify-content: flex-start; gap: var(--space-3); }
+.book-cover .book-art { position: absolute; left: 10px; right: 0; bottom: 0; width: calc(100% - 10px); height: 58%; object-fit: cover;
+    border-radius: 0 0 var(--radius) 0; }
+@media (max-width: 560px) { .reader.is-paged .scene-art.has-art { aspect-ratio: 4 / 3; } }

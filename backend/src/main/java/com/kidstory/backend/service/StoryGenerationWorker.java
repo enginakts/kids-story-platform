@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Veritabanı kuyruğundan (generation_jobs) iş alır. FOR UPDATE SKIP LOCKED sayesinde birden fazla sunucu
@@ -25,6 +26,8 @@ public class StoryGenerationWorker {
     private final JdbcTemplate jdbc;
     private final TransactionTemplate tx;
     private final StoryGenerationService generation;
+    private final StoryAudioService audio;
+    private final StoryImageService images;
 
     /** false ise zamanlanmış çalışma durur (testler runOnce'ı doğrudan çağırır). */
     @Value("${app.generation.worker-enabled:true}")
@@ -45,22 +48,41 @@ public class StoryGenerationWorker {
         tx.executeWithoutResult(s -> jdbc.update("""
                 UPDATE generation_jobs SET status = 'QUEUED', run_after = now()
                 WHERE status = 'RUNNING' AND started_at < now() - interval '10 minutes'"""));
-        List<Long> claimed = tx.execute(s -> jdbc.queryForList("""
+        // Öncelik: masal metni, sonra sahne resimleri, sonra sesler. Medya işleri birikse de yeni masal beklemez.
+        List<Map<String, Object>> claimed = tx.execute(s -> jdbc.queryForList("""
                 UPDATE generation_jobs SET status = 'RUNNING', started_at = now(), attempt_count = attempt_count + 1
                 WHERE id = (SELECT id FROM generation_jobs
-                            WHERE status = 'QUEUED' AND run_after <= now() AND job_type = 'STORY_TEXT'
-                            ORDER BY run_after, id LIMIT 1 FOR UPDATE SKIP LOCKED)
-                RETURNING id""", Long.class));
+                            WHERE status = 'QUEUED' AND run_after <= now() AND job_type IN ('STORY_TEXT', 'SCENE_IMAGE', 'SCENE_AUDIO')
+                            ORDER BY CASE job_type WHEN 'STORY_TEXT' THEN 0 WHEN 'SCENE_IMAGE' THEN 1 ELSE 2 END, run_after, id
+                            LIMIT 1 FOR UPDATE SKIP LOCKED)
+                RETURNING id, job_type"""));
         if (claimed == null || claimed.isEmpty()) {
             return false;
         }
-        Long jobId = claimed.getFirst();
+        Long jobId = ((Number) claimed.getFirst().get("id")).longValue();
+        String type = (String) claimed.getFirst().get("job_type");
         try {
-            StoryGenerationService.Prepared prepared = generation.prepare(jobId);
-            generation.complete(prepared, generation.generate(prepared));
+            switch (type) {
+                case "STORY_TEXT" -> {
+                    StoryGenerationService.Prepared prepared = generation.prepare(jobId);
+                    generation.complete(prepared, generation.generate(prepared));
+                }
+                case "SCENE_IMAGE" -> {
+                    StoryImageService.Prepared prepared = images.prepare(jobId);
+                    images.complete(prepared, images.generate(prepared));
+                }
+                default -> {
+                    StoryAudioService.Prepared prepared = audio.prepare(jobId);
+                    audio.complete(prepared, audio.synthesize(prepared));
+                }
+            }
         } catch (Exception e) {
             try {
-                generation.fail(jobId, e);
+                switch (type) {
+                    case "STORY_TEXT" -> generation.fail(jobId, e);
+                    case "SCENE_IMAGE" -> images.fail(jobId, e);
+                    default -> audio.fail(jobId, e);
+                }
             } catch (Exception inner) {
                 log.error("Üretim işi hatası kaydedilemedi (job={})", jobId, inner);
             }

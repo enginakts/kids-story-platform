@@ -12,9 +12,10 @@ Proje tek bir Spring Boot uygulamasıdır. Web arayüzü Thymeleaf ile sunucuda 
 | Web | Thymeleaf | `/`, `/app/**`, `/admin/**`; oturum ve CSRF korumalı |
 | Mobil | REST API | `/api/v1/**`; JWT, oturumsuz. Mobil istemci sonraki aşamada |
 | Veritabanı | PostgreSQL 16 | Şema yalnızca Flyway ile yönetilir |
-| Masal metni | Trendyol LLM (`Trendyol-LLM-8B-T1`), Featherless AI | `AiRouter`, `ai_providers_config` (`LLM`) öncelik sırasıyla sağlayıcı dener |
+| Masal metni | Groq (`openai/gpt-oss-120b`); yedek: Trendyol LLM (`Trendyol-LLM-8B-T1`), Featherless AI | `AiRouter`, `ai_providers_config` (`LLM`) öncelik sırasıyla sağlayıcı dener |
 | Sahnelere bölme | Google Gemini Flash (`gemini-3.6-flash`) | Aynı yönlendirici, `SCENE` rolü; JSON şemalı çıktı |
-| Görsel ve TTS | Dış API | `ImageClient`, `TtsClient` arayüzleri; şu an yalnızca taslak adaptörler var |
+| Seslendirme (TTS) | Kikiri Türkçe TTS (ücretsiz model, kendi servisimiz `tts-service/`) | `TtsClient`, `KikiriTtsClient`; `ai_providers_config` (`TTS`) |
+| Sahne resimleri | Cloudflare Workers AI, FLUX.2 [klein] 4B (günde yaklaşık 90 ücretsiz resim) | `ImageClient`, `CloudflareImageClient`; `ai_providers_config` (`IMAGE`); karakter referans portreleri |
 | Üretim kuyruğu | Veritabanı kuyruğu | `generation_jobs`; ücretsiz katmanda Redis gerektirmez |
 | Giriş | E-posta ve parola | Ebeveyn ve yönetici ayrı tablo, ayrı giriş |
 | Dağıtım | Önce yerel, sonra bulut | `dev` ve `prod` profilleri |
@@ -63,6 +64,24 @@ cd backend
 
 Veriler `backend/.devdb` klasöründe kalıcıdır. Sıfırlamak için uygulamayı kapatıp bu klasörü silin.
 
+### Ses servisi (masal seslendirme)
+
+Masalların sesi ayrı bir Python servisinde, ücretsiz Kikiri Türkçe TTS modeliyle üretilir. Kurulum ve Hugging Face Space'e taşıma: [tts-service/README.md](./tts-service/README.md). Kısaca (PowerShell):
+
+```powershell
+cd tts-service
+py -3.11 -m venv .venv
+.venv\Scripts\python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+.venv\Scripts\python -m pip install -r requirements.txt
+.venv\Scripts\python -m uvicorn app:app --port 8000
+```
+
+Spring uygulaması servisi `http://localhost:8000` adresinde arar (`KIKIRI_TTS_URL`). Servis kapalıysa masallar yine oluşur, sesler birkaç kez yeniden denenir ve masal sayfasında "Sesi yeniden hazırla" düğmesi çıkar. Servis hiç kullanılmayacaksa `KIKIRI_TTS_ENABLED=false` ile sessiz taslak ses kullanılır (yalnızca geliştirme). Ses dosyaları `backend/media` klasörüne yazılır (git'e girmez).
+
+### Sahne resimleri (Cloudflare)
+
+Gerçek resimler için `backend/.env` dosyasına `CLOUDFLARE_ACCOUNT_ID` ve `CLOUDFLARE_API_TOKEN` ekleyin (Cloudflare panelinde AI > Workers AI > "REST API kullan"; ücretsiz hesap yeterli). Anahtar yoksa geliştirmede düz renkli taslak resimler çizilir. Eski masallar için masal sayfasındaki "Resimleri çiz" düğmesi kullanılır.
+
 ### Docker ile
 
 ```bash
@@ -102,7 +121,9 @@ Testler Docker olmadan gerçek PostgreSQL üzerinde çalışır.
 
 Geliştirmede e-posta gönderilmez; doğrulama ve sıfırlama bağlantıları konsol log'una yazılır.
 
-Masal üretimi iki aşamalıdır: metni **Trendyol LLM** (Featherless AI) yazar, **Gemini Flash** sahnelere böler. Üretimde `FEATHERLESS_API_KEY` ve `GEMINI_API_KEY` zorunludur. Geliştirmede anahtarı olmayan aşama için sabit bir taslak kullanılır. Yerelde gerçek sağlayıcılarla denemek için `backend/.env.example` dosyasını `backend/.env` adıyla kopyalayıp anahtarları yazın (`GROQ_API_KEY=...` biçiminde). `.env` git'e girmez ve uygulama `backend` klasöründen çalıştırıldığında kendiliğinden okunur. Aynı adlı ortam değişkenleri `.env`'deki değerleri ezer.
+Masal üretimi iki aşamalıdır: metni **Groq** (`openai/gpt-oss-120b`) yazar, **Gemini Flash** sahnelere böler; Featherless (Trendyol LLM) anahtarı verilirse yedektir. Üretimde `GROQ_API_KEY` ve `GEMINI_API_KEY` zorunludur. Geliştirmede anahtarı olmayan aşama için sabit bir taslak kullanılır. Yerelde gerçek sağlayıcılarla denemek için `backend/.env.example` dosyasını `backend/.env` adıyla kopyalayıp anahtarları yazın (`GROQ_API_KEY=...` biçiminde). `.env` git'e girmez ve uygulama `backend` klasöründen çalıştırıldığında kendiliğinden okunur. Aynı adlı ortam değişkenleri `.env`'deki değerleri ezer.
+
+Sahne resimleri için `CLOUDFLARE_ACCOUNT_ID` ve `CLOUDFLARE_API_TOKEN` zorunludur (Cloudflare panelinde AI > Workers AI > REST API; token yalnızca Workers AI iznine sahip olmalıdır). Seslendirme için `KIKIRI_TTS_URL` (ses servisinin adresi) ve `MEDIA_DIR` (ses dosyalarının kalıcı klasörü) zorunludur; servis internete açıksa `KIKIRI_TTS_TOKEN`, özel Hugging Face Space için `KIKIRI_TTS_HF_TOKEN` verilir.
 
 İlk yönetici için `ADMIN_USERNAME`, `ADMIN_EMAIL` ve `ADMIN_PASSWORD` verilir. Taslak yapay zekâ adaptörleri `prod` profilinde yüklenmez.
 
@@ -126,7 +147,11 @@ Masal üretimi iki aşamalıdır: metni **Trendyol LLM** (Featherless AI) yazar,
 | GET | `/api/v1/locations` | Sistem mekân şablonları |
 | POST | `/api/v1/stories` | Masal ister (1 kredi); 202 döner, masal arka planda hazırlanır |
 | GET | `/api/v1/stories` | Ebeveynin masalları ve durumları |
-| GET | `/api/v1/stories/{id}` | Masalın sahneleri |
+| GET | `/api/v1/stories/{id}` | Masalın sahneleri, resim ve ses durumu (`images.status`, `audio.status`: `NONE`, `PREPARING`, `READY`, `PARTIAL`, `FAILED`) |
+| GET | `/api/v1/stories/{id}/scenes/{n}/audio` | Sahne sesi (MP3, Range destekli); yalnızca masalın sahibi |
+| POST | `/api/v1/stories/{id}/audio` | Hazırlanamamış sahne seslerini yeniden ister; 202 döner |
+| GET | `/api/v1/stories/{id}/scenes/{n}/image` | Sahne resmi; 1. sahnenin resmi kapaktır (`coverReady`) |
+| POST | `/api/v1/stories/{id}/images` | Hazırlanamamış sahne resimlerini yeniden ister; 202 döner |
 | GET | `/api/v1/stories/options` | Tema, anlatım biçimi ve uzunluk seçenekleri |
 
 Ebeveyn kimliği her zaman token'dan okunur, istekten alınmaz. Erişim token'ı 15 dakika, yenileme token'ı 30 gün geçerlidir.

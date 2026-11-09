@@ -1,0 +1,10 @@
+# CPU için: pip install torch --index-url https://download.pytorch.org/whl/cpu  (önce bu, sonra bu dosya)
+torch>=2.5
+kokoro>=0.9.4
+phonemizer-fork>=3.3
+espeakng-loader>=0.2
+huggingface_hub>=0.30
+numpy
+soundfile>=0.13
+fastapi>=0.115
+uvicorn[standard]>=0.30

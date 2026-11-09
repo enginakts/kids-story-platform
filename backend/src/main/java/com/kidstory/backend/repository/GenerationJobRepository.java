@@ -8,4 +8,6 @@ import java.util.List;
 public interface GenerationJobRepository extends JpaRepository<GenerationJob, Long> {
 
     List<GenerationJob> findByStoryIdOrderByIdAsc(Long storyId);
+
+    List<GenerationJob> findByStoryIdAndJobTypeOrderByIdAsc(Long storyId, GenerationJob.Type jobType);
 }

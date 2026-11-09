@@ -9,6 +9,7 @@ import com.kidstory.backend.entity.GenerationJob;
 import com.kidstory.backend.entity.LocationBible;
 import com.kidstory.backend.entity.Parent;
 import com.kidstory.backend.entity.Story;
+import com.kidstory.backend.entity.StoryScene;
 import com.kidstory.backend.entity.StoryCharacter;
 import com.kidstory.backend.exception.EmailNotVerifiedException;
 import com.kidstory.backend.exception.FieldValidationException;
@@ -25,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,6 +45,8 @@ public class StoryService {
     private final CharacterBibleRepository characters;
     private final LocationBibleRepository locations;
     private final BillingService billing;
+    private final StoryAudioService audio;
+    private final StoryImageService images;
 
     /** Krediyi harcar, masalı ve metin üretim işini kuyruğa koyar. Üretim arka planda yapılır. */
     @Transactional
@@ -94,17 +98,25 @@ public class StoryService {
 
     @Transactional(readOnly = true)
     public List<StorySummaryResponse> list(Long parentId) {
-        return stories.findByParentIdOrderByCreatedAtDesc(parentId).stream().map(StorySummaryResponse::from).toList();
+        Set<Long> withAudio = new HashSet<>(scenes.findStoryIdsWithFullAudio(parentId));
+        return stories.findByParentIdOrderByCreatedAtDesc(parentId).stream()
+                .map(s -> StorySummaryResponse.from(s, withAudio.contains(s.getId()))).toList();
     }
 
     @Transactional(readOnly = true)
     public StoryDetailResponse get(Long parentId, Long storyId) {
         Story story = stories.findByIdAndParentId(storyId, parentId)
                 .orElseThrow(() -> new NotFoundException("Masal bulunamadı"));
-        List<StoryDetailResponse.Scene> list = scenes.findByStoryIdOrderBySceneNumberAsc(storyId).stream()
-                .map(s -> new StoryDetailResponse.Scene(s.getSceneNumber(), s.getSceneText(), s.getImageUrl(), s.getAudioUrl()))
+        List<StoryScene> sceneList = scenes.findByStoryIdOrderBySceneNumberAsc(storyId);
+        List<StoryDetailResponse.Scene> list = sceneList.stream()
+                .map(s -> new StoryDetailResponse.Scene(s.getSceneNumber(), s.getSceneText(),
+                        s.getImageUrl() == null ? null : "/api/v1/stories/" + storyId + "/scenes/" + s.getSceneNumber() + "/image",
+                        s.getAudioUrl() == null ? null : "/api/v1/stories/" + storyId + "/scenes/" + s.getSceneNumber() + "/audio",
+                        s.getAudioDurationSeconds()))
                 .toList();
-        return new StoryDetailResponse(StorySummaryResponse.from(story), StoryCatalog.style(story.getNarrationStyle()), list);
+        StoryDetailResponse.Progress audioStatus = audio.status(storyId, sceneList);
+        return new StoryDetailResponse(StorySummaryResponse.from(story, "READY".equals(audioStatus.status())),
+                StoryCatalog.style(story.getNarrationStyle()), list, audioStatus, images.status(storyId, sceneList));
     }
 
     @Transactional(readOnly = true)

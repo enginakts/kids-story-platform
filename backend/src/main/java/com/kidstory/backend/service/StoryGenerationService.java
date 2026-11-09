@@ -15,21 +15,20 @@ import com.kidstory.backend.repository.StorySceneRepository;
 import com.kidstory.backend.service.ai.AiRouter;
 import com.kidstory.backend.service.ai.LlmClient;
 import com.kidstory.backend.service.ai.LlmRequest;
-import com.kidstory.backend.service.ai.RateLimitedException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 /**
- * Masal üretim işinin adımları: 1) Trendyol LLM metni yazar, 2) Gemini sahnelere böler.
+ * Masal üretim işinin adımları: 1) Trendyol LLM metni yazar, 2) Gemini sahnelere böler, 3) sahne resimleri ve sesleri kuyruğa girer.
  * Dış çağrılar veritabanı işlemi dışında yapılır; hazırlık ve sonuç kaydı kısa işlemlerdir.
  */
 @Service
@@ -45,6 +44,8 @@ public class StoryGenerationService {
     private final StoryDraftParser parser;
     private final AiRouter router;
     private final BillingService billing;
+    private final StoryAudioService audio;
+    private final StoryImageService images;
 
     /**
      * textRequest hazırdır; sahne isteği 1. aşamanın metniyle kurulur (sceneRequest).
@@ -103,6 +104,7 @@ public class StoryGenerationService {
 
         story.setTitle(personalize(draft.title(), prepared, childName));
         int number = 1;
+        List<StoryScene> saved = new ArrayList<>();
         for (StoryDraft.Scene s : draft.scenes()) {
             String text = personalize(s.text().trim(), prepared, childName);
             StoryScene scene = new StoryScene();
@@ -112,11 +114,13 @@ public class StoryGenerationService {
             scene.setSceneText(text);
             scene.setVoiceText(text);
             scene.setImagePrompt(StoryPromptBuilder.imagePrompt(s.imagePrompt(), story, sides, prepared.placeholder()));
-            scenes.save(scene);
+            saved.add(scenes.save(scene));
         }
         story.setTotalScenes(draft.scenes().size());
-        // Görsel (Adım 6) ve ses (Adım 7) eklenene kadar metin hazır olduğunda masal tamamlanmış sayılır.
+        // Metin hazır olunca masal okunabilir; sahne resimleri (Adım 6) ve sesleri (Adım 7) arka planda hazırlanır.
         story.setStatus(StoryEnums.Status.COMPLETED);
+        images.enqueue(story, saved);
+        audio.enqueue(story, saved);
 
         job.setStatus(GenerationJob.Status.SUCCEEDED);
         job.setProviderName(generated.provider());
@@ -129,29 +133,13 @@ public class StoryGenerationService {
     public void fail(Long jobId, Exception error) {
         GenerationJob job = jobs.findById(jobId).orElseThrow();
         Story story = job.getStory();
-        // AiRouter sağlayıcı hatasını sarar; asıl neden ve hız sınırı zincirin içinden bulunur.
-        Throwable root = error;
-        RateLimitedException rateLimited = null;
-        for (Throwable t = error; t != null; t = t.getCause()) {
-            if (t instanceof RateLimitedException r) {
-                rateLimited = r;
-            }
-            root = t;
-        }
-        String message = root.getMessage() == null ? root.getClass().getSimpleName() : root.getMessage();
-        job.setLastError(message.length() > 500 ? message.substring(0, 500) : message);
-        if (job.getAttemptCount() < job.getMaxAttempts()) {
-            long delay = rateLimited != null ? rateLimited.getRetryAfterSeconds() : 15L * job.getAttemptCount();
-            job.setStatus(GenerationJob.Status.QUEUED);
-            job.setRunAfter(Instant.now().plus(Duration.ofSeconds(delay)));
-            log.info("Masal üretimi yeniden denenecek (job={}, deneme={}): {}", jobId, job.getAttemptCount(), message);
+        if (JobRetry.reschedule(job, error, 15)) {
+            log.info("Masal üretimi yeniden denenecek (job={}, deneme={}): {}", jobId, job.getAttemptCount(), job.getLastError());
             return;
         }
-        job.setStatus(GenerationJob.Status.FAILED);
-        job.setFinishedAt(Instant.now());
         story.setStatus(StoryEnums.Status.FAILED);
         billing.refundStoryCredit(story.getParent().getId(), story);
-        log.warn("Masal üretimi başarısız (job={}, story={}): {}", jobId, story.getId(), message);
+        log.warn("Masal üretimi başarısız (job={}, story={}): {}", jobId, story.getId(), job.getLastError());
     }
 
     private PromptTemplate template(String key) {

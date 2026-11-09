@@ -17,8 +17,8 @@ Proje küçük, test edilebilir adımlarla ilerler. Her adım hem web arayüzün
 | 3 | Hesap tamamlama: e-posta doğrulama, parola sıfırlama, mobil yenileme token'ı, giriş hız sınırı | Vize | İncelemede |
 | 4 | Karakter rehberi (ebeveyne ait) ve sistem mekân şablonları; arayüz tasarım sistemi | Vize | İncelemede |
 | 5 | Masal sihirbazı; Trendyol LLM ile metin, Gemini Flash ile sahnelere bölme; içerik güvenliği, kredi | Vize | İncelemede |
-| 6 | Görsel üretimi ve dosya depolama | Vize | Sıradaki |
-| 7 | TTS ve masal okuyucu | Vize | Planlandı |
+| 6 | Görsel üretimi (Cloudflare FLUX.2 klein), karakter referans portreleri ve dosya depolama | Vize | İncelemede |
+| 7 | TTS (Kikiri, ücretsiz Türkçe model) ve masal okuyucu | Vize | İncelemede |
 | 8 | Kütüphane, favoriler ve ebeveyn kilidi | Vize | Planlandı |
 | 9 | Özel/herkese açık masal, keşfet, denetim kuyruğu | Vize | Planlandı |
 | 10 | Yönetim paneli: kullanıcı, masal, kara liste, prompt, sağlayıcı yönetimi | Vize | Planlandı |
@@ -49,7 +49,38 @@ Proje küçük, test edilebilir adımlarla ilerler. Her adım hem web arayüzün
 
 ## Sonraki eylem
 
-Adım 0-5 incelendikten sonra Adım 6 ile devam edilir. Adım 6'ya başlamadan görsel üretim sağlayıcısı web'den güncel olarak araştırılıp seçilir.
+Adım 6 ve 7 incelendikten sonra Adım 8 (kütüphane, favoriler ve ebeveyn kilidi) ile devam edilir. Proje sahibi ses adımını görselden önce aldı.
+
+## Metin sağlayıcısı değişikliği (V9)
+
+* Proje sahibinin kararıyla masal metni artık **Groq** üzerinden yazılır (`openai/gpt-oss-120b`, Groq'un model listesinden 9 Kasım 2026'da doğrulandı). Featherless (Trendyol LLM) silinmedi; 2. sıradadır ve anahtarı verilirse Groq hata verdiğinde yedek olur. Sahnelere bölme Gemini'de kalır.
+* Aynı metin prompt'u (`story.text.v3`) kullanılır; Qwen'e özgü `/no_think` komutu Groq'a gönderilmez. Çocuk verisi kuralı değişmez: Groq'a çocuğun adı gitmez, yer tutucu ad kullanılır.
+* Groq anahtarı varken taslak metin yüklenmez; Groq hata verirse iş yeniden denenir. Testler `backend/.env` dosyasındaki gerçek anahtarları kullanmaz.
+
+## Adım 6 kararları (Cloudflare FLUX.2 klein ile sahne resimleri)
+
+* **Sağlayıcı (proje sahibinin kararı):** Cloudflare Workers AI üzerinde Black Forest Labs **FLUX.2 [klein] 4B** (açık ağırlıklar Apache 2.0). Günde 10.000 ücretsiz "neuron" verilir; 1024x768 bir resim yaklaşık 100 neuron tutar, yani günde yaklaşık 90-100 resim (20 civarı masal) ücretsizdir. Aşımı 1.000 neuron başına 0,011 $'dır (resim başına yaklaşık 0,001 $). Cloudflare bu model için veri saklamaz (zero data retention).
+* **Araştırılan diğer seçenekler:** Gemini görsel modelleri (Nano Banana) ücretsiz katman sunmuyor (resim başına yaklaşık 0,034 $). Kendi GPU'muzda FLUX.2 klein ücretsiz ama 8 GB kartta sınırda ve canlıda GPU'lu sunucu ister. Model adı `ai_providers_config` tablosundan değiştirilebilir; `@cf/black-forest-labs/flux-1-schnell` daha ucuzdur ama boyut ve referans görsel almaz (adaptör ikisini de destekler).
+* **Karakter tutarlılığı:** Her karakter için bir kez beyaz zeminli bir referans portre üretilir ve `character_bibles.reference_image_url` alanına kaydedilir (tohum `base_seed`). Sonraki tüm sahnelere bu portreler referans görsel olarak verilir (en fazla 3 karakter, 448 piksele küçültülmüş). İkinci masalda aynı karakterin portresi yeniden üretilmez. Sahne resmi başarısız olsa bile üretilen portre saklanır. Aynı masalın sahneleri birbirine yakın tohumlarla çizilir.
+* **Akış:** Masal metni hazır olunca her sahne için bir `SCENE_IMAGE` işi kuyruğa girer. Kuyruk önceliği: masal metni, sonra resimler, sonra sesler. Masal resimler beklenmeden okunabilir; okuyucu hazır olan resimleri sayfa yenilenmeden gösterir. 1. sahnenin resmi masalın kapağıdır (`stories.cover_image_url`) ve kütüphanede gösterilir.
+* **Hata:** Resim işi 3 kez denenir; günlük ücretsiz kota bitmişse (HTTP 429) `retry-after` kadar beklenir. Olmazsa masal geçerli kalır, kredi iade edilmez; ebeveyn "Resimleri yeniden çiz" ile yalnızca eksik sahneleri yeniden ister.
+* **Çocuk verisi ve güvenlik:** Görsel prompt'una çocuğun adı gitmez (yer tutucu "a small child" olur); yalnızca İngilizce sahne tarifi, karakter ve mekân görünüşleri ve sabit çizim tarzı gider. Resimler herkese açık adresten değil, sahiplik denetimi yapan uç noktalardan sunulur. Üretilen resimler için otomatik görsel içerik denetimi yoktur: prompt'lar kara listeden geçmiş metinden ve güvenli sabit tarzdan oluşur, resimleri yalnızca ebeveyn görür. Keşfette yayımlanmadan önce (Adım 9) resimler de yönetici denetiminden geçmelidir.
+* **Geliştirme:** Cloudflare anahtarı yoksa dış servise gidilmez; prompt'a göre renklenen düz bir taslak resim üretilir.
+* **Açık konular:** Gerçek Cloudflare çağrısı henüz denenmedi (hesap bilgileri bekleniyor); karakter tutarlılığının ve çizim tarzının kalitesi gerçek resimlerle değerlendirilmeli. Yerel dosya deposu tek sunucu içindir; bulut adımında S3 uyumlu bir depoya geçilmeli.
+
+## Adım 7 kararları (Kikiri TTS ve masal okuyucu)
+
+* **Model:** Proje sahibinin kararıyla Hugging Face'teki ücretsiz **Kikiri Türkçe TTS** (`duxx/kikiri-turkish-base`, Kokoro-82M'den türetilmiş, tek ses: Nisan). Model için Hugging Face'te hazır bir çalıştırma servisi yoktur; bu yüzden kendi küçük servisimizde çalışır (`tts-service/`, FastAPI). Servis yerelde veya ücretsiz, özel (private) bir Hugging Face Space'te aynı Dockerfile ile çalışır.
+* **Neden ayrı servis:** Model Python (PyTorch) gerektirir. Spring uygulaması servise `KikiriTtsClient` ile HTTP üzerinden bağlanır (`ai_providers_config` içinde `TTS` / `kikiri`). Başka bir TTS sağlayıcısına geçmek için yeni bir adaptör ve tablo satırı yeterlidir.
+* **Teknik ayrıntı:** Metin eSpeak-ng ile Türkçe fonemlere çevrilip modele verilir (model böyle eğitildi). Checkpoint yeni PyTorch ağırlık normalizasyonu adlarıyla kaydedilmiş; Kokoro bunları sessizce atlayıp gürültü üretiyordu. Servis anahtarları dönüştürüp sıkı yükler; eksik ağırlık olursa açılmaz. Çıktı 24 kHz MP3'tür (5 saniyelik sahne yaklaşık 38 KB). CPU'da 10 saniyelik ses yaklaşık 2 saniyede üretilir.
+* **Akış:** Masal metni hazır olunca masal hemen okunabilir ("Hazır") ve her sahne için bir `SCENE_AUDIO` işi kuyruğa girer. Aynı veritabanı kuyruğu kullanılır; masal metni işleri her zaman önce alınır, ses işleri yeni masalları bekletmez. Okuyucu ses durumunu 4 saniyede bir yoklar ve hazır olan sahneleri sayfa yenilenmeden açar.
+* **Hata:** Ses işi 3 kez denenir (servis uyuyorsa veya meşgulse `retry-after` kadar beklenir). Olmazsa masal geçerli kalır, kredi iade edilmez; ebeveyn "Sesi yeniden hazırla" ile yalnızca eksik sahneleri yeniden ister. Ses servisi kapalıyken uygulama ve masal üretimi çalışmaya devam eder.
+* **Anlatım hızı:** Uyku masalı 0,88, sıcak ve kafiyeli 0,95, oyunbaz 1,0. Karakter başına ses (`voice_id`) modelde tek ses olduğu için kullanılmıyor.
+* **Dosyalar:** Ses dosyaları `MediaStorage` ile saklanır (şimdilik sunucu diski, `MEDIA_DIR`). Dosyalar herkese açık bir adresten değil, sahiplik denetimi yapan uç noktalardan sunulur (web: oturum, mobil: token). Tarayıcının parça parça istemesi (Range) desteklenir.
+* **Çocuk verisi:** Seslendirilen metin kişiselleştirilmiş olabilir (çocuğun adını içerir). Bu yüzden servis üçüncü taraf bir API değil, bizim çalıştırdığımız bir sunucudur; metin kaydedilmez ve log'a yazılmaz. Servis internete açıksa `TTS_SERVICE_TOKEN` zorunlu tutulur.
+* **Lisans:** Model CC BY-SA 3.0, temel model Apache 2.0. Okuyucuda atıf satırı gösterilir. "Aynı lisansla paylaş" koşulunun üretilen ses dosyalarına nasıl uygulanacağı ticari yayından önce bir hukukçuya danışılmalıdır.
+* **Okuyucu:** Betik yoksa sahneler alt alta, her biri kendi ses oynatıcısıyla gösterilir. Betik varsa sayfa sayfa okunur: önceki/sonraki, sahne noktaları, klavye okları, "Baştan dinle" ve sahne bitince kendiliğinden sonraki sahneye geçme. "Hareketi azalt" açıksa geçişler canlandırılmaz.
+* **Açık konular:** Ses kalitesi ve Türkçe telaffuz insan kulağıyla değerlendirilmeli (otomatik kontrolde sinyal, modelin kendi örnek kaydıyla aynı özellikleri gösteriyor). Masal sayfası ve sesler ebeveyn oturumunda açılır; çocuğun ebeveyn kilidiyle kendi başına dinlemesi Adım 8'e aittir. Ücretsiz Space uykudan uyanırken ilk ses gecikebilir.
 
 ## Adım 5 kararları (Trendyol LLM + Gemini Flash)
 

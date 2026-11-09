@@ -5,7 +5,7 @@
 <svg th:replace="~{fragments/layout :: icons}"></svg>
 <a th:replace="~{fragments/layout :: skip}"></a>
 <header th:replace="~{fragments/layout :: appNav(${user.displayName}, 'library')}"></header>
-<main id="main" class="story-page" th:with="s=${detail.story}">
+<main id="main" class="story-page" th:with="s=${detail.story}, audio=${detail.audio}, images=${detail.images}">
     <a class="btn btn-ghost btn-sm" th:href="@{/app}"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>Kütüphanem</a>
 
     <th:block th:if="${s.status == 'PENDING' or s.status == 'GENERATING'}">
@@ -34,25 +34,111 @@
             </ul>
             </div>
         </header>
-        <ol class="scenes">
-            <li class="scene" th:each="scene : ${detail.scenes}">
-                <div class="scene-art" aria-hidden="true">
-                    <svg class="apple"><use href="#apple"/></svg>
-                    <p class="scene-note">Bu sahnenin resmi bir sonraki adımda eklenecek.</p>
+
+        <!-- Ses ve resim durumu. Biri hazırlanırken okuyucu durumu yoklar ve hazır olan sahneleri sayfa yenilenmeden açar. -->
+        <section class="listen card" aria-labelledby="listen-title"
+                 th:attr="data-media-preparing=${audio.preparing() or images.preparing()},data-status-url=@{/app/stories/{id}/media-status(id=${s.id})}">
+            <div class="listen-copy">
+                <h2 id="listen-title" class="listen-title">
+                    <svg class="icon" aria-hidden="true"><use href="#i-volume"/></svg>
+                    <span th:switch="${audio.status}">
+                        <th:block th:case="'READY'">Sesli masal hazır</th:block>
+                        <th:block th:case="'PREPARING'">Masal seslendiriliyor</th:block>
+                        <th:block th:case="'PARTIAL'">Bazı sahnelerin sesi hazırlanamadı</th:block>
+                        <th:block th:case="'FAILED'">Ses hazırlanamadı</th:block>
+                        <th:block th:case="*">Masalı sesli dinleyin</th:block>
+                    </span>
+                </h2>
+                <p class="listen-note muted" data-audio-note role="status" aria-live="polite">
+                    <th:block th:if="${audio.preparing()}" th:text="${audio.ready} + ' / ' + ${audio.total} + ' sahne hazır. Masalı okumaya başlayabilirsiniz; sesler hazır oldukça açılır.'">2 / 5 sahne hazır.</th:block>
+                    <th:block th:if="${audio.status == 'READY'}">Sahneler sırayla okunur, bir sahne bitince sonrakine geçilir.</th:block>
+                    <th:block th:if="${audio.status == 'PARTIAL' or audio.status == 'FAILED'}">Ses servisine şu anda ulaşılamadı. Masalın metni hazır; sesi yeniden isteyebilirsiniz.</th:block>
+                    <th:block th:if="${audio.status == 'NONE'}">Bu masal için henüz ses hazırlanmadı.</th:block>
+                </p>
+                <div class="listen-progress" th:if="${audio.preparing()}" aria-hidden="true">
+                    <span data-audio-bar th:style="'width:' + ${audio.total == 0 ? 0 : audio.ready * 100 / audio.total} + '%'"></span>
                 </div>
-                <div>
-                    <p class="scene-text" th:text="${scene.text}">Sahne metni</p>
-                    <span class="scene-number" th:text="'Sahne ' + ${scene.sceneNumber} + ' / ' + ${#lists.size(detail.scenes)}">Sahne 1 / 5</span>
-                </div>
-            </li>
-        </ol>
-        <div class="story-end">
+                <p class="art-note" data-image-note role="status" aria-live="polite" th:unless="${images.status == 'READY'}">
+                    <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
+                    <span th:switch="${images.status}">
+                        <th:block th:case="'PREPARING'" th:text="'Resimler çiziliyor: ' + ${images.ready} + ' / ' + ${images.total} + ' sahne hazır.'">Resimler çiziliyor.</th:block>
+                        <th:block th:case="'PARTIAL'">Bazı sahnelerin resmi çizilemedi.</th:block>
+                        <th:block th:case="'FAILED'">Resimler çizilemedi; resim servisine şu anda ulaşılamıyor.</th:block>
+                        <th:block th:case="*">Bu masal için henüz resim çizilmedi.</th:block>
+                    </span>
+                </p>
+            </div>
+            <div class="listen-actions">
+                <button class="btn btn-primary" type="button" data-listen hidden th:if="${audio.ready > 0 or audio.preparing()}">
+                    <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span>Baştan dinle</span></button>
+                <form th:if="${audio.canRequest()}" th:action="@{/app/stories/{id}/audio(id=${s.id})}" method="post">
+                    <button class="btn btn-secondary" type="submit"
+                            th:text="${audio.status == 'NONE'} ? 'Sesi hazırla' : 'Sesi yeniden hazırla'">Sesi hazırla</button>
+                </form>
+                <form th:if="${images.canRequest()}" th:action="@{/app/stories/{id}/images(id=${s.id})}" method="post">
+                    <button class="btn btn-secondary" type="submit"
+                            th:text="${images.status == 'NONE'} ? 'Resimleri çiz' : 'Resimleri yeniden çiz'">Resimleri çiz</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Okuyucu: betik yoksa tüm sahneler alt alta, her biri kendi ses oynatıcısıyla.
+             Betik varsa sayfa sayfa okunur; sesli okumada bir sahne bitince sonrakine geçilir. -->
+        <section class="reader" data-reader aria-label="Masal" th:attr="data-total=${#lists.size(detail.scenes)}">
+            <ol class="scenes">
+                <li class="scene" th:each="scene : ${detail.scenes}" th:id="'sahne-' + ${scene.sceneNumber}"
+                    th:attr="data-scene=${scene.sceneNumber},data-duration=${scene.audioDurationSeconds}">
+                    <div class="scene-art" th:classappend="${scene.imageUrl != null} ? 'has-art'">
+                        <img th:if="${scene.imageUrl != null}" th:src="@{/app/stories/{id}/scenes/{n}/image(id=${s.id},n=${scene.sceneNumber})}"
+                             alt="" width="1024" height="768" th:attr="loading=${scene.sceneNumber == 1} ? 'eager' : 'lazy'" decoding="async">
+                        <th:block th:if="${scene.imageUrl == null}">
+                            <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
+                            <p class="scene-note" th:text="${images.preparing()} ? 'Resim çiziliyor…' : 'Bu sahnenin resmi yok.'">Resim çiziliyor…</p>
+                        </th:block>
+                    </div>
+                    <div class="scene-body">
+                        <span class="scene-number" th:text="'Sahne ' + ${scene.sceneNumber} + ' / ' + ${#lists.size(detail.scenes)}">Sahne 1 / 5</span>
+                        <p class="scene-text" th:text="${scene.text}">Sahne metni</p>
+                        <audio class="scene-audio" controls preload="none" th:if="${scene.audioUrl != null}"
+                               th:src="@{/app/stories/{id}/scenes/{n}/audio(id=${s.id},n=${scene.sceneNumber})}"
+                               th:attr="aria-label='Sahne ' + ${scene.sceneNumber} + ' sesi'"></audio>
+                    </div>
+                </li>
+            </ol>
+
+            <div class="reader-bar" data-reader-bar hidden>
+                <button class="reader-btn" type="button" data-prev aria-label="Önceki sahne">
+                    <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg></button>
+                <button class="reader-play" type="button" data-play aria-label="Bu sahneyi dinle" disabled>
+                    <svg class="icon icon-play" aria-hidden="true"><use href="#i-play"/></svg>
+                    <svg class="icon icon-pause" aria-hidden="true"><use href="#i-pause"/></svg></button>
+                <button class="reader-btn" type="button" data-next aria-label="Sonraki sahne">
+                    <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+                <ol class="reader-dots" data-dots aria-label="Sahneler"></ol>
+                <label class="reader-auto check">
+                    <input type="checkbox" data-auto checked>
+                    <span>Sahneleri kendiliğinden çevir</span>
+                </label>
+            </div>
+        </section>
+
+        <div class="story-end" data-story-end>
             <div class="three-apples" aria-hidden="true">
                 <svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg>
             </div>
             <p>Gökten üç elma düştü.</p>
-            <a class="btn btn-secondary" th:href="@{/app/stories/new}">Yeni bir masal</a>
+            <div class="story-end-actions">
+                <button class="btn btn-ghost" type="button" data-restart hidden>
+                    <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>Başa dön</button>
+                <a class="btn btn-secondary" th:href="@{/app/stories/new}">Yeni bir masal</a>
+            </div>
         </div>
+
+        <p class="credit" th:if="${audio.ready > 0 or images.ready > 0}">
+            <th:block th:if="${images.ready > 0}">Resimler yapay zekâ ile çizildi.</th:block>
+            <th:block th:if="${audio.ready > 0}">Seslendirme: <a href="https://huggingface.co/duxx/kikiri-turkish-base" rel="noopener" target="_blank">Kikiri Türkçe TTS</a>
+            (Kokoro-82M tabanlı, CC BY-SA 3.0).</th:block></p>
+        <script defer th:src="@{/js/reader.js}"></script>
     </th:block>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>

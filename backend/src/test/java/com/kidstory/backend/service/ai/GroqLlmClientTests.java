@@ -84,6 +84,16 @@ class GroqLlmClientTests {
         return new GroqLlmClient(RestClient.builder(), "http://127.0.0.1:" + server.getAddress().getPort() + "/openai/v1", "test-key");
     }
 
+    @Test
+    void plainTextStoryRequestHasNoSchemaAndNoQwenCommand() throws IOException {
+        start(200, Map.of(), """
+                {"id":"x","choices":[{"index":0,"finish_reason":"stop","message":{"role":"assistant","content":"Başlık\\n\\nMasal."}}],"usage":{}}""");
+        String content = client().complete(new LlmRequest("Sistem kuralı", "Yaş: 5\nMasalı yaz.\n/no_think", null, null), config());
+
+        assertThat(content).isEqualTo("Başlık\n\nMasal.");
+        assertThat(body.get()).doesNotContain("response_format").doesNotContain("no_think").contains("Masalı yaz.");
+    }
+
     private static LlmRequest request() {
         return new LlmRequest("Sistem kuralı", "Kullanıcı isteği", "story",
                 Map.of("type", "object", "properties", Map.of(), "required", List.of(), "additionalProperties", false));

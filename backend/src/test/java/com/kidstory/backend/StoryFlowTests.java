@@ -98,7 +98,7 @@ class StoryFlowTests {
                 .andExpect(jsonPath("$.scenes[0].imagePrompt").doesNotExist());
         assertThat(jdbc.queryForObject("SELECT image_prompt FROM story_scenes WHERE story_id = ? AND scene_number = 1",
                 String.class, storyId)).contains("a small child").contains("Style: soft watercolor").doesNotContain("Ada").doesNotContain("Kiko");
-        assertThat(jdbc.queryForObject("SELECT provider_name FROM generation_jobs WHERE story_id = ?", String.class, storyId))
+        assertThat(jdbc.queryForObject("SELECT provider_name FROM generation_jobs WHERE story_id = ? AND job_type = 'STORY_TEXT'", String.class, storyId))
                 .isEqualTo("featherless+gemini");
     }
 
@@ -256,7 +256,7 @@ class StoryFlowTests {
     }
 
     private String jobStatus(long storyId) {
-        return jdbc.queryForObject("SELECT status FROM generation_jobs WHERE story_id = ?", String.class, storyId);
+        return jdbc.queryForObject("SELECT status FROM generation_jobs WHERE story_id = ? AND job_type = 'STORY_TEXT'", String.class, storyId);
     }
 
     private static String story(String title, String first, String second) {
