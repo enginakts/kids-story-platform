@@ -250,7 +250,8 @@ public class AdminService {
         audit(adminId, active ? "ADMIN_ACTIVATED" : "ADMIN_SUSPENDED", "admin", targetId, admin.getUsername(), ip);
     }
 
-    private void audit(long adminId, String action, String target, Long targetId, String details, String ip) {
+    /** Yönetici işlemlerinin kaydı; karakter ve mekân kütüphanesi (CharacterService) de kullanır. */
+    void audit(long adminId, String action, String target, Long targetId, String details, String ip) {
         AdminAuditLog log = new AdminAuditLog();
         log.setAdmin(admins.getReferenceById(adminId));
         log.setAction(action);

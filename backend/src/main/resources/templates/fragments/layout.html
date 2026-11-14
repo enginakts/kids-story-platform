@@ -80,8 +80,6 @@
                     <svg class="icon" aria-hidden="true"><use href="#i-book"/></svg><span>Kütüphanem</span></a>
                 <a th:href="@{/app/children}" th:attr="aria-current=${active == 'children'} ? 'page' : null">
                     <svg class="icon" aria-hidden="true"><use href="#i-users"/></svg><span>Çocuklarım</span></a>
-                <a th:href="@{/app/characters}" th:attr="aria-current=${active == 'characters'} ? 'page' : null">
-                    <svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg><span>Karakterler</span></a>
                 <a th:href="@{/app/stories/new}" th:attr="aria-current=${active == 'new'} ? 'page' : null">
                     <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg><span>Yeni masal</span></a>
             </nav>
@@ -101,7 +99,6 @@
             <ul class="rail-nav">
                 <li><a th:href="@{/app}" th:classappend="${active == 'library'} ? 'is-active'" th:attr="aria-current=${active == 'library'} ? 'page' : null"><span>Kütüphanem</span></a></li>
                 <li><a th:href="@{/app/children}" th:classappend="${active == 'children'} ? 'is-active'" th:attr="aria-current=${active == 'children'} ? 'page' : null"><span>Çocuklarım</span></a></li>
-                <li><a th:href="@{/app/characters}" th:classappend="${active == 'characters'} ? 'is-active'" th:attr="aria-current=${active == 'characters'} ? 'page' : null"><span>Karakterler</span></a></li>
                 <li><a th:href="@{/app/stories/new}" th:classappend="${active == 'new'} ? 'is-active'" th:attr="aria-current=${active == 'new'} ? 'page' : null"><span>Yeni masal</span></a></li>
             </ul>
         </nav>

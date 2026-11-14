@@ -96,7 +96,8 @@ public class SecurityConfig {
                 .authenticationProvider(provider)
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/", "/login", "/register", "/verify-email",
-                                "/forgot-password", "/reset-password", "/css/**", "/fonts/**", "/js/**", "/img/**", "/error").permitAll()
+                                "/forgot-password", "/reset-password", "/css/**", "/fonts/**", "/js/**", "/img/**", "/error",
+                                "/library/images/*").permitAll()
                         .requestMatchers("/app/**").hasAuthority(Role.PARENT)
                         .anyRequest().denyAll())
                 .formLogin(f -> f.loginPage("/login").defaultSuccessUrl("/app", true)

@@ -57,14 +57,15 @@ public class StoryService {
         }
         ChildProfile child = children.findByIdAndParentIdAndActiveTrue(r.childId(), parentId)
                 .orElseThrow(() -> new FieldValidationException("childId", "Çocuk profili bulunamadı"));
-        CharacterBible primary = usableCharacter(r.primaryCharacterId(), parentId, "primaryCharacterId");
+        CharacterBible primary = usableCharacter(r.primaryCharacterId(), "primaryCharacterId");
         Set<Long> sideIds = new LinkedHashSet<>(r.sideCharacterIds() == null ? List.of() : r.sideCharacterIds());
         sideIds.remove(primary.getId());
         if (sideIds.size() > 2) {
             throw new FieldValidationException("sideCharacterIds", "En fazla 2 yan karakter seçebilirsiniz");
         }
-        List<CharacterBible> sides = sideIds.stream().map(id -> usableCharacter(id, parentId, "sideCharacterIds")).toList();
-        LocationBible location = locations.findById(r.locationId()).filter(LocationBible::isSystemPreset)
+        List<CharacterBible> sides = sideIds.stream().map(id -> usableCharacter(id, "sideCharacterIds")).toList();
+        LocationBible location = (r.locationId() == null ? java.util.Optional.<LocationBible>empty()
+                : locations.findByIdAndSystemPresetTrueAndActiveTrue(r.locationId()))
                 .orElseThrow(() -> new FieldValidationException("locationId", "Mekân bulunamadı"));
 
         Story story = new Story();
@@ -124,11 +125,12 @@ public class StoryService {
         return parents.findById(parentId).map(Parent::isEmailVerified).orElse(false);
     }
 
-    private CharacterBible usableCharacter(Long id, Long parentId, String field) {
+    /** Yalnızca yöneticilerin tanımladığı, yayındaki karakterler seçilebilir (V10). */
+    private CharacterBible usableCharacter(Long id, String field) {
         if (id == null) {
             throw new FieldValidationException(field, "Lütfen bir karakter seçin");
         }
-        return characters.findUsable(id, parentId)
+        return characters.findByIdAndSystemPresetTrueAndActiveTrue(id)
                 .orElseThrow(() -> new FieldValidationException(field, "Karakter bulunamadı"));
     }
 }

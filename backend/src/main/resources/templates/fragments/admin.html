@@ -2,7 +2,7 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <body>
 <!-- Yönetim panelinin gezinmesi: ebeveyn sayfalarıyla aynı sağ menü (masaüstü) ve üst bar + alt çubuk (dar ekran).
-     Yapay zekâ ve Yöneticiler yalnızca süper yöneticiye görünür; yetki SecurityConfig'te de denetlenir. -->
+     Karakterler ve Mekânlar bütün yöneticilere, Yapay zekâ ve Yöneticiler yalnızca süper yöneticiye görünür; yetki SecurityConfig'te de denetlenir. -->
 <div th:fragment="adminNav(active)" class="app-chrome">
     <header class="site-header app-top">
         <div class="header-inner">
@@ -16,6 +16,12 @@
                     <svg class="icon" aria-hidden="true"><use href="#i-book"/></svg><span>Masallar</span></a>
                 <a th:href="@{/admin/parents}" th:attr="aria-current=${active == 'parents'} ? 'page' : null">
                     <svg class="icon" aria-hidden="true"><use href="#i-users"/></svg><span>Ebeveynler</span></a>
+                <a th:href="@{/admin/characters}" th:attr="aria-current=${active == 'characters'} ? 'page' : null">
+                    <svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg><span>Karakterler</span></a>
+                <a th:href="@{/admin/locations}" th:attr="aria-current=${active == 'locations'} ? 'page' : null">
+                    <svg class="icon" aria-hidden="true"><use href="#i-map-pin"/></svg><span>Mekânlar</span></a>
+                <a th:if="${superAdmin}" th:href="@{/admin/ai}" th:attr="aria-current=${active == 'ai'} ? 'page' : null">
+                    <svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg><span>Yapay zekâ</span></a>
                 <a th:if="${superAdmin}" th:href="@{/admin/admins}" th:attr="aria-current=${active == 'admins'} ? 'page' : null">
                     <svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><span>Yöneticiler</span></a>
             </nav>
@@ -35,6 +41,8 @@
                 <li><a th:href="@{/admin}" th:classappend="${active == 'overview'} ? 'is-active'" th:attr="aria-current=${active == 'overview'} ? 'page' : null"><span>Genel bakış</span></a></li>
                 <li><a th:href="@{/admin/stories}" th:classappend="${active == 'stories'} ? 'is-active'" th:attr="aria-current=${active == 'stories'} ? 'page' : null"><span>Masallar</span></a></li>
                 <li><a th:href="@{/admin/parents}" th:classappend="${active == 'parents'} ? 'is-active'" th:attr="aria-current=${active == 'parents'} ? 'page' : null"><span>Ebeveynler</span></a></li>
+                <li><a th:href="@{/admin/characters}" th:classappend="${active == 'characters'} ? 'is-active'" th:attr="aria-current=${active == 'characters'} ? 'page' : null"><span>Karakterler</span></a></li>
+                <li><a th:href="@{/admin/locations}" th:classappend="${active == 'locations'} ? 'is-active'" th:attr="aria-current=${active == 'locations'} ? 'page' : null"><span>Mekânlar</span></a></li>
                 <li th:if="${superAdmin}"><a th:href="@{/admin/ai}" th:classappend="${active == 'ai'} ? 'is-active'" th:attr="aria-current=${active == 'ai'} ? 'page' : null"><span>Yapay zekâ</span></a></li>
                 <li th:if="${superAdmin}"><a th:href="@{/admin/admins}" th:classappend="${active == 'admins'} ? 'is-active'" th:attr="aria-current=${active == 'admins'} ? 'page' : null"><span>Yöneticiler</span></a></li>
             </ul>

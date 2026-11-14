@@ -67,7 +67,7 @@ public final class StoryPromptBuilder {
                 "scenes", String.valueOf(story.getTotalScenes()),
                 "placeholder", placeholder(story, sides),
                 "cast", cast,
-                "setting", story.getPrimaryLocation().getVisualAnchorTokens(),
+                "setting", setting(story.getPrimaryLocation()),
                 "title", text.title(),
                 "story", text.body());
         return new LlmRequest(fill(template.getSystemPrompt(), values), fill(template.getUserPromptTemplate(), values),
@@ -80,8 +80,20 @@ public final class StoryPromptBuilder {
         String cast = Stream.concat(Stream.of(story.getPrimaryCharacter()), sides.stream())
                 .map(CharacterBible::getVisualAnchorTokens)
                 .collect(Collectors.joining("; "));
-        return scene.trim() + ". Characters: " + cast + ". Setting: " + story.getPrimaryLocation().getVisualAnchorTokens()
+        return scene.trim() + ". Characters: " + cast + ". Setting: " + setting(story.getPrimaryLocation())
                 + ". Style: " + STYLE;
+    }
+
+    /** Mekânın yönetim panelinde girilen çevre bilgisi: resim tarifi, ışık ve her sahnede görünen sabit öğeler. */
+    static String setting(LocationBible l) {
+        StringBuilder out = new StringBuilder(l.getVisualAnchorTokens().trim());
+        if (l.getLightingStyle() != null && !l.getLightingStyle().isBlank()) {
+            out.append("; lighting: ").append(l.getLightingStyle().trim());
+        }
+        if (l.getRecurringLandmarks() != null && !l.getRecurringLandmarks().isBlank()) {
+            out.append("; recurring landmarks: ").append(l.getRecurringLandmarks().trim());
+        }
+        return out.toString();
     }
 
     private static String describe(CharacterBible c) {

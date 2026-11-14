@@ -135,7 +135,6 @@ public class StoryPageController {
         model.addAttribute("emailVerified", stories.emailVerified(user.id()));
         model.addAttribute("wallet", billing.wallet(user.id()).orElse(null));
         model.addAttribute("children", children.list(user.id()));
-        model.addAttribute("own", characters.own(user.id()));
         model.addAttribute("presets", characters.presets());
         model.addAttribute("locations", characters.locations());
         model.addAttribute("options", StoryOptionsResponse.create());

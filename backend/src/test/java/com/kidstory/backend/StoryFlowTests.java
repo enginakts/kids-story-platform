@@ -199,15 +199,40 @@ class StoryFlowTests {
         mvc.perform(get("/api/v1/stories/" + storyId).header("Authorization", "Bearer " + other)).andExpect(status().isNotFound());
         mvc.perform(get("/api/v1/stories").header("Authorization", "Bearer " + other)).andExpect(jsonPath("$.length()").value(0));
 
-        Long ownCharacter = ((Number) JsonPath.read(mvc.perform(post("/api/v1/characters").header("Authorization", "Bearer " + token)
-                .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Bulut\",\"speciesCode\":\"KEDI\",\"colorCode\":\"MAVI\"}"))
-                .andReturn().getResponse().getContentAsString(), "$.id")).longValue();
         jdbc.update("UPDATE parents SET is_email_verified = TRUE WHERE is_email_verified = FALSE");
         mvc.perform(post("/api/v1/stories").header("Authorization", "Bearer " + other).contentType(MediaType.APPLICATION_JSON)
                         .content(body(childId, presetId, true)))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.childId").exists());
+    }
+
+    @Test
+    void onlyActiveAdminCharactersCanBeUsed() throws Exception {
+        // V10 öncesinde ebeveynin oluşturduğu karakter eski masallar için saklanır ama yeni masalda seçilemez.
+        Long parentId = jdbc.queryForObject("SELECT id FROM parents WHERE email = ?", Long.class, email);
+        Long legacy = jdbc.queryForObject("""
+                INSERT INTO character_bibles (parent_id, name, species, visual_anchor_tokens, is_system_preset)
+                VALUES (?, 'Eski Bulut', 'Kedi', 'cute small sky blue kitten', FALSE) RETURNING id""", Long.class, parentId);
         mvc.perform(post("/api/v1/stories").header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON)
-                .content(body(childId, ownCharacter, true))).andExpect(status().isAccepted());
+                        .content(body(childId, legacy, true)))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.primaryCharacterId").exists());
+
+        Long retired = jdbc.queryForObject("""
+                INSERT INTO character_bibles (name, species, visual_anchor_tokens, is_system_preset, is_active)
+                VALUES ('Emekli Leo', 'Aslan', 'cute small sunny yellow lion cub', TRUE, FALSE) RETURNING id""", Long.class);
+        mvc.perform(post("/api/v1/stories").header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON)
+                        .content(body(childId, retired, true)))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.primaryCharacterId").exists());
+
+        jdbc.update("UPDATE location_bibles SET is_active = FALSE WHERE id = ?", locationId);
+        try {
+            mvc.perform(post("/api/v1/stories").header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON)
+                            .content(body(childId, presetId, true)))
+                    .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.locationId").exists());
+        } finally {
+            jdbc.update("UPDATE location_bibles SET is_active = TRUE WHERE id = ?", locationId);
+        }
+        mvc.perform(post("/api/v1/stories").header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON)
+                .content(body(childId, presetId, true))).andExpect(status().isAccepted());
     }
 
     @Test

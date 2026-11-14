@@ -34,4 +34,8 @@ public class LocationBible extends CreatedEntity {
 
     @Column(name = "is_system_preset", nullable = false)
     private boolean systemPreset;
+
+    /** Yayından kaldırılan mekân yeni masallarda seçilemez; eski masallar etkilenmez. */
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
 }

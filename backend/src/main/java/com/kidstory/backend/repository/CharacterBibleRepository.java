@@ -2,25 +2,25 @@ package com.kidstory.backend.repository;
 
 import com.kidstory.backend.entity.CharacterBible;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
-/** Ebeveyn karakterlerine her zaman parentId ile erişilir. */
+/**
+ * Karakterleri yöneticiler tanımlar (is_system_preset = TRUE, parent_id boş) ve bütün ebeveynler kullanır.
+ * Ebeveynlerin V10'dan önce oluşturduğu karakterler yalnızca eski masallar için saklanır, seçilemez.
+ */
 public interface CharacterBibleRepository extends JpaRepository<CharacterBible, Long> {
 
+    /** Ebeveynin masal sihirbazında seçebildikleri. */
     List<CharacterBible> findBySystemPresetTrueAndActiveTrueOrderByIdAsc();
 
-    List<CharacterBible> findByParentIdAndActiveTrueOrderByCreatedAtDesc(Long parentId);
+    /** Yönetim listesi: yayındakiler önce, yayından kaldırılanlar sonra. */
+    List<CharacterBible> findBySystemPresetTrueOrderByActiveDescIdAsc();
 
-    Optional<CharacterBible> findByIdAndParentIdAndActiveTrue(Long id, Long parentId);
+    Optional<CharacterBible> findByIdAndSystemPresetTrue(Long id);
 
-    long countByParentIdAndActiveTrue(Long parentId);
+    Optional<CharacterBible> findByIdAndSystemPresetTrueAndActiveTrue(Long id);
 
-    /** Ebeveynin kullanabileceği karakter: kendi aktif karakteri ya da aktif sistem şablonu. */
-    @Query("select c from CharacterBible c where c.id = :id and c.active = true"
-            + " and (c.systemPreset = true or c.parent.id = :parentId)")
-    Optional<CharacterBible> findUsable(@Param("id") Long id, @Param("parentId") Long parentId);
+    boolean existsBySystemPresetTrueAndNameIgnoreCaseAndIdNot(String name, Long id);
 }

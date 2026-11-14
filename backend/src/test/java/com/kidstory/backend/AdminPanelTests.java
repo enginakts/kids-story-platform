@@ -34,7 +34,7 @@ class AdminPanelTests {
     @Test
     void superAdminSeesEveryPage() throws Exception {
         MockHttpSession s = adminSession("testadmin", "TestAdmin123!");
-        for (String path : new String[] {"/admin", "/admin/stories", "/admin/parents", "/admin/ai", "/admin/admins"}) {
+        for (String path : new String[] {"/admin", "/admin/stories", "/admin/parents", "/admin/characters", "/admin/locations", "/admin/ai", "/admin/admins"}) {
             mvc.perform(get(path).session(s)).andExpect(status().isOk());
         }
     }
@@ -52,6 +52,8 @@ class AdminPanelTests {
         MockHttpSession editor = adminSession(username, "Editor123!");
         mvc.perform(get("/admin").session(editor)).andExpect(status().isOk());
         mvc.perform(get("/admin/parents").session(editor)).andExpect(status().isOk());
+        mvc.perform(get("/admin/characters").session(editor)).andExpect(status().isOk());
+        mvc.perform(get("/admin/locations").session(editor)).andExpect(status().isOk());
         mvc.perform(get("/admin/admins").session(editor)).andExpect(status().isForbidden());
         mvc.perform(get("/admin/ai").session(editor)).andExpect(status().isForbidden());
     }

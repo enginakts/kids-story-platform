@@ -47,16 +47,13 @@
         <fieldset class="card step">
             <legend><span class="step-number" aria-hidden="true">2</span>Kahramanlar</legend>
             <p class="field-label">Ana karakter <span class="req" aria-hidden="true">*</span></p>
+            <p class="alert alert-info" role="status" th:if="${#lists.isEmpty(presets)}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>Şu anda seçilebilecek karakter yok. Lütfen daha sonra tekrar deneyin.</p>
             <div class="choice-grid">
-                <label class="choice" th:each="c : ${own}">
+                <label class="choice" th:each="c : ${presets}" th:classappend="${c.cover() != null} ? 'has-photo'">
                     <input type="radio" th:field="*{primaryCharacterId}" th:value="${c.id}" required>
-                    <span class="hero-thumb" aria-hidden="true" th:with="art=${@heroArt.of(c.species)}" th:style="${c.colorHex != null} ? '--card-bg:' + ${c.colorHex}">
-                        <img th:if="${art}" th:src="@{'/img/heroes/' + ${art}}" alt=""><span th:unless="${art}" th:text="${#strings.substring(c.name, 0, 1)}">P</span></span>
-                    <span><strong th:text="${c.name}">Pıtırcık</strong><br><span class="muted" th:text="${c.species}">Tavşan</span></span>
-                </label>
-                <label class="choice" th:each="c : ${presets}">
-                    <input type="radio" th:field="*{primaryCharacterId}" th:value="${c.id}" required>
-                    <span class="hero-thumb" aria-hidden="true" th:with="art=${@heroArt.of(c.species)}">
+                    <!-- Yöneticinin yüklediği örnek resim varsa büyük gösterilir; yoksa hazır gravür -->
+                    <img th:if="${c.cover() != null}" class="choice-photo" th:src="@{${c.cover()}}" th:alt="${c.name} + ' örnek resmi'" loading="lazy">
+                    <span th:if="${c.cover() == null}" class="hero-thumb" aria-hidden="true" th:with="art=${@heroArt.of(c.species)}" th:style="${c.colorHex != null} ? '--card-bg:' + ${c.colorHex}">
                         <img th:if="${art}" th:src="@{'/img/heroes/' + ${art}}" alt=""><span th:unless="${art}" th:text="${#strings.substring(c.name, 0, 1)}">L</span></span>
                     <span><strong th:text="${c.name}">Leo</strong><br><span class="muted" th:text="${c.species}">Yavru Aslan</span></span>
                 </label>
@@ -64,26 +61,23 @@
             <p th:replace="~{fragments/forms :: error('primaryCharacterId')}"></p>
             <p class="field-label" style="margin-top:var(--space-5)">Yan karakterler <span class="hint" style="display:inline">(isteğe bağlı, en fazla 2)</span></p>
             <div class="choice-grid">
-                <label class="choice" th:each="c : ${own}">
-                    <input type="checkbox" th:field="*{sideCharacterIds}" th:value="${c.id}">
-                    <span th:text="${c.name}">Pıtırcık</span>
-                </label>
                 <label class="choice" th:each="c : ${presets}">
                     <input type="checkbox" th:field="*{sideCharacterIds}" th:value="${c.id}">
                     <span th:text="${c.name}">Leo</span>
                 </label>
             </div>
             <p th:replace="~{fragments/forms :: error('sideCharacterIds')}"></p>
-            <p class="hint" style="margin-top:var(--space-3)">Kendi karakterinizi <a th:href="@{/app/characters}">Karakterler</a> sayfasında oluşturabilirsiniz.</p>
         </fieldset>
 
         <fieldset class="card step">
             <legend><span class="step-number" aria-hidden="true">3</span>Nerede ve ne hakkında?</legend>
             <p class="field-label">Mekân <span class="req" aria-hidden="true">*</span></p>
+            <p class="alert alert-info" role="status" th:if="${#lists.isEmpty(locations)}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>Şu anda seçilebilecek mekân yok. Lütfen daha sonra tekrar deneyin.</p>
             <div class="choice-grid">
-                <label class="choice" th:each="l : ${locations}">
+                <label class="choice" th:each="l : ${locations}" th:classappend="${l.cover() != null} ? 'has-photo'">
                     <input type="radio" th:field="*{locationId}" th:value="${l.id}" required>
-                    <svg class="apple place-mark" aria-hidden="true"><use href="#apple"/></svg>
+                    <img th:if="${l.cover() != null}" class="choice-photo" th:src="@{${l.cover()}}" th:alt="${l.name} + ' örnek resmi'" loading="lazy">
+                    <svg th:if="${l.cover() == null}" class="apple place-mark" aria-hidden="true"><use href="#apple"/></svg>
                     <span><strong th:text="${l.name}">Çiçekli Orman</strong><br><span class="muted" th:text="${l.environmentType}">Orman</span></span>
                 </label>
             </div>

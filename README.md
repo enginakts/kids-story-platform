@@ -97,7 +97,7 @@ cd backend
 | `http://localhost:8080/` | Ana sayfa |
 | `http://localhost:8080/register` | Ebeveyn kaydı |
 | `http://localhost:8080/admin/login` | Yönetici girişi (`dev`: `superadmin` / `DevAdmin123!`) |
-| `http://localhost:8080/admin` | Yönetim paneli: genel bakış, masallar ve içerik onayı, ebeveynler (kredi ekleme, askıya alma). Süper yönetici ayrıca yapay zekâ sağlayıcılarını ve yönetici hesaplarını yönetir. Her değişiklik `admin_audit_logs` tablosuna yazılır |
+| `http://localhost:8080/admin` | Yönetim paneli: genel bakış, masallar ve içerik onayı, ebeveynler (kredi ekleme, askıya alma), karakter ve mekân kütüphanesi (yalnızca yöneticiler ekler; ebeveynler masal oluştururken seçer). Süper yönetici ayrıca yapay zekâ sağlayıcılarını ve yönetici hesaplarını yönetir. Her değişiklik `admin_audit_logs` tablosuna yazılır |
 
 Bu yönetici hesabı yalnızca `dev` profiline aittir.
 

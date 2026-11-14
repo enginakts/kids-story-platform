@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mekânlar · Yönetim')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<div th:replace="~{fragments/admin :: adminNav('locations')}"></div>
+<main id="main">
+    <div th:replace="~{fragments/admin :: messages}"></div>
+    <header class="page-head">
+        <div>
+            <h1 class="page-title">Mekânlar</h1>
+            <p class="page-lead">Yayındaki mekânlar bütün ebeveynlerin masal sihirbazında, örnek resimleriyle görünür. Mekânın çevre bilgisi (resim tarifi, ışık, sabit öğeler) her sahne resmi çizilirken isteğe eklenir.</p>
+        </div>
+    </header>
+
+    <!-- Yeni mekân: düğmeye basınca sayfa içinde açılan alan. Form hata verirse açık gelir. -->
+    <details class="create-panel" th:attr="open=${formOpen} ? 'open' : null">
+        <summary class="btn btn-primary">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+            <span class="when-closed">Yeni mekân oluştur</span><span class="when-open">Formu kapat</span>
+        </summary>
+        <section class="panel-ink create-body" aria-labelledby="new-title">
+            <h2 id="new-title">Yeni mekân</h2>
+            <form th:action="@{/admin/locations}" th:object="${form}" method="post" enctype="multipart/form-data" class="form create-form" novalidate>
+                <div class="create-cols">
+                    <div><th:block th:replace="~{fragments/forms :: location-fields}"></th:block></div>
+                    <div><fieldset th:replace="~{fragments/forms :: sample-images(null, true)}"></fieldset></div>
+                </div>
+                <button class="btn btn-primary" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Mekânı ekle</button>
+            </form>
+        </section>
+    </details>
+
+    <section class="section" aria-labelledby="list-title">
+        <h2 id="list-title">Kütüphane</h2>
+        <p class="empty-line" th:if="${#lists.isEmpty(locations)}">Henüz mekân yok. "Yeni mekân oluştur" ile ilkini ekleyin; mekân yoksa ebeveynler masal oluşturamaz.</p>
+        <ul class="lib-list" th:unless="${#lists.isEmpty(locations)}">
+            <li class="card lib-item" th:each="l : ${locations}" th:classappend="${!l.active} ? 'is-off'">
+                <div class="lib-cover" th:classappend="${l.cover() == null} ? 'is-empty'">
+                    <img th:if="${l.cover() != null}" th:src="@{${l.cover()}}" th:alt="${l.name} + ' örnek resmi'" loading="lazy">
+                    <span th:if="${l.cover() == null}">Örnek resim yok</span>
+                </div>
+                <div class="lib-body">
+                    <div>
+                        <h3 th:text="${l.name}">Çiçekli Orman</h3>
+                        <p class="item-meta" th:text="${l.environmentType} + ' · ' + (${l.active} ? 'Yayında' : 'Yayında değil') + ' · ' + ${l.stories} + ' masalda kullanıldı · ' + ${#lists.size(l.images)} + ' örnek resim'">Orman · Yayında</p>
+                        <p th:text="${l.atmosphereDescription}">Güneşli, huzurlu ve renkli bir orman</p>
+                    </div>
+                    <dl class="lib-prompt" lang="en" aria-label="Resim çizilirken giden çevre bilgisi">
+                        <dt lang="tr">Resim tarifi</dt><dd th:text="${l.visualAnchorTokens}">sunny forest</dd>
+                        <dt lang="tr">Işık</dt><dd th:text="${l.lightingStyle}">soft light</dd>
+                        <th:block th:if="${l.recurringLandmarks}"><dt lang="tr">Sabit öğeler</dt><dd th:text="${l.recurringLandmarks}">oak tree</dd></th:block>
+                    </dl>
+                    <div class="lib-actions">
+                        <a class="btn btn-secondary btn-sm" th:href="@{/admin/locations/{id}(id=${l.id})}" th:attr="aria-label=${l.name} + ' mekânını düzenle'">
+                            <svg class="icon" aria-hidden="true"><use href="#i-pencil"/></svg>Düzenle</a>
+                        <form th:action="@{/admin/locations/{id}/active(id=${l.id})}" method="post"
+                              th:attr="data-confirm=${l.active} ? ${l.name} + ' yayından kaldırılsın mı? Ebeveynler artık seçemez; eski masallar etkilenmez.' : null">
+                            <input type="hidden" name="active" th:value="${!l.active}">
+                            <button class="btn btn-sm" th:classappend="${l.active} ? 'btn-danger' : 'btn-secondary'" type="submit"
+                                    th:text="${l.active} ? 'Yayından kaldır' : 'Yayına al'">Yayından kaldır</button>
+                        </form>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:replace="~{app/confirm :: script}"></script>
+<script th:src="@{/js/admin-library.js}" defer></script>
+</body>
+</html>

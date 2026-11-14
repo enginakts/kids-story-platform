@@ -32,12 +32,13 @@
     </div>
 </th:block>
 
+<!-- Karakter formu alanları: yönetim panelinde karakter ekleme ve düzenleme (admin/characters, admin/character). -->
 <th:block th:fragment="character-fields">
     <div class="field">
         <label for="name">Karakter adı <span class="req" aria-hidden="true">*</span></label>
         <input id="name" th:field="*{name}" maxlength="40" autocomplete="off" required
                th:attr="aria-invalid=${#fields.hasErrors('name')},aria-describedby=${#fields.hasErrors('name')} ? 'name-error' : 'name-hint'">
-        <p class="hint" id="name-hint">Çocuğunuzun adı olamaz; masallarda çocuğunuz zaten kendisi olarak yer alabilir.</p>
+        <p class="hint" id="name-hint">Ebeveynler masal oluştururken karakteri bu adla görür. Gerçek bir çocuk adı kullanmayın; çocuk masala kendi adıyla ayrıca eklenir.</p>
         <p th:replace="~{fragments/forms :: error('name')}"></p>
     </div>
     <fieldset>
@@ -82,6 +83,86 @@
         <p class="hint" id="traits-hint">Masallarda karakterin nasıl davranacağını belirler. En fazla 300 karakter.</p>
         <p th:replace="~{fragments/forms :: error('personalityTraits')}"></p>
     </div>
+</th:block>
+
+<!-- Örnek resimler (karakter ve mekân formları). Ebeveyn sihirbazda bu resimleri görür; ilk resim kapak olur.
+     existing: düzenlemede mevcut resimler (CharacterService.ImageRef), required: yeni kayıtta en az bir resim zorunlu.
+     Seçilen dosyaların önizlemesi ve boyut uyarısı static/js/admin-library.js ile yapılır; sunucu her şeyi yeniden denetler. -->
+<fieldset th:fragment="sample-images(existing, required)" class="sample-images">
+    <legend>Örnek resimler <span class="req" aria-hidden="true" th:if="${required}">*</span></legend>
+    <p class="hint" id="images-hint" th:text="'Ebeveynler masal oluştururken bu resimleri görür; ilk resim kapak olur. JPEG ya da PNG, her biri en fazla 5 MB, toplam en fazla ' + ${maxImages} + ' resim. Resim yeniden boyutlandırılır ve içindeki konum gibi bilgiler silinir.'">Ebeveynler bu resimleri görür.</p>
+    <ul class="sample-grid" th:if="${existing != null and !#lists.isEmpty(existing)}" aria-label="Mevcut örnek resimler">
+        <li th:each="img, st : ${existing}">
+            <img th:src="@{${img.url}}" th:alt="${st.first} ? 'Kapak resmi' : 'Örnek resim ' + ${st.count}" loading="lazy">
+            <span class="chip" th:if="${st.first}">Kapak</span>
+            <label class="check"><input type="checkbox" name="removeImageIds" th:value="${img.id}"><span>Kaldır</span></label>
+        </li>
+    </ul>
+    <div class="field">
+        <label for="images" th:text="${existing != null and !#lists.isEmpty(existing)} ? 'Resim ekle' : 'Resim seç'">Resim seç</label>
+        <input id="images" type="file" name="images" accept="image/jpeg,image/png" multiple data-image-picker
+               th:attr="data-max=${maxImages},data-existing=${existing == null ? 0 : #lists.size(existing)},aria-invalid=${imageError != null},aria-describedby=${imageError != null} ? 'images-error images-hint' : 'images-hint'">
+        <p class="field-error" id="images-error" role="alert" th:if="${imageError}">
+            <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span th:text="${imageError}">Hata</span></p>
+        <p class="field-error" role="alert" data-image-warning hidden></p>
+    </div>
+    <ul class="sample-grid is-preview" data-image-preview aria-label="Seçilen resimler" hidden></ul>
+    <p class="hint" th:if="${imageError != null or #fields.hasAnyErrors()}">Tarayıcı güvenlik nedeniyle seçilen dosyaları formda tutmaz; resimleri yeniden seçin.</p>
+</fieldset>
+
+<!-- Mekân formu alanları: yönetim panelinde mekân ekleme ve düzenleme (admin/locations, admin/location).
+     Türkçe alanlar ebeveyne görünür ve masal metnine gider; İngilizce alanlar her sahne resminin isteğine eklenir. -->
+<th:block th:fragment="location-fields">
+    <fieldset>
+        <legend>Ebeveynin gördüğü ve masal metnine giden bilgiler (Türkçe)</legend>
+        <div class="form-row">
+            <div class="field">
+                <label for="name">Mekân adı <span class="req" aria-hidden="true">*</span></label>
+                <input id="name" th:field="*{name}" maxlength="60" autocomplete="off" required placeholder="Çiçekli Orman"
+                       th:attr="aria-invalid=${#fields.hasErrors('name')}">
+                <p th:replace="~{fragments/forms :: error('name')}"></p>
+            </div>
+            <div class="field">
+                <label for="environmentType">Ortam türü <span class="req" aria-hidden="true">*</span></label>
+                <input id="environmentType" th:field="*{environmentType}" maxlength="60" required placeholder="Orman"
+                       th:attr="aria-invalid=${#fields.hasErrors('environmentType')}">
+                <p th:replace="~{fragments/forms :: error('environmentType')}"></p>
+            </div>
+        </div>
+        <div class="field">
+            <label for="atmosphereDescription">Atmosfer <span class="req" aria-hidden="true">*</span></label>
+            <textarea id="atmosphereDescription" th:field="*{atmosphereDescription}" maxlength="300" required
+                      placeholder="Güneşli, huzurlu ve renkli bir orman" aria-describedby="atmosphere-hint"
+                      th:attr="aria-invalid=${#fields.hasErrors('atmosphereDescription')}"></textarea>
+            <p class="hint" id="atmosphere-hint">Masal metni yazılırken yapay zekâya verilir.</p>
+            <p th:replace="~{fragments/forms :: error('atmosphereDescription')}"></p>
+        </div>
+    </fieldset>
+    <fieldset>
+        <legend>Resim çizilirken giden çevre bilgisi (İngilizce)</legend>
+        <p class="hint">Bu üç alan her sahne resminin isteğine eklenir; resim modeli İngilizce en iyi sonucu verir. Korkutucu ya da karanlık ifadeler kullanmayın.</p>
+        <div class="field">
+            <label for="visualAnchorTokens">Resim tarifi <span class="req" aria-hidden="true">*</span></label>
+            <textarea id="visualAnchorTokens" th:field="*{visualAnchorTokens}" maxlength="400" required
+                      placeholder="sunny whimsical forest, colorful flowers, soft green hills"
+                      th:attr="aria-invalid=${#fields.hasErrors('visualAnchorTokens')}"></textarea>
+            <p th:replace="~{fragments/forms :: error('visualAnchorTokens')}"></p>
+        </div>
+        <div class="field">
+            <label for="lightingStyle">Işık <span class="req" aria-hidden="true">*</span></label>
+            <input id="lightingStyle" th:field="*{lightingStyle}" maxlength="100" required placeholder="soft warm morning sunlight"
+                   th:attr="aria-invalid=${#fields.hasErrors('lightingStyle')}">
+            <p th:replace="~{fragments/forms :: error('lightingStyle')}"></p>
+        </div>
+        <div class="field">
+            <label for="recurringLandmarks">Sabit öğeler</label>
+            <textarea id="recurringLandmarks" th:field="*{recurringLandmarks}" maxlength="300"
+                      placeholder="a big friendly oak tree, a small wooden bridge" aria-describedby="landmarks-hint"
+                      th:attr="aria-invalid=${#fields.hasErrors('recurringLandmarks')}"></textarea>
+            <p class="hint" id="landmarks-hint">İsteğe bağlı. Her sahnede tekrar görünmesi istenen ağaç, ev, köprü gibi öğeler; sahneler arası tutarlılığı artırır.</p>
+            <p th:replace="~{fragments/forms :: error('recurringLandmarks')}"></p>
+        </div>
+    </fieldset>
 </th:block>
 </body>
 </html>

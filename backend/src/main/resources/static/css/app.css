@@ -157,7 +157,11 @@ main { flex: 1; width: 100%; max-width: var(--container); margin: 0 auto; paddin
 @media (max-width: 767px) {
     .app-nav { position: fixed; z-index: var(--z-nav); left: 0; right: 0; bottom: 0; justify-content: space-around;
         padding: var(--space-1) var(--space-2) calc(var(--space-1) + env(safe-area-inset-bottom)); background: var(--surface); }
-    .app-nav a { flex: 1; flex-direction: column; gap: 2px; padding: var(--space-1); font-size: 13px; justify-content: center; }
+    .app-nav a { flex: 1 0 auto; min-width: 72px; flex-direction: column; gap: 2px; padding: var(--space-1); font-size: 13px; justify-content: center; }
+    /* Yönetimde öğe sayısı 4'ü aşar: sığmayanlar yana kaydırılır, etiketler kesilmez */
+    .app-nav { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x proximity; }
+    .app-nav::-webkit-scrollbar { display: none; }
+    .app-nav a { scroll-snap-align: start; }
     body:has(.app-nav) main { padding-bottom: calc(var(--space-8) + 48px); }
     body:has(.app-nav) .site-footer { padding-bottom: 104px; }
     .user-name { display: none; }
@@ -1149,3 +1153,68 @@ body:has(.auth-page) { height: 100dvh; overflow: hidden; }
 .book-cover .book-art { position: absolute; left: 10px; right: 0; bottom: 0; width: calc(100% - 10px); height: 58%; object-fit: cover;
     border-radius: 0 0 var(--radius) 0; }
 @media (max-width: 560px) { .reader.is-paged .scene-art.has-art { aspect-ratio: 4 / 3; } }
+
+/* ==========================================================================
+   Yönetim: mekân kütüphanesi kartları (tablo dar ekranda düğmeleri dışarı itiyordu)
+   ========================================================================== */
+.lib-list { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.lib-item { display: grid; gap: var(--space-3); padding: var(--space-5); }
+.lib-item.is-off { opacity: 0.62; }
+.lib-item h3 { margin: 0; font-size: 22px; }
+.lib-item .item-meta { color: var(--ink-soft); font-size: var(--fs-small); }
+.lib-item .lib-prompt { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm); background: var(--paper-2);
+    font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.lib-item .lib-prompt dt { font-weight: 700; }
+.lib-item .lib-prompt dd { margin: 0 0 var(--space-2); }
+.lib-item .lib-prompt dd:last-child { margin-bottom: 0; }
+.lib-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.lib-actions form { margin: 0; }
+
+/* ==========================================================================
+   Yönetim: kütüphane formları. "Yeni … oluştur" düğmesi sayfa içinde bir alan açar (<details>);
+   örnek resimler formun yanında, seçilenler yüklemeden önce önizlenir (admin-library.js).
+   ========================================================================== */
+.create-panel { margin: 0 0 var(--space-7); }
+.create-panel > summary { list-style: none; cursor: pointer; width: max-content; max-width: 100%; }
+.create-panel > summary::-webkit-details-marker { display: none; }
+.create-panel .when-open { display: none; }
+.create-panel[open] .when-open { display: inline; }
+.create-panel[open] .when-closed { display: none; }
+.create-panel[open] > summary { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.create-panel > summary .icon { transition: transform 200ms ease-out; }
+.create-panel[open] > summary .icon { transform: rotate(45deg); }
+.create-body { margin-top: var(--space-4); }
+@media (prefers-reduced-motion: no-preference) {
+    .create-panel[open] .create-body { animation: create-open 260ms cubic-bezier(0.22, 1, 0.36, 1); }
+}
+@keyframes create-open { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.create-cols { display: grid; gap: var(--space-6); }
+@media (min-width: 1000px) { .create-cols { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; } }
+
+.sample-images { display: grid; gap: var(--space-3); }
+.sample-grid { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); margin: 0; padding: 0; list-style: none; }
+.sample-grid li { position: relative; display: grid; gap: var(--space-2); align-content: start; }
+.sample-grid img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-sm); background: var(--paper-2); }
+.sample-grid .chip { position: absolute; top: 6px; left: 6px; }
+.sample-grid li.is-removed img { opacity: 0.35; filter: grayscale(1); }
+.sample-name { font-size: 13px; line-height: 1.3; overflow-wrap: anywhere; }
+.sample-images input[type="file"] { width: 100%; padding: var(--space-3); border: 2px dashed currentColor; border-radius: var(--radius-sm); background: transparent; cursor: pointer; }
+
+/* Kart resmi yüklenmiş bir örnek resimse gravür gibi karışım uygulanmaz, kartı doldurur */
+.card-art.has-photo { padding: 0; }
+.card-art.has-photo img { object-fit: cover; mix-blend-mode: normal; filter: none; }
+
+/* Mekân kartı: solda kapak resmi */
+.lib-item { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 720px) { .lib-item { grid-template-columns: 220px minmax(0, 1fr); align-items: start; } }
+.lib-body { display: grid; gap: var(--space-3); min-width: 0; }
+.lib-cover { aspect-ratio: 4 / 3; border-radius: var(--radius-sm); overflow: clip; background: var(--paper-2) var(--grid-paper); }
+.lib-cover img { width: 100%; height: 100%; object-fit: cover; }
+.lib-cover.is-empty { display: grid; place-items: center; color: var(--ink-soft); font-size: 15px; }
+
+/* Ebeveyn sihirbazı: örnek resmi olan karakter ve mekân seçenekleri resimli kart olarak görünür */
+.choice-grid:has(.choice.has-photo) { grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr)); }
+.choice.has-photo { flex-direction: column; align-items: stretch; padding: var(--space-2); gap: var(--space-2); }
+.choice.has-photo .choice-photo { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; }
+.choice.has-photo > span:last-child { padding: 0 var(--space-2) var(--space-2); }
+.choice.has-photo::before { display: none; }

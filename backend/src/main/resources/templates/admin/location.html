@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mekânı düzenle · Yönetim')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<div th:replace="~{fragments/admin :: adminNav('locations')}"></div>
+<main id="main" class="narrow">
+    <div th:replace="~{fragments/admin :: messages}"></div>
+    <a class="btn btn-ghost btn-sm" th:href="@{/admin/locations}"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>Mekânlar</a>
+    <section class="card">
+        <h1 th:text="${locationName} + ' mekânını düzenle'">Mekânı düzenle</h1>
+        <p class="muted">Değişiklik bütün ebeveynlerde hemen görünür ve bundan sonra yazılan masallarda kullanılır; mevcut masalların metni ve resimleri değişmez.</p>
+        <form th:action="@{/admin/locations/{id}(id=${locationId})}" th:object="${form}" method="post" enctype="multipart/form-data" class="form" novalidate>
+            <th:block th:replace="~{fragments/forms :: location-fields}"></th:block>
+            <fieldset th:replace="~{fragments/forms :: sample-images(${existingImages}, ${!#lists.isEmpty(existingImages)})}"></fieldset>
+            <button class="btn btn-primary" type="submit">Kaydet</button>
+        </form>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:src="@{/js/admin-library.js}" defer></script>
+</body>
+</html>

@@ -51,6 +51,15 @@ Proje küçük, test edilebilir adımlarla ilerler. Her adım hem web arayüzün
 
 Adım 6 ve 7 incelendikten sonra Adım 8 (kütüphane, favoriler ve ebeveyn kilidi) ile devam edilir. Proje sahibi ses adımını görselden önce aldı.
 
+## Karakter ve mekân kütüphanesi yönetime taşındı (V10)
+
+* **Karar (proje sahibi):** Ebeveynler karakter ve mekân oluşturamaz, değiştiremez. Karakter ve mekânları yöneticiler yönetim panelinden (`/admin/characters`, `/admin/locations`) ekler, düzenler, yayından kaldırır; yayındakiler bütün ebeveynlerin masal sihirbazında görünür. Her işlem `admin_audit_logs` tablosuna yazılır.
+* **Ebeveyn tarafı:** `/app/characters` sayfası, menü bağlantısı ve `POST/PUT/DELETE /api/v1/characters` kaldırıldı; `GET /api/v1/characters` ve `/api/v1/locations` yalnızca yayındaki kayıtları listeler. Masal oluşturma yalnızca yayındaki yönetici karakter ve mekânlarını kabul eder.
+* **Eski kayıtlar:** V10 öncesinde ebeveynlerin oluşturduğu karakterler silinmedi (eski masallar bağlı) ama yeni masalda seçilemez. Kayıtlar silinmez, yayından kaldırılır (`location_bibles.is_active` eklendi).
+* **Çevre bilgisi resme gider:** Mekânın İngilizce resim tarifi, ışığı ve sabit öğeleri her sahne resminin isteğine (`Setting: …; lighting: …; recurring landmarks: …`) ve sahneleri bölen modele eklenir. Türkçe ad, ortam türü ve atmosfer ebeveyne görünür ve masal metni prompt'una gider. Değişiklikler yalnızca yeni masalları etkiler (sahne resim isteği masal oluşurken kaydedilir).
+* **Karakter görünümü:** Yönetici görünümü katalogdan seçer (tür, renk, kıyafet, aksesuar); İngilizce tarif otomatik üretilir. Görünüm değişirse karakterin referans portresi sıfırlanır ve bir sonraki resimde yeniden çizilir.
+* **Örnek resimler (V11, `library_images`):** Yeni karakter ve mekân, liste sayfasındaki "Yeni … oluştur" düğmesiyle sayfa içinde açılan formdan eklenir; en az 1, en fazla 4 örnek resim (JPEG/PNG, resim başına 5 MB) zorunludur. Resimler 1200 piksele küçültülüp JPEG olarak yeniden kodlanır (gömülü konum gibi bilgiler silinir), `/library/images/{id}` adresinden oturumsuz sunulur ve ebeveyn sihirbazında kapak olarak gösterilir. Düzenlemede resim eklenip kaldırılabilir, son resim kaldırılamaz. Örnek resimler yalnızca ebeveyne gösterilir; sahne resmi üretimine referans olarak gitmez.
+
 ## Metin sağlayıcısı değişikliği (V9)
 
 * Proje sahibinin kararıyla masal metni artık **Groq** üzerinden yazılır (`openai/gpt-oss-120b`, Groq'un model listesinden 9 Kasım 2026'da doğrulandı). Featherless (Trendyol LLM) silinmedi; 2. sıradadır ve anahtarı verilirse Groq hata verdiğinde yedek olur. Sahnelere bölme Gemini'de kalır.

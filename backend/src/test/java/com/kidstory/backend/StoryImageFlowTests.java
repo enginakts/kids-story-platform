@@ -87,10 +87,12 @@ class StoryImageFlowTests {
         childId = ((Number) JsonPath.read(mvc.perform(post("/api/v1/children").header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Ada\",\"age\":5}"))
                 .andReturn().getResponse().getContentAsString(), "$.id")).longValue();
-        // Her test kendi karakteriyle başlar: referans portresi henüz yok.
-        characterId = ((Number) JsonPath.read(mvc.perform(post("/api/v1/characters").header("Authorization", "Bearer " + token)
-                .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Bulut\",\"speciesCode\":\"KEDI\",\"colorCode\":\"MAVI\"}"))
-                .andReturn().getResponse().getContentAsString(), "$.id")).longValue();
+        // Her test kendi (yöneticinin eklediği) karakteriyle başlar: referans portresi henüz yok.
+        characterId = jdbc.queryForObject("""
+                INSERT INTO character_bibles (name, species, species_code, color_code, outfit_code, accessory_code,
+                                              visual_anchor_tokens, is_system_preset)
+                VALUES (?, 'Kedi', 'KEDI', 'MAVI', 'YOK', 'YOK', 'cute small sky blue kitten', TRUE) RETURNING id""",
+                Long.class, "Bulut " + UUID.randomUUID().toString().substring(0, 6));
     }
 
     @Test
@@ -116,6 +118,9 @@ class StoryImageFlowTests {
             assertThat(r.height()).isEqualTo(768);
             // Çocuğun adı ve yer tutucu görsel prompt'una gitmez
             assertThat(r.prompt()).contains("reference images").contains("Style:").doesNotContain("Ada").doesNotContain("Kiko");
+            // Mekânın çevre bilgisi (yönetim panelinden) her sahne resmine gider
+            assertThat(r.prompt()).contains("Setting: sunny whimsical forest").contains("lighting: soft warm morning sunlight")
+                    .contains("recurring landmarks: a big friendly oak tree");
         }
         assertThat(sceneRequests.getFirst().prompt()).contains("a small child holds a basket of strawberries");
         assertThat(jdbc.queryForObject("SELECT reference_image_url FROM character_bibles WHERE id = ?", String.class, characterId))
