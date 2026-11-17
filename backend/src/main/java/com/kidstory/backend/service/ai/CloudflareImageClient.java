@@ -73,6 +73,7 @@ public class CloudflareImageClient implements ImageClient {
             }
             return new ImageResult(image, mimeType(image));
         } catch (RestClientResponseException e) {
+            UsageMeter.status(e.getStatusCode().value());
             if (e.getStatusCode().value() == HttpStatus.TOO_MANY_REQUESTS.value()) {
                 // Günlük ücretsiz kota veya hız sınırı
                 throw new RateLimitedException("Cloudflare görsel", OpenAiCompatibleLlmClient.retryAfter(e));

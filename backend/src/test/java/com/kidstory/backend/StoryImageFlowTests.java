@@ -53,12 +53,12 @@ class StoryImageFlowTests {
 
             Herkes huzurla uyudu.""";
 
-    private static final String SCENES = """
+    private static final String SCENES = StoryFlowTests.padScenes("""
             {"title":"Kiko'nun Paylaşma Günü","scenes":[
             {"text":"Kiko'ya bir sepet çilek geldi.","image_prompt":"Kiko holds a basket of strawberries"},
             {"text":"Kiko'nun gülümsemesi parladı.","image_prompt":"Kiko smiles brightly"},
             {"text":"Dostlar el ele tutuştu.","image_prompt":"friends holding hands"},
-            {"text":"Herkes huzurla uyudu.","image_prompt":"friends sleeping under the moon"}]}""";
+            {"text":"Herkes huzurla uyudu.","image_prompt":"friends sleeping under the moon"}]}""");
 
     @Autowired MockMvc mvc;
     @Autowired JdbcTemplate jdbc;
@@ -128,6 +128,7 @@ class StoryImageFlowTests {
 
         api(storyId).andExpect(jsonPath("$.images.status").value("READY"))
                 .andExpect(jsonPath("$.scenes[0].imageUrl").value("/api/v1/stories/" + storyId + "/scenes/1/image"));
+        jdbc.update("UPDATE stories SET saved_at = now() WHERE id = ?", storyId); // V16: listelerde yalnızca kaydedilmiş masal
         mvc.perform(get("/api/v1/stories").header("Authorization", "Bearer " + token))
                 .andExpect(jsonPath("$[0].coverReady").value(true));
         mvc.perform(get("/api/v1/stories/" + storyId + "/scenes/2/image").header("Authorization", "Bearer " + token))
@@ -194,7 +195,8 @@ class StoryImageFlowTests {
         mvc.perform(get("/app/stories/" + storyId + "/media-status").session(session))
                 .andExpect(jsonPath("$.images.status").value("READY"))
                 .andExpect(jsonPath("$.scenes[0].image").value("/app/stories/" + storyId + "/scenes/1/image"));
-        mvc.perform(get("/app").session(session)).andExpect(content().string(containsString("class=\"book-art\"")));
+        jdbc.update("UPDATE stories SET saved_at = now() WHERE id = ?", storyId); // V16: listelerde yalnızca kaydedilmiş masal
+        mvc.perform(get("/app/stories").session(session)).andExpect(content().string(containsString("class=\"book-art\"")));
         mvc.perform(get("/app/stories/" + storyId + "/scenes/1/image").session(session))
                 .andExpect(status().isOk()).andExpect(header().string("Content-Type", "image/jpeg"));
     }

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Profilim')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<header th:replace="~{fragments/layout :: appNav(${user.displayName}, 'profile')}"></header>
+<!-- Ebeveyn profili: hesap bilgileri, kullanım (yer tutucu), gizlilik ve veri (KVKK), hesabı silme (tehlikeli bölge). -->
+<main id="main" class="profile-page" th:with="p=${profile}">
+    <header class="page-head">
+        <div>
+            <h1 class="page-title">Profilim</h1>
+            <p class="page-lead">Hesap bilgileriniz, verileriniz ve hesabınızla ilgili işlemler.</p>
+        </div>
+    </header>
+
+    <p class="alert alert-success" role="status" th:if="${notice}"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span th:text="${notice}">Kaydedildi.</span></p>
+    <p class="alert alert-danger" role="alert" th:if="${problem}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span th:text="${problem}">Hata.</span></p>
+
+    <nav class="profile-tabs" aria-label="Profil bölümleri">
+        <a href="#hesap">Hesap bilgileri</a>
+        <a href="#kullanim">Kullanım</a>
+        <a href="#gizlilik">Gizlilik ve veri</a>
+        <a href="#sil">Hesabı sil</a>
+    </nav>
+
+    <section aria-labelledby="summary-title">
+        <h2 id="summary-title" class="visually-hidden">Özet</h2>
+        <ul class="kpi-board profile-summary">
+            <li class="kpi"><strong th:text="${p.children}">0</strong><span>kayıtlı çocuk</span></li>
+            <li class="kpi"><strong th:text="${p.stories}">0</strong><span>kayıtlı masal</span></li>
+            <li class="kpi"><strong class="kpi-date" th:text="${memberSince}">1 Ocak 2026</strong><span>üyelik tarihi</span></li>
+        </ul>
+    </section>
+
+    <section id="hesap" class="card profile-section" aria-labelledby="account-title">
+        <h2 id="account-title">Hesap bilgileri</h2>
+        <form class="form" th:action="@{/app/profile/name}" method="post">
+            <div class="form-row">
+                <div class="field">
+                    <label for="firstName">Ad</label>
+                    <input id="firstName" name="firstName" type="text" maxlength="100" autocomplete="given-name" required th:value="${p.firstName}">
+                </div>
+                <div class="field">
+                    <label for="lastName">Soyad</label>
+                    <input id="lastName" name="lastName" type="text" maxlength="100" autocomplete="family-name" required th:value="${p.lastName}">
+                </div>
+            </div>
+            <div class="field">
+                <label for="email">E-posta</label>
+                <input id="email" type="email" th:value="${p.email}" readonly aria-describedby="email-hint">
+                <p class="hint" id="email-hint">E-posta adresi şimdilik buradan değiştirilemiyor.</p>
+            </div>
+            <div><button class="btn btn-primary" type="submit">Kaydet</button></div>
+        </form>
+
+        <div id="parola" class="profile-subsection">
+            <h3>Parola değiştir</h3>
+            <form class="form" th:action="@{/app/profile/password}" method="post">
+                <div class="form-row">
+                    <div class="field">
+                        <label for="currentPassword">Mevcut parola</label>
+                        <input id="currentPassword" name="currentPassword" type="password" autocomplete="current-password" required>
+                    </div>
+                    <div class="field">
+                        <label for="newPassword">Yeni parola</label>
+                        <input id="newPassword" name="newPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" required aria-describedby="new-hint">
+                        <p class="hint" id="new-hint">8-72 karakter.</p>
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-secondary" type="submit">Parolayı değiştir</button>
+                    <a class="btn btn-ghost" th:href="@{/forgot-password}">Parolamı unuttum</a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Sonraki adımlarda doldurulacak bölümler -->
+    <section id="kullanim" class="card profile-section" aria-labelledby="usage-title">
+        <h2 id="usage-title">Kullanım</h2>
+        <div class="profile-placeholder">
+            <h3>Token kullanımı</h3>
+            <p class="muted">Yakında burada masal üretiminde kullanılan tokenları görebileceksiniz.</p>
+        </div>
+        <div class="profile-placeholder">
+            <h3>Bellek</h3>
+            <p class="muted">Yakında burada kayıtlı dosyalarınızın kapladığı alanı görebileceksiniz.</p>
+        </div>
+    </section>
+
+    <section id="gizlilik" class="card profile-section" aria-labelledby="privacy-title">
+        <h2 id="privacy-title">Gizlilik ve veri</h2>
+        <p>Çocuğunuzun soyadı, fotoğrafı ve konumu hiçbir zaman istenmez ve paylaşılmaz. Hangi verileri neden işlediğimizi aydınlatma metninde bulabilirsiniz.</p>
+        <div class="btn-row">
+            <a class="btn btn-secondary" th:href="@{/kvkk}">KVKK aydınlatma metni</a>
+            <a class="btn btn-secondary" th:href="@{/app/profile/export}" download="masal-dunyasi-verilerim.json">
+                <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>Verilerimi indir</a>
+        </div>
+        <p class="hint">İndirilen dosya: hesap bilgileriniz, çocuklarınızın takma adları ve masallarınızın başlık ve metinleri (JSON). Resim ve sesler dahil değildir.</p>
+    </section>
+
+    <!-- Tehlikeli bölge: hesabı kalıcı silme. Onay penceresi (dialog) iki güvence ister: "SİL" ve parola. -->
+    <section id="sil" class="danger-zone" aria-labelledby="danger-title">
+        <h2 id="danger-title"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>Tehlikeli bölge</h2>
+        <p>Hesabınızı silerseniz bütün verileriniz kalıcı olarak silinir ve geri getirilemez.</p>
+        <p class="alert alert-danger" role="alert" th:if="${deleteProblem}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span th:text="${deleteProblem}">Hata.</span></p>
+        <button class="btn btn-danger-solid" type="button" data-open-dialog="delete-dialog" aria-haspopup="dialog">Hesabımı sil</button>
+
+        <dialog id="delete-dialog" class="delete-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-title" aria-describedby="delete-desc"
+                th:attr="data-open-on-load=${deleteProblem != null} ? 'true' : null">
+            <h2 id="delete-title">Hesabınızı kalıcı olarak silin</h2>
+            <div id="delete-desc">
+                <p>Şunların hepsi silinecek:</p>
+                <ul class="delete-list">
+                    <li>Hesabınız ve giriş bilgileriniz</li>
+                    <li>Bütün çocuk profilleri</li>
+                    <li>Bütün masallar, sahne resimleri ve seslendirmeler (yayımlanmış olanlar hariç)</li>
+                    <li>Kendi oluşturduğunuz karakterler ve paylaşımlar</li>
+                    <li>Kredi ve kullanım geçmişiniz, açık oturumlarınız</li>
+                </ul>
+                <p class="hint">Keşfet'te yayımlanmış masallarınız silinmez; içlerinde geçen çocuğunuzun adı "Minik" ile değiştirilir, seslendirmeleri silinir ve masal artık hesabınızla bağlantılı olmaz.</p>
+                <p class="delete-warning"><strong>Bu işlem geri alınamaz.</strong></p>
+            </div>
+            <p class="alert alert-danger" role="alert" th:if="${deleteProblem}"><span th:text="${deleteProblem}">Hata.</span></p>
+            <form class="form" th:action="@{/app/profile/delete}" method="post" data-delete-form>
+                <div class="field">
+                    <label for="confirmWord">Onaylamak için <strong>SİL</strong> yazın</label>
+                    <input id="confirmWord" name="confirmWord" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+                </div>
+                <div class="field">
+                    <label for="deletePassword">Parolanız</label>
+                    <input id="deletePassword" name="password" type="password" autocomplete="current-password" required>
+                </div>
+                <div class="btn-row dialog-actions">
+                    <button class="btn btn-secondary" type="button" data-close-dialog>Vazgeç</button>
+                    <button class="btn btn-danger-solid" type="submit" data-delete-submit>Kalıcı olarak sil</button>
+                </div>
+            </form>
+        </dialog>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script defer th:src="@{/js/profile.js}"></script>
+</body>
+</html>

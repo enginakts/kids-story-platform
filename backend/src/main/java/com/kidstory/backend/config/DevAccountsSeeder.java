@@ -9,10 +9,12 @@ import com.kidstory.backend.repository.AdminRepository;
 import com.kidstory.backend.repository.ParentRepository;
 import com.kidstory.backend.repository.RoleRepository;
 import com.kidstory.backend.service.AuthService;
+import com.kidstory.backend.service.BillingService;
 import com.kidstory.backend.service.ChildProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Profile;
@@ -27,7 +29,9 @@ import java.util.Locale;
 
 /**
  * Yalnızca geliştirme ortamı: hızlı giriş hesapları yoksa oluşturur, böylece .devdb silinse de düğmeler çalışır.
- * Var olan hesaplara dokunmaz. Ebeveynlerin e-postası doğrulanmış sayılır ve birer çocuk profili eklenir.
+ * Var olan hesapların bilgilerine dokunmaz. Ebeveynlerin e-postası doğrulanmış sayılır ve birer çocuk profili eklenir.
+ * Deneme için her açılışta ebeveynlerin masal kredisi app.dev.quick-login.story-credits değerine (varsayılan 90) tamamlanır;
+ * eksik kalan kısım cüzdan geçmişine ADMIN_ADJUSTMENT olarak yazılır (fazlası silinmez).
  * İlk süper yöneticiyi AdminBootstrap oluşturduğu için ondan sonra çalışır.
  */
 @Slf4j
@@ -45,6 +49,10 @@ class DevAccountsSeeder implements ApplicationRunner {
     private final AuthService auth;
     private final ChildProfileService children;
     private final PasswordEncoder passwordEncoder;
+    private final BillingService billing;
+
+    @Value("${app.dev.quick-login.story-credits:90}")
+    private int storyCredits;
 
     @Override
     @Transactional
@@ -52,12 +60,14 @@ class DevAccountsSeeder implements ApplicationRunner {
         for (QuickLoginProperties.Account a : accounts.parents()) {
             String email = a.login().trim().toLowerCase(Locale.ROOT);
             if (parents.existsByEmail(email)) {
+                parents.findByEmail(email).ifPresent(p -> topUpCredits(p.getId(), email));
                 continue;
             }
             Parent parent = auth.register(new ParentRegisterRequest(email, a.password(), a.firstName(), a.lastName(), true), "127.0.0.1");
             parent.setEmailVerified(true);
             children.create(parent.getId(), new CreateChildRequest("Defne", 5, null, "Tavşan", "Turuncu", null, LocalTime.of(20, 30)));
             log.info("Geliştirme hesabı oluşturuldu: {}", email);
+            topUpCredits(parent.getId(), email);
         }
         for (QuickLoginProperties.Account a : accounts.admins()) {
             if (admins.existsByUsernameIgnoreCase(a.login())) {
@@ -71,6 +81,15 @@ class DevAccountsSeeder implements ApplicationRunner {
             admin.setRole(roles.findByName(a.role() == null ? Role.ADMIN : a.role()).orElseThrow());
             admins.save(admin);
             log.info("Geliştirme yöneticisi oluşturuldu: {}", a.login());
+        }
+    }
+
+    /** Deneme kredisi: bakiye hedefin altındaysa farkı ekler. */
+    private void topUpCredits(Long parentId, String email) {
+        int balance = billing.wallet(parentId).map(w -> w.getStoryCreditBalance()).orElse(0);
+        if (balance < storyCredits) {
+            billing.grantStoryCredits(parentId, storyCredits - balance, "Geliştirme test kredisi");
+            log.info("Geliştirme hesabının masal kredisi {} yapıldı: {}", storyCredits, email);
         }
     }
 }

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${child.name})}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<header th:replace="~{fragments/layout :: appNav(${user.displayName}, 'children')}"></header>
+<!-- Bir çocuğun masal alanı: yalnızca bu çocuk için üretilmiş masallar, en yeni başta. -->
+<main id="main">
+    <header class="page-head">
+        <div>
+            <a class="btn btn-ghost btn-sm" th:href="@{/app/children}"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>Geri: Çocuklarım</a>
+            <div class="child-main">
+                <span th:class="'child-avatar child-avatar-' + ${child.id % 3}" aria-hidden="true"
+                      th:text="${#strings.toUpperCase(#strings.substring(child.name, 0, 1))}">D</span>
+                <div class="child-info">
+                    <h1 class="page-title" th:text="${child.name}">Defne</h1>
+                    <p th:text="${child.age} + ' yaş'">5 yaş</p>
+                </div>
+            </div>
+        </div>
+        <div class="page-head-side">
+            <a class="btn btn-primary" th:href="@{/app/stories/new(child=${child.id})}">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Bu çocuk için yeni masal oluştur</a>
+        </div>
+    </header>
+    <p class="alert alert-success" role="status" th:if="${notice}"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span th:text="${notice}">Tamam.</span></p>
+    <p class="alert alert-danger" role="alert" th:if="${problem}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span th:text="${problem}">Hata.</span></p>
+    <aside th:replace="~{fragments/layout :: latestUnsaved(${latest}, true)}"></aside>
+
+    <section aria-labelledby="stories-title">
+        <h2 id="stories-title" class="visually-hidden" th:text="${child.name} + ' için masallar'">Masallar</h2>
+        <div class="empty" th:if="${#lists.isEmpty(cards)}">
+            <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
+            <h3>Henüz masal yok</h3>
+            <a class="btn btn-primary" th:href="@{/app/stories/new(child=${child.id})}">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Yeni masal oluştur</a>
+        </div>
+        <ul class="shelf child-shelf" th:unless="${#lists.isEmpty(cards)}">
+            <li th:each="card : ${cards}" th:with="story=${card.story}">
+                <a class="book" th:href="@{/app/stories/{id}(id=${story.id}, child=${child.id})}">
+                    <span th:class="'book-cover cover-' + ${story.id % 4} + (${story.coverReady} ? ' has-art' : '')">
+                        <span class="book-title" th:text="${story.title}">Başlık</span>
+                        <img class="book-art" th:if="${story.coverReady}" th:src="@{/app/stories/{id}/scenes/1/image(id=${story.id})}"
+                             alt="" width="1024" height="768" loading="lazy" decoding="async">
+                        <svg class="apple" aria-hidden="true" th:unless="${story.coverReady}"><use href="#apple"/></svg>
+                    </span>
+                    <span class="book-meta">
+                        <span class="book-chips">
+                            <span class="chip" th:text="${story.theme}">Paylaşma</span>
+                            <span th:unless="${story.status == 'COMPLETED'}" th:class="'chip status-' + ${#strings.toLowerCase(story.status)}" th:text="${story.statusLabel}">Hazırlanıyor</span>
+                        </span>
+                        <span class="muted" th:text="(${story.totalScenes} > 0 ? ${story.totalScenes} + ' sahne · ' : '') + ${card.date}">4 sahne · 16 Kasım 2026</span>
+                        <span class="btn btn-secondary btn-sm">Oku</span>
+                    </span>
+                </a>
+                <!-- Başlığı düzenle: kart bağlantısının dışında, açılır küçük form -->
+                <details class="title-edit">
+                    <summary><svg class="icon" aria-hidden="true"><use href="#i-pencil"/></svg>Başlığı düzenle</summary>
+                    <form class="title-edit-form" th:action="@{/app/stories/{id}/title(id=${story.id})}" method="post">
+                        <input type="hidden" name="back" th:value="${child.id}">
+                        <label class="visually-hidden" th:for="'title-' + ${story.id}">Yeni başlık</label>
+                        <input th:id="'title-' + ${story.id}" name="title" type="text" maxlength="160" required th:value="${story.title}">
+                        <button class="btn btn-secondary btn-sm" type="submit">Kaydet</button>
+                    </form>
+                </details>
+            </li>
+        </ul>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

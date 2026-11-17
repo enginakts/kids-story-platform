@@ -46,15 +46,19 @@ public class StoryGenerationService {
     private final BillingService billing;
     private final StoryAudioService audio;
     private final StoryImageService images;
+    private final com.kidstory.backend.repository.StoryRepository storyRepository;
 
     /**
      * textRequest hazırdır; sahne isteği 1. aşamanın metniyle kurulur (sceneRequest).
      */
+    /** existingTitles/themeLabel/locationName/childName: başlık seçimi için (V17); çocuğun adı hiçbir LLM'e gitmez. */
     public record Prepared(Long jobId, LlmRequest textRequest, Function<StoryText, LlmRequest> sceneRequest,
-                           boolean childAllowed, String placeholder) {
+                           boolean childAllowed, String placeholder, List<String> existingTitles, String themeLabel,
+                           String locationName, String childName) {
     }
 
-    public record Generated(StoryDraft draft, String provider) {
+    /** title: sunucunun adaylar arasından seçtiği başlık (yer tutucu adlı hâli). */
+    public record Generated(StoryDraft draft, String provider, String title) {
     }
 
     @Transactional
@@ -72,7 +76,9 @@ public class StoryGenerationService {
                 sceneProbe.systemPrompt(),
                 sceneProbe.userPrompt().replace("\u0000T", text.title()).replace("\u0000S", text.body()),
                 sceneProbe.schemaName(), sceneProbe.schema());
-        return new Prepared(jobId, textRequest, sceneRequest, story.isPersonalizedUsed(), StoryPromptBuilder.placeholder(story, sides));
+        return new Prepared(jobId, textRequest, sceneRequest, story.isPersonalizedUsed(), StoryPromptBuilder.placeholder(story, sides),
+                storyRepository.otherTitles(story.getParent().getId(), story.getId()), StoryCatalog.theme(story.getTheme()),
+                story.getPrimaryLocation().getName(), story.getChild().getName());
     }
 
     /** İşlem dışında: iki aşamalı LLM çağrısı ve doğrulama. Hata fırlatırsa iş yeniden denenir. */
@@ -82,7 +88,12 @@ public class StoryGenerationService {
             textProvider.set(config.getProviderName());
             return client.complete(prepared.textRequest(), config);
         });
-        StoryText text = parser.parseText(rawText, prepared.childAllowed(), prepared.placeholder());
+        StoryText candidates = parser.parseText(rawText, prepared.childAllowed(), prepared.placeholder());
+        // Başlık: aynı çağrıdaki adaylardan, ebeveynin diğer başlıklarıyla çakışmayan ve içeriğe uygun olanı (ek çağrı yok)
+        String title = StoryTitles.pick(candidates.titleCandidates(),
+                t -> personalize(t, prepared, prepared.childName()), prepared.existingTitles(),
+                prepared.themeLabel(), prepared.locationName());
+        StoryText text = new StoryText(title, candidates.body(), candidates.titleCandidates());
 
         AtomicReference<String> sceneProvider = new AtomicReference<>();
         LlmRequest sceneRequest = prepared.sceneRequest().apply(text);
@@ -91,7 +102,7 @@ public class StoryGenerationService {
             return client.complete(sceneRequest, config);
         });
         StoryDraft draft = parser.parse(rawScenes, prepared.childAllowed(), prepared.placeholder());
-        return new Generated(draft, textProvider.get() + "+" + sceneProvider.get());
+        return new Generated(draft, textProvider.get() + "+" + sceneProvider.get(), title);
     }
 
     @Transactional
@@ -102,7 +113,8 @@ public class StoryGenerationService {
         String childName = story.getChild().getName();
         StoryDraft draft = generated.draft();
 
-        story.setTitle(personalize(draft.title(), prepared, childName));
+        // Sahne aşamasının (Gemini) başlığı değil, sunucunun seçtiği başlık kullanılır
+        story.setTitle(personalize(generated.title(), prepared, childName));
         int number = 1;
         List<StoryScene> saved = new ArrayList<>();
         for (StoryDraft.Scene s : draft.scenes()) {

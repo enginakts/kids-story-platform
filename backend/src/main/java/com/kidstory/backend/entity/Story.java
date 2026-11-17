@@ -10,12 +10,13 @@ import java.time.Instant;
 @Entity @Table(name = "stories")
 public class Story extends CreatedEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "child_id", nullable = false)
+    /** V15: hesap silinince yayımlanmış masal korunur ve sahipsiz kalır (child ve parent null). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "child_id")
     private ChildProfile child;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "parent_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
     private Parent parent;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -64,6 +65,10 @@ public class Story extends CreatedEntity {
 
     @Column(name = "published_at")
     private Instant publishedAt;
+
+    /** V16: boşsa masal geçicidir (çocuğun listesinde görünmez, süre dolunca temizlenir); ebeveyn kaydedince dolar. */
+    @Column(name = "saved_at")
+    private Instant savedAt;
 
     @Column(name = "cover_image_url", length = 500)
     private String coverImageUrl;

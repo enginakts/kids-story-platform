@@ -5,45 +5,59 @@
 <svg th:replace="~{fragments/layout :: icons}"></svg>
 <a th:replace="~{fragments/layout :: skip}"></a>
 <header th:replace="~{fragments/layout :: appNav(${user.displayName}, 'children')}"></header>
-<main id="main">
+<!-- Uygulamanın ana ekranı: çocuk listesi. Giriş, kayıt, logo ve /app buraya yönlenir. -->
+<main id="main" th:with="empty=${#lists.isEmpty(children)}">
+    <div th:replace="~{fragments/layout :: verifyBanner}"></div>
+    <p class="alert alert-success" role="status" th:if="${notice}"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span th:text="${notice}">Tamam.</span></p>
+    <aside th:replace="~{fragments/layout :: latestUnsaved(${latest}, false)}"></aside>
     <header class="page-head">
         <div>
             <h1 class="page-title">Çocuklarım</h1>
             <p class="page-lead">Masallar her çocuğun yaşına ve ilgi alanlarına göre hazırlanır. Her çocuğun kütüphanesi ayrıdır.</p>
         </div>
     </header>
-    <div class="split">
-        <section aria-labelledby="list-title">
-            <h2 id="list-title" class="visually-hidden">Çocuk profilleri</h2>
-            <div class="empty" th:if="${#lists.isEmpty(children)}">
-                <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
-                <h3>Henüz çocuk profili yok</h3>
-                <p>Yandaki formla ilk profili ekleyin.</p>
-            </div>
-            <ul class="hero-grid" th:unless="${#lists.isEmpty(children)}" data-stagger>
-                <li th:each="child, st : ${children}" th:class="'card-hero ' + ${ {'c-red', 'c-ink', 'c-paper'}[st.index % 3] }">
-                    <div class="card-art card-art-short">
-                        <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
-                        <span class="card-initial" aria-hidden="true" th:text="${#strings.substring(child.name, 0, 1)}">D</span>
+
+    <section aria-labelledby="list-title">
+        <h2 id="list-title" class="visually-hidden">Çocuk profilleri</h2>
+        <!-- Boş durum -->
+        <div class="empty child-empty" th:if="${empty}">
+            <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
+            <h3>Henüz çocuk eklemediniz</h3>
+            <a class="btn btn-primary" href="#new-child" data-open-details="new-child">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>İlk çocuğu ekle</a>
+        </div>
+        <!-- Çocuk kartları: baş harf dairesi, takma ad, yaş -->
+        <ul class="child-list" th:unless="${empty}" data-stagger>
+            <li th:each="child : ${children}" class="child-card">
+                <!-- Kartın tamamı bu bağlantıyla tıklanır (::after kartı kaplar); Düzenle/Kaldır onun üstünde kalır -->
+                <a class="child-main child-link" th:href="@{/app/children/{id}(id=${child.id})}">
+                    <span th:class="'child-avatar child-avatar-' + ${child.id % 3}" aria-hidden="true"
+                          th:text="${#strings.toUpperCase(#strings.substring(child.name, 0, 1))}">D</span>
+                    <div class="child-info">
+                        <h3 th:text="${child.name}">Deniz</h3>
+                        <p th:text="${child.age} + ' yaş'">4 yaş</p>
                     </div>
-                    <div class="card-name"><h3 th:text="${child.name}">Deniz</h3><span th:text="${child.age} + ' yaş'">4 yaş</span></div>
-                    <ul class="chips card-chips">
-                        <li class="chip" th:if="${!#strings.isEmpty(child.favoriteAnimals)}" th:text="${child.favoriteAnimals}">Kedi</li>
-                        <li class="chip chip-secondary" th:if="${child.bedtimeHour}"><svg class="icon" aria-hidden="true" style="width:16px;height:16px"><use href="#i-moon"/></svg><span th:text="${#temporals.format(child.bedtimeHour, 'HH:mm')}">20:30</span></li>
-                    </ul>
-                    <div class="card-actions">
-                        <a class="btn btn-secondary btn-sm" th:href="@{/app/children/{id}/edit(id=${child.id})}"
-                           th:attr="aria-label=${child.name} + ' profilini düzenle'"><svg class="icon" aria-hidden="true"><use href="#i-pencil"/></svg>Düzenle</a>
-                        <form th:action="@{/app/children/{id}/delete(id=${child.id})}" method="post"
-                              th:attr="data-confirm=${child.name} + ' profilini kaldırmak istediğinize emin misiniz?'">
-                            <button class="btn btn-danger btn-sm" type="submit" th:attr="aria-label=${child.name} + ' profilini kaldır'">
-                                <svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg>Kaldır</button>
-                        </form>
-                    </div>
-                </li>
-            </ul>
-        </section>
-        <section class="panel-ink" aria-labelledby="add-title">
+                </a>
+                <div class="child-actions">
+                    <a class="btn btn-secondary btn-sm" th:href="@{/app/children/{id}/edit(id=${child.id})}"
+                       th:attr="aria-label=${child.name} + ' profilini düzenle'"><svg class="icon" aria-hidden="true"><use href="#i-pencil"/></svg>Düzenle</a>
+                    <form th:action="@{/app/children/{id}/delete(id=${child.id})}" method="post"
+                          th:attr="data-confirm=${child.name} + ' profilini kaldırmak istediğinize emin misiniz?'">
+                        <button class="btn btn-danger btn-sm" type="submit" th:attr="aria-label=${child.name} + ' profilini kaldır'">
+                            <svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg>Kaldır</button>
+                    </form>
+                </div>
+            </li>
+        </ul>
+    </section>
+
+    <!-- Tek ekleme düğmesi: form sayfa içinde açılır. Liste boşken düğme yerine boş durumdaki "İlk çocuğu ekle" kullanılır. -->
+    <details id="new-child" class="create-panel child-create" th:classappend="${empty} ? 'is-bare'" th:attr="open=${formOpen} ? 'open' : null">
+        <summary class="btn btn-primary">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+            <span class="when-closed">Yeni çocuk ekle</span><span class="when-open">Formu kapat</span>
+        </summary>
+        <section class="panel-ink create-body" aria-labelledby="add-title">
             <h2 id="add-title">Yeni çocuk ekle</h2>
             <p class="hint" style="margin-bottom:var(--space-4)">Soyad veya fotoğraf istemiyoruz.</p>
             <form th:action="@{/app/children}" th:object="${form}" method="post" class="form">
@@ -51,7 +65,7 @@
                 <button class="btn btn-primary" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Ekle</button>
             </form>
         </section>
-    </div>
+    </details>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 <script th:replace="~{app/confirm :: script}"></script>

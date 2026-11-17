@@ -107,7 +107,7 @@ class AccountFlowTests {
         mvc.perform(post("/reset-password").with(csrf()).param("token", token).param("newPassword", "WebParola123!"))
                 .andExpect(redirectedUrl("/login?reset"));
         mvc.perform(post("/login").with(csrf()).param("username", email).param("password", "WebParola123!"))
-                .andExpect(redirectedUrl("/app"));
+                .andExpect(redirectedUrl("/app/children"));
     }
 
     @Test
@@ -174,6 +174,26 @@ class AccountFlowTests {
         assertThat(jdbc.queryForObject("SELECT age FROM child_profiles WHERE id = ?", Integer.class, id)).isEqualTo(6);
         assertThat(jdbc.queryForObject("SELECT bedtime_hour::text FROM child_profiles WHERE id = ?", String.class, id))
                 .isEqualTo("21:15:00");
+    }
+
+    /** Ana ekran çocuk listesidir; doğrulanmamış ve çocuğu olmayan yeni ebeveyn boş durumu ve doğrulama uyarısını görür. */
+    @Test
+    void parentHomeIsChildrenList() throws Exception {
+        String email = email();
+        register(email);
+        var session = new org.springframework.mock.web.MockHttpSession();
+        mvc.perform(post("/login").session(session).with(csrf()).param("username", email).param("password", PASSWORD))
+                .andExpect(redirectedUrl("/app/children"));
+        mvc.perform(get("/").session(session)).andExpect(redirectedUrl("/app/children"));
+        mvc.perform(get("/app").session(session)).andExpect(redirectedUrl("/app/children"));
+        // Doğrulama parametresi yokken uyarı 500 vermemeli (null-güvenli ifade)
+        mvc.perform(get("/app/children").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Henüz çocuk eklemediniz")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("E-posta adresinizi doğrulayın")));
+        mvc.perform(get("/app/stories").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Tüm masallar")));
     }
 
     private Boolean verified(String email) {

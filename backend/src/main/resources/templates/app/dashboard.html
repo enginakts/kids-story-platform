@@ -1,21 +1,15 @@
 <!doctype html>
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Kütüphanem')}"></head>
+<head th:replace="~{fragments/layout :: head('Tüm masallar')}"></head>
 <body>
 <svg th:replace="~{fragments/layout :: icons}"></svg>
 <a th:replace="~{fragments/layout :: skip}"></a>
 <header th:replace="~{fragments/layout :: appNav(${user.displayName}, 'library')}"></header>
 <main id="main">
-    <div class="banner" th:unless="${emailVerified}" role="status">
-        <span th:if="${param.verificationSent}">Doğrulama bağlantısı gönderildi. Gelen kutunuzu ve gereksiz (spam) klasörünü kontrol edin.</span>
-        <span th:if="${param.verificationFailed}">E-posta şu anda gönderilemedi. Lütfen biraz sonra tekrar deneyin.</span>
-        <span th:unless="${param.verificationSent or param.verificationFailed}">E-posta adresinizi doğrulayın; masal oluşturmak için gerekiyor.</span>
-        <form th:action="@{/app/verify-email/resend}" method="post"><button class="btn btn-ghost btn-sm" type="submit">
-            <svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>Bağlantıyı yeniden gönder</button></form>
-    </div>
+    <div th:replace="~{fragments/layout :: verifyBanner}"></div>
     <header class="page-head">
         <div>
-            <h1 class="page-title">Kütüphanem</h1>
+            <h1 class="page-title">Tüm masallar</h1>
             <p class="page-lead" th:text="'Merhaba ' + ${user.displayName} + '. Bir varmış, bir yokmuş... Bu gece hangi masal?'">Merhaba.</p>
         </div>
         <div class="page-head-side">

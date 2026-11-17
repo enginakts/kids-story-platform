@@ -76,6 +76,7 @@ public class KikiriTtsClient implements TtsClient {
             return new SpeechResult(audio, "audio/mpeg", duration(response.getHeaders().getFirst("X-Audio-Duration")), null);
         } catch (RestClientResponseException e) {
             int status = e.getStatusCode().value();
+            UsageMeter.status(status);
             // 503: Space uyuyor veya model yükleniyor; 429: yoğunluk. İkisinde de bir süre sonra yeniden denenir.
             if (status == HttpStatus.SERVICE_UNAVAILABLE.value() || status == HttpStatus.TOO_MANY_REQUESTS.value()) {
                 throw new RateLimitedException("Kikiri ses servisi", OpenAiCompatibleLlmClient.retryAfter(e));

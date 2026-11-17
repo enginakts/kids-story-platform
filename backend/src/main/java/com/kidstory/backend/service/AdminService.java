@@ -24,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -100,8 +101,9 @@ public class AdminService {
     public List<StoryRow> stories(String filter, int limit) {
         String where = STORY_FILTERS.getOrDefault(filter, "TRUE");
         return jdbc.query("""
-                SELECT s.id, s.title, s.status, s.moderation_status, s.theme, c.name AS child_name, p.email, s.created_at
-                FROM stories s JOIN child_profiles c ON c.id = s.child_id JOIN parents p ON p.id = s.parent_id
+                SELECT s.id, s.title, s.status, s.moderation_status, s.theme, coalesce(c.name, '—') AS child_name,
+                       coalesce(p.email, '[silinmiş hesap]') AS email, s.created_at
+                FROM stories s LEFT JOIN child_profiles c ON c.id = s.child_id LEFT JOIN parents p ON p.id = s.parent_id
                 WHERE %s ORDER BY s.created_at DESC LIMIT ?""".formatted(where),
                 (r, i) -> new StoryRow(r.getLong("id"), r.getString("title"), r.getString("status"), r.getString("moderation_status"),
                         r.getString("theme"), r.getString("child_name"), r.getString("email"), instant(r.getTimestamp("created_at"))),
@@ -115,8 +117,9 @@ public class AdminService {
     @Transactional(readOnly = true)
     public StoryRow story(long id) {
         return jdbc.query("""
-                SELECT s.id, s.title, s.status, s.moderation_status, s.theme, c.name AS child_name, p.email, s.created_at
-                FROM stories s JOIN child_profiles c ON c.id = s.child_id JOIN parents p ON p.id = s.parent_id WHERE s.id = ?""",
+                SELECT s.id, s.title, s.status, s.moderation_status, s.theme, coalesce(c.name, '—') AS child_name,
+                       coalesce(p.email, '[silinmiş hesap]') AS email, s.created_at
+                FROM stories s LEFT JOIN child_profiles c ON c.id = s.child_id LEFT JOIN parents p ON p.id = s.parent_id WHERE s.id = ?""",
                 (r, i) -> new StoryRow(r.getLong("id"), r.getString("title"), r.getString("status"), r.getString("moderation_status"),
                         r.getString("theme"), r.getString("child_name"), r.getString("email"), instant(r.getTimestamp("created_at"))),
                 id).stream().findFirst().orElseThrow(() -> new NotFoundException("Masal bulunamadı"));
@@ -215,6 +218,32 @@ public class AdminService {
         provider.setPriority(priority);
         audit(adminId, "PROVIDER_UPDATED", "ai_provider", providerId,
                 provider.getProviderType() + "/" + provider.getProviderName() + " " + (active ? "açık" : "kapalı") + ", öncelik " + priority, ip);
+    }
+
+    /** Kullanım raporu (V14): günlük/aylık çağrı limiti (boş = bilinmiyor) ve tahmini ücretler (USD). */
+    @Transactional
+    public void updateProviderLimits(long adminId, long providerId, Integer dailyLimit, Integer monthlyLimit,
+                                     BigDecimal costPerCall, BigDecimal costPer1kTokens, String ip) {
+        if (dailyLimit != null && (dailyLimit < 1 || dailyLimit > 10_000_000)) {
+            throw new FieldValidationException("dailyLimit", "Günlük limit 1 ile 10.000.000 arasında olmalı ya da boş bırakılmalıdır");
+        }
+        if (monthlyLimit != null && (monthlyLimit < 1 || monthlyLimit > 100_000_000)) {
+            throw new FieldValidationException("monthlyLimit", "Aylık limit 1 ile 100.000.000 arasında olmalı ya da boş bırakılmalıdır");
+        }
+        BigDecimal perCall = costPerCall == null ? BigDecimal.ZERO : costPerCall;
+        BigDecimal per1k = costPer1kTokens == null ? BigDecimal.ZERO : costPer1kTokens;
+        if (perCall.signum() < 0 || per1k.signum() < 0 || perCall.compareTo(BigDecimal.valueOf(1000)) > 0
+                || per1k.compareTo(BigDecimal.valueOf(99)) > 0) {
+            throw new FieldValidationException("costPerCall", "Ücretler 0 veya pozitif olmalıdır (çağrı başı en fazla 1000, 1K token için en fazla 99)");
+        }
+        AiProviderConfig provider = providers.findById(providerId).orElseThrow(() -> new NotFoundException("Sağlayıcı bulunamadı"));
+        provider.setDailyLimit(dailyLimit);
+        provider.setMonthlyLimit(monthlyLimit);
+        provider.setCostPerCall(perCall);
+        provider.setCostPer1kTokens(per1k);
+        audit(adminId, "PROVIDER_LIMITS", "ai_provider", providerId, provider.getProviderType() + "/" + provider.getProviderName()
+                + " günlük " + (dailyLimit == null ? "-" : dailyLimit) + ", aylık " + (monthlyLimit == null ? "-" : monthlyLimit)
+                + ", çağrı başı $" + perCall.toPlainString() + ", 1K token $" + per1k.toPlainString(), ip);
     }
 
     @Transactional

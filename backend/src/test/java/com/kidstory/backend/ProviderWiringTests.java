@@ -33,7 +33,8 @@ class ProviderWiringTests {
     @Test
     void everyKeyedProviderAdapterIsCreated() {
         assertThat(context.getBeansOfType(FeatherlessLlmClient.class)).hasSize(1);
-        assertThat(context.getBeansOfType(GeminiLlmClient.class)).hasSize(1);
+        // Ana Gemini ve yoğunlukta devreye giren yedek kayıt (gemini-lite)
+        assertThat(context.getBeansOfType(GeminiLlmClient.class)).hasSize(2);
         assertThat(context.getBeansOfType(GroqLlmClient.class)).hasSize(1);
         assertThat(context.getBeansOfType(KikiriTtsClient.class)).hasSize(1);
         // Kikiri açıkken taslak ses yüklenmez: servis hatası sessiz bir dosyaya düşmesin

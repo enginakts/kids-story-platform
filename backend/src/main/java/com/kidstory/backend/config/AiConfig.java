@@ -35,6 +35,15 @@ public class AiConfig {
         return new GeminiLlmClient(builder, baseUrl, apiKey, apiRevision);
     }
 
+    /** Sahnelere bölmede yedek: ana Gemini modeli yoğunken (503) yönlendirici bu kayda geçer (V13, öncelik 2). */
+    @Bean
+    @ConditionalOnExpression("'${app.ai.gemini.api-key:}' != ''")
+    GeminiLlmClient geminiFallbackLlmClient(RestClient.Builder builder, @Value("${app.ai.gemini.base-url}") String baseUrl,
+                                            @Value("${app.ai.gemini.api-key}") String apiKey,
+                                            @Value("${app.ai.gemini.api-revision}") String apiRevision) {
+        return new GeminiLlmClient(GeminiLlmClient.FALLBACK_NAME, builder, baseUrl, apiKey, apiRevision);
+    }
+
     /** Sahne resimleri: Cloudflare Workers AI üzerinde FLUX (model adı ai_providers_config'ten). */
     @Bean
     @ConditionalOnExpression("'${app.ai.cloudflare.api-token:}' != ''")

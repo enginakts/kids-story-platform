@@ -1,5 +1,6 @@
 package com.kidstory.backend.service;
 
+import com.kidstory.backend.service.ai.UsageMeter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,12 +56,15 @@ public class StoryGenerationWorker {
                             WHERE status = 'QUEUED' AND run_after <= now() AND job_type IN ('STORY_TEXT', 'SCENE_IMAGE', 'SCENE_AUDIO')
                             ORDER BY CASE job_type WHEN 'STORY_TEXT' THEN 0 WHEN 'SCENE_IMAGE' THEN 1 ELSE 2 END, run_after, id
                             LIMIT 1 FOR UPDATE SKIP LOCKED)
-                RETURNING id, job_type"""));
+                RETURNING id, job_type, story_id"""));
         if (claimed == null || claimed.isEmpty()) {
             return false;
         }
         Long jobId = ((Number) claimed.getFirst().get("id")).longValue();
         String type = (String) claimed.getFirst().get("job_type");
+        Object storyId = claimed.getFirst().get("story_id");
+        // Kullanım raporu: bu işteki dış çağrılar hangi masal ve iş için (V14)
+        UsageMeter.context(storyId == null ? null : ((Number) storyId).longValue(), jobId);
         try {
             switch (type) {
                 case "STORY_TEXT" -> {
@@ -86,6 +90,8 @@ public class StoryGenerationWorker {
             } catch (Exception inner) {
                 log.error("Üretim işi hatası kaydedilemedi (job={})", jobId, inner);
             }
+        } finally {
+            UsageMeter.clearContext();
         }
         return true;
     }

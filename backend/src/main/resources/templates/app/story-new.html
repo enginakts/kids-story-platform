@@ -30,7 +30,18 @@
     <form th:unless="${#lists.isEmpty(children)}" th:action="@{/app/stories}" th:object="${form}" method="post" class="form wizard-form">
         <fieldset class="card step">
             <legend><span class="step-number" aria-hidden="true">1</span>Masal kimin için?</legend>
-            <div class="choice-grid">
+            <!-- Çocuk sayfasından gelindi (?child=ID): seçim atlanır, çocuk sabittir -->
+            <th:block th:if="${lockedChild}">
+                <div class="locked-child">
+                    <input type="hidden" name="childId" th:value="${lockedChild.id}">
+                    <input type="hidden" name="lockedChild" th:value="${lockedChild.id}">
+                    <span th:class="'child-avatar child-avatar-' + ${lockedChild.id % 3}" aria-hidden="true"
+                          th:text="${#strings.toUpperCase(#strings.substring(lockedChild.name, 0, 1))}">D</span>
+                    <span><strong th:text="${lockedChild.name}">Defne</strong><br><span class="muted" th:text="${lockedChild.age} + ' yaş'">5 yaş</span></span>
+                    <a class="btn btn-ghost btn-sm" th:href="@{/app/stories/new}">Başka çocuk seç</a>
+                </div>
+            </th:block>
+            <div class="choice-grid" th:unless="${lockedChild}">
                 <label class="choice" th:each="c : ${children}">
                     <input type="radio" th:field="*{childId}" th:value="${c.id}" required>
                     <span th:class="'avatar avatar-sm avatar-' + ${c.id % 6}" aria-hidden="true" th:text="${#strings.substring(c.name, 0, 1)}">A</span>

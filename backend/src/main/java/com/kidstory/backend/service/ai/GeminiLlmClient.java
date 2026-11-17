@@ -1,9 +1,11 @@
 package com.kidstory.backend.service.ai;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kidstory.backend.entity.AiProviderConfig;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
@@ -21,14 +23,23 @@ import java.util.Map;
 public class GeminiLlmClient implements LlmClient {
 
     public static final String NAME = "gemini";
+    /** Yedek: ana model yoğunken (HTTP 503) aynı anahtarla daha hafif bir modelle sahnelere bölme (model ai_providers_config'te). */
+    public static final String FALLBACK_NAME = "gemini-lite";
 
     private final RestClient.Builder builder;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     private final String baseUrl;
     private final String apiKey;
     private final String apiRevision;
+    private final String name;
 
     public GeminiLlmClient(RestClient.Builder builder, String baseUrl, String apiKey, String apiRevision) {
+        this(NAME, builder, baseUrl, apiKey, apiRevision);
+    }
+
+    /** Aynı API'nin ikinci kaydı (ör. yedek model): sağlayıcı adı ai_providers_config satırıyla eşleşir. */
+    public GeminiLlmClient(String name, RestClient.Builder builder, String baseUrl, String apiKey, String apiRevision) {
+        this.name = name;
         this.builder = builder;
         this.baseUrl = baseUrl.replaceAll("/+$", "");
         this.apiKey = apiKey;
@@ -37,7 +48,7 @@ public class GeminiLlmClient implements LlmClient {
 
     @Override
     public String providerName() {
-        return NAME;
+        return name;
     }
 
     @Override
@@ -62,13 +73,21 @@ public class GeminiLlmClient implements LlmClient {
         body.put("store", false);
 
         try {
-            Interaction response = client.post().uri("/interactions")
+            ResponseEntity<Interaction> entity = client.post().uri("/interactions")
                     .header("x-goog-api-key", apiKey)
                     .header("Api-Revision", apiRevision)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
-                    .body(Interaction.class);
+                    .toEntity(Interaction.class);
+            Interaction response = entity.getBody();
+            // Kullanım raporu (V14): yanıttaki token sayıları (düşünme tokenları çıkışa eklenir); ek çağrı yok
+            UsageMeter.status(entity.getStatusCode().value());
+            if (response != null && response.usage() != null) {
+                Usage u = response.usage();
+                UsageMeter.tokens(u.totalInputTokens(), u.totalOutputTokens() == null ? null
+                        : u.totalOutputTokens() + (u.totalThoughtTokens() == null ? 0 : u.totalThoughtTokens()));
+            }
             if (response == null) {
                 throw new IllegalStateException("Gemini boş yanıt döndü");
             }
@@ -89,6 +108,7 @@ public class GeminiLlmClient implements LlmClient {
             }
             return text.toString();
         } catch (RestClientResponseException e) {
+            UsageMeter.status(e.getStatusCode().value());
             if (e.getStatusCode().value() == HttpStatus.TOO_MANY_REQUESTS.value()) {
                 throw new RateLimitedException("Gemini", OpenAiCompatibleLlmClient.retryAfter(e));
             }
@@ -97,7 +117,13 @@ public class GeminiLlmClient implements LlmClient {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record Interaction(String status, List<Step> steps) {
+    record Interaction(String status, List<Step> steps, Usage usage) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record Usage(@JsonProperty("total_input_tokens") Integer totalInputTokens,
+                 @JsonProperty("total_output_tokens") Integer totalOutputTokens,
+                 @JsonProperty("total_thought_tokens") Integer totalThoughtTokens) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

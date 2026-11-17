@@ -35,24 +35,32 @@ class StubClients {
         return new Stub("stub", AiProviderConfig.Type.LLM, """
                 Paylaşınca Çoğalan Mutluluk
 
-                Güneşli bir sabah ormanda küçük bir sepet dolusu çilek bulundu.
+                %s
 
-                Dostlar sepetin etrafında toplandı ve gülümsedi.
+                %s
 
-                Herkes çilekleri sırayla ve eşit paylaştı.
+                %s
 
-                Akşam olunca karınları tok, kalpleri sevinçle doluydu.""");
+                %s""".formatted(STUB_SCENES[0], STUB_SCENES[1], STUB_SCENES[2], STUB_SCENES[3]));
     }
+
+    /** Taslak masal (anahtar yokken): 4 sahne, giriş-gelişme-sonuç, her sahne 3-6 kısa cümle, son cümle ders. */
+    private static final String[] STUB_SCENES = {
+            "Bir varmış, bir yokmuş, Çiçekli Orman'da minik bir tavşan yaşarmış. Her sabah papatyaların arasında zıplar, kuşlara günaydın dermiş. O sabah güneş ılık ılık parlıyormuş. Tavşan ağaçların dibinde kırmızı bir parıltı görmüş. Yaklaşınca küçük bir sepet dolusu çilek bulmuş. Gözleri sevinçle parlamış.",
+            "Az sonra sincap, kirpi ve kuş da gelmiş. Herkes çileklere bakıp gülümsemiş. Ama sepette yalnızca dört çilek varmış. Tavşan bir an düşünmüş: “Hepimize yeter mi acaba?” Önce çilekleri yan yana dizmiş. Sonra arkadaşlarını tek tek saymış. Dört dost, dört çilek! Bu yüzden içi rahatlamış.",
+            "Tavşan her arkadaşına birer çilek uzatmış. Sincap teşekkür edip kuyruğunu sallamış. Kirpi çileğini küçük küçük ısırmış. Kuş ise neşeyle şarkı söylemeye başlamış. Paylaştıkça orman daha da şenlenmiş. Tavşan kendi çileğini yerken hiç olmadığı kadar mutlu hissetmiş.",
+            "Akşam olunca gökyüzü pembeye boyanmış. Dostlar yumuşak çimenlere uzanıp yıldızları seyretmiş. Karınları tok, kalpleri sevinçle doluymuş. Tavşan gözlerini yavaşça kapatmış ve gülümseyerek uykuya dalmış. Yanında arkadaşları da mışıl mışıl uyuyormuş. Tavşan, paylaştıkça mutluluğun çoğaldığını öğrenmiş."};
 
     @Bean
     @ConditionalOnExpression("'${app.ai.gemini.api-key:}' == ''")
     LlmClient stubScenes() {
         return new Stub("stub-scene", AiProviderConfig.Type.SCENE, """
                 {"title":"Paylaşınca Çoğalan Mutluluk","scenes":[
-                {"text":"Güneşli bir sabah ormanda küçük bir sepet dolusu çilek bulundu.","image_prompt":"a basket of strawberries on soft grass in a sunny forest"},
-                {"text":"Dostlar sepetin etrafında toplandı ve gülümsedi.","image_prompt":"friendly animals gathering around a basket of strawberries, smiling"},
-                {"text":"Herkes çilekleri sırayla ve eşit paylaştı.","image_prompt":"animals sharing strawberries one by one, happy faces"},
-                {"text":"Akşam olunca karınları tok, kalpleri sevinçle doluydu.","image_prompt":"animals resting together under a pastel sunset sky"}]}""");
+                {"text":"%s","image_prompt":"a little rabbit finding a basket of strawberries on soft grass in a sunny forest"},
+                {"text":"%s","image_prompt":"a rabbit, a squirrel, a hedgehog and a bird counting four strawberries together"},
+                {"text":"%s","image_prompt":"animal friends happily eating one strawberry each while a bird sings"},
+                {"text":"%s","image_prompt":"animal friends sleeping on the grass under a pink evening sky with first stars"}]}"""
+                .formatted(STUB_SCENES[0], STUB_SCENES[1], STUB_SCENES[2], STUB_SCENES[3]));
     }
 
     /** Cloudflare anahtarı yoksa: prompt'a göre renklenen düz bir taslak resim (dış servis yok). */

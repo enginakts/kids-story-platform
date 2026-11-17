@@ -38,6 +38,16 @@ public class AiProviderConfig extends IdEntity {
     @Column(name = "cost_per_1k_tokens", nullable = false, precision = 8, scale = 6)
     private BigDecimal costPer1kTokens = BigDecimal.ZERO;
 
+    /** Kullanım raporu (V14): günlük/aylık çağrı limiti (boş = bilinmiyor) ve çağrı başı tahmini ücret (USD). */
+    @Column(name = "daily_limit")
+    private Integer dailyLimit;
+
+    @Column(name = "monthly_limit")
+    private Integer monthlyLimit;
+
+    @Column(name = "cost_per_call", nullable = false, precision = 10, scale = 6)
+    private BigDecimal costPerCall = BigDecimal.ZERO;
+
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;

@@ -54,6 +54,25 @@ public class LocalMediaStorage implements MediaStorage {
         }
     }
 
+    @Override
+    public void deleteFolder(String prefix) {
+        Path dir = resolve(prefix);
+        if (dir.equals(root)) {
+            throw new IllegalArgumentException("Kök klasör silinemez");
+        }
+        if (!Files.isDirectory(dir)) {
+            return;
+        }
+        try (java.util.stream.Stream<Path> walk = Files.walk(dir)) {
+            // Önce dosyalar, sonra klasörler (derinden yüzeye)
+            for (Path p : walk.sorted(java.util.Comparator.reverseOrder()).toList()) {
+                Files.deleteIfExists(p);
+            }
+        } catch (IOException e) {
+            log.warn("Klasör silinemedi: {}", prefix);
+        }
+    }
+
     private Path resolve(String key) {
         Path path = root.resolve(key).normalize();
         if (!path.startsWith(root)) {

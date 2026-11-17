@@ -15,4 +15,7 @@ public interface MediaStorage {
     Optional<Resource> load(String key);
 
     void delete(String key);
+
+    /** Bir klasörü (ör. "stories/12", "characters/7") içindekilerle birlikte siler; yoksa bir şey yapmaz. Hesap silme için. */
+    void deleteFolder(String prefix);
 }

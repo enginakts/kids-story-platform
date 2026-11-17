@@ -19,6 +19,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** Yönetim paneli: masallar, ebeveynler, yapay zekâ sağlayıcıları ve yöneticiler. Her değişiklik denetim kaydı bırakır. */
@@ -34,7 +35,7 @@ class AdminPanelTests {
     @Test
     void superAdminSeesEveryPage() throws Exception {
         MockHttpSession s = adminSession("testadmin", "TestAdmin123!");
-        for (String path : new String[] {"/admin", "/admin/stories", "/admin/parents", "/admin/characters", "/admin/locations", "/admin/ai", "/admin/admins"}) {
+        for (String path : new String[] {"/admin", "/admin/stories", "/admin/parents", "/admin/characters", "/admin/locations", "/admin/ai", "/admin/usage", "/admin/admins"}) {
             mvc.perform(get(path).session(s)).andExpect(status().isOk());
         }
     }
@@ -56,6 +57,7 @@ class AdminPanelTests {
         mvc.perform(get("/admin/locations").session(editor)).andExpect(status().isOk());
         mvc.perform(get("/admin/admins").session(editor)).andExpect(status().isForbidden());
         mvc.perform(get("/admin/ai").session(editor)).andExpect(status().isForbidden());
+        mvc.perform(get("/admin/usage").session(editor)).andExpect(status().isForbidden());
     }
 
     @Test
@@ -87,9 +89,39 @@ class AdminPanelTests {
         mvc.perform(post("/admin/parents/" + parentId + "/active").session(s).with(csrf()).param("active", "false"))
                 .andExpect(status().is3xxRedirection());
         mvc.perform(post("/login").with(csrf()).param("username", email).param("password", "Parola123!"))
-                .andExpect(result -> assertThat(result.getResponse().getRedirectedUrl()).doesNotEndWith("/app"));
+                .andExpect(result -> assertThat(result.getResponse().getRedirectedUrl()).doesNotEndWith("/app/children"));
         assertThat(audits("PARENT_CREDITS")).isPositive();
         assertThat(audits("PARENT_SUSPENDED")).isPositive();
+    }
+
+    /** Kullanım raporu: kayıtlı çağrılar sayılır, girilen limitten kalan ve ücretten maliyet hesaplanır (V14). */
+    @Test
+    void superAdminSeesUsageAndSetsLimits() throws Exception {
+        long id = jdbc.queryForObject("SELECT id FROM ai_providers_config WHERE provider_type = 'IMAGE' AND provider_name = 'cloudflare'", Long.class);
+        MockHttpSession s = adminSession("testadmin", "TestAdmin123!");
+        mvc.perform(post("/admin/usage/" + id).session(s).with(csrf())
+                        .param("dailyLimit", "40").param("monthlyLimit", "").param("costPerCall", "0.01").param("costPer1kTokens", "0"))
+                .andExpect(status().is3xxRedirection());
+        assertThat(jdbc.queryForObject("SELECT daily_limit FROM ai_providers_config WHERE id = ?", Integer.class, id)).isEqualTo(40);
+        assertThat(jdbc.queryForObject("SELECT monthly_limit FROM ai_providers_config WHERE id = ?", Integer.class, id)).isNull();
+        assertThat(audits("PROVIDER_LIMITS")).isPositive();
+
+        jdbc.update("""
+                INSERT INTO ai_usage_events (provider_type, provider_name, model_name, is_success, http_status, duration_ms, estimated_cost)
+                VALUES ('IMAGE', 'cloudflare', 'flux', TRUE, 200, 900, 0.01), ('IMAGE', 'cloudflare', 'flux', FALSE, 503, 300, 0.01)""");
+        // Kalan = limit − bugünkü çağrı (Türkiye saatiyle; diğer testlerin kayıtları da sayılır)
+        long today = jdbc.queryForObject("""
+                SELECT count(*) FROM ai_usage_events WHERE provider_type = 'IMAGE' AND provider_name = 'cloudflare'
+                AND created_at >= (date_trunc('day', now() AT TIME ZONE 'Europe/Istanbul') AT TIME ZONE 'Europe/Istanbul')""", Long.class);
+        mvc.perform(get("/admin/usage").session(s)).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Kullanım ve maliyet")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(Math.max(0, 40 - today) + " / 40")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("HTTP 503")));
+
+        mvc.perform(post("/admin/usage/" + id).session(s).with(csrf()).param("dailyLimit", "0"))
+                .andExpect(flash().attributeExists("problem"));
+        jdbc.update("UPDATE ai_providers_config SET daily_limit = NULL, cost_per_call = 0 WHERE id = ?", id);
+        jdbc.update("DELETE FROM ai_usage_events WHERE model_name = 'flux'");
     }
 
     @Test

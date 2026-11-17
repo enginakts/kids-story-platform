@@ -7,6 +7,8 @@ import com.kidstory.backend.exception.ConflictException;
 import com.kidstory.backend.exception.FieldValidationException;
 import com.kidstory.backend.security.AppUser;
 import com.kidstory.backend.service.AdminService;
+import com.kidstory.backend.service.AiUsageService;
+import com.kidstory.backend.service.CloudflareUsageService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
+
 /**
  * Yönetim paneli. Tüm yöneticiler genel bakış, masallar ve ebeveynler sayfalarını kullanır;
  * yapay zekâ sağlayıcıları ve yöneticiler yalnızca süper yöneticiye açıktır (SecurityConfig).
@@ -32,6 +36,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AdminPageController {
 
     private final AdminService admin;
+    private final AiUsageService usage;
+    private final CloudflareUsageService cloudflareUsage;
 
     @ModelAttribute
     void common(@AuthenticationPrincipal AppUser user, Model model) {
@@ -126,6 +132,30 @@ public class AdminPageController {
             redirect.addFlashAttribute("problem", e.getMessage());
         }
         return "redirect:/admin/ai";
+    }
+
+    // ---------- Kullanım ve maliyet raporu (süper yönetici, V14) ----------
+
+    @GetMapping("/usage")
+    String usage(Model model) {
+        model.addAttribute("report", usage.report());
+        model.addAttribute("cloudflare", cloudflareUsage.today());
+        return "admin/usage";
+    }
+
+    @PostMapping("/usage/{id}")
+    String updateLimits(@AuthenticationPrincipal AppUser user, @PathVariable long id,
+                        @RequestParam(required = false) Integer dailyLimit, @RequestParam(required = false) Integer monthlyLimit,
+                        @RequestParam(required = false) BigDecimal costPerCall,
+                        @RequestParam(required = false) BigDecimal costPer1kTokens,
+                        HttpServletRequest request, RedirectAttributes redirect) {
+        try {
+            admin.updateProviderLimits(user.id(), id, dailyLimit, monthlyLimit, costPerCall, costPer1kTokens, request.getRemoteAddr());
+            redirect.addFlashAttribute("notice", "Limit ve ücretler güncellendi.");
+        } catch (FieldValidationException e) {
+            redirect.addFlashAttribute("problem", e.getMessage());
+        }
+        return "redirect:/admin/usage";
     }
 
     // ---------- Yöneticiler (süper yönetici) ----------

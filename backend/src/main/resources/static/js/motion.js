@@ -256,79 +256,21 @@
         return run > 0 ? clamp01(-r.top / run) : 0;
     }
 
-    /* ---------- Nasıl çalışır: dağınık elmalar şeritte toplanır ve sahne sıralarına dizilir ----------
-       Geniş ekranda bölüm sabitlenir ve kaydırma üç adımı sırayla oynatır; dar ekranda diyagram görünürken oynar. */
-    function flow() {
-        var fig = $("[data-flow]");
-        if (!fig || reduce) return;
-        var sec = $("[data-pin-flow]"), pinned = !!sec && wide.matches;
-        var steps = $$("[data-flow-steps] > li"), bar = null;
-        if (pinned) {
-            var list = $("[data-flow-steps]");
-            list.removeAttribute("data-stagger"); // adımların görünürlüğünü sabitleme yönetir
-            var prog = document.createElement("div"); prog.className = "flow-progress"; prog.setAttribute("aria-hidden", "true");
-            bar = document.createElement("span"); prog.appendChild(bar); list.after(prog);
-        }
-        // Bölgeler sırayla yerleşir: önce dağınık elmalar, sonra şerit, en son sahne sıraları
-        var stages = { scatter: [0, 0.3], ribbon: [0.3, 0.62], rows: [0.62, 0.92] };
-        $$("svg", fig).forEach(function (svg) {
-            var vb = svg.viewBox.baseVal, tall = vb.height > vb.width;
-            var midX = vb.width / 2, midY = vb.height / 2;
-            var seeds = [], groups = {};
-            ["scatter", "ribbon", "rows"].forEach(function (zone) {
-                groups[zone] = $('[data-zone="' + zone + '"]', svg);
-                $$('[data-zone="' + zone + '"] use', svg).forEach(function (el) {
-                    var x = +el.getAttribute("x"), y = +el.getAttribute("y"), dx, dy;
-                    if (zone === "scatter") { dx = (Math.random() - 0.5) * 70; dy = (Math.random() - 0.5) * 70; }
-                    else if (zone === "ribbon") { // soldaki (telefonda üstteki) dağınık alandan gelir
-                        if (tall) { dx = (Math.random() - 0.5) * vb.width * 0.8; dy = -(y - Math.random() * 150); }
-                        else { dx = -(x - Math.random() * 360); dy = (Math.random() - 0.5) * 200; }
-                    } else { // şeridin ortasından açılır
-                        dx = (tall ? midX : 600) - x; dy = (tall ? 265 : midY) - y;
-                    }
-                    seeds.push({ el: el, zone: zone, dx: dx, dy: dy, r: (Math.random() - 0.5) * 80 });
-                });
-            });
-            function place(s, p) {
-                var e = 1 - Math.pow(1 - clamp01(p), 3), k = 1 - e;
-                s.el.style.transform = k < 0.001 ? "" : "translate(" + (s.dx * k).toFixed(1) + "px," + (s.dy * k).toFixed(1) + "px) rotate(" + (s.r * k).toFixed(1) + "deg)";
-            }
-            if (pinned) {
-                onFrame(function () {
-                    var p = pinProgress(sec);
-                    for (var i = 0; i < seeds.length; i++) { var st = stages[seeds[i].zone]; place(seeds[i], (p - st[0]) / (st[1] - st[0])); }
-                    Object.keys(groups).forEach(function (z) {
-                        var st = stages[z]; groups[z].style.opacity = p < st[0] ? "0.3" : "1";
-                    });
-                });
-            } else {
-                seeds.forEach(function (s) { place(s, 0); });
-                scroll(function (p) { seeds.forEach(function (s) { place(s, p); }); }, { target: svg, offset: ["start end", "center 55%"] });
-            }
-        });
-        if (pinned) onFrame(function () {
-            var p = pinProgress(sec), on = p < 0.3 ? 0 : p < 0.62 ? 1 : 2;
-            steps.forEach(function (li, i) { li.classList.toggle("is-on", i === on); });
-            bar.style.transform = "scaleX(" + p.toFixed(3) + ")";
-        });
-        queue();
-    }
-
     /* ---------- Bölüm girişleri: başlık, metin, resim sırayla; bir kez ---------- */
     function reveals() {
         if (reduce) return;
         inView("[data-reveal]:not([data-reveal=mask])", function (el) {
-            animate(el, { opacity: [0, 1], transform: ["translateY(24px)", "translateY(0px)"] }, { duration: 0.8, ease: expo });
-        }, { margin: "0px 0px -12% 0px" });
+            animate(el, { opacity: [0, 1], transform: ["translateY(12px)", "translateY(0px)"] }, { duration: 0.45, ease: expo });
+        }, { margin: "0px 0px 10% 0px" });
         inView('[data-reveal="mask"]', function (el) {
-            animate(el, { clipPath: ["inset(0% 0% 100% 0%)", "inset(0% 0% 0% 0%)"] }, { duration: 1.1, ease: inOut });
+            animate(el, { clipPath: ["inset(0% 0% 100% 0%)", "inset(0% 0% 0% 0%)"] }, { duration: 0.6, ease: inOut });
             var img = $("img", el);
-            if (img) animate(img, { transform: ["scale(1.12)", "scale(1)"] }, { duration: 1.5, ease: [0.33, 1, 0.68, 1] });
-        }, { margin: "0px 0px -12% 0px" });
+            if (img) animate(img, { transform: ["scale(1.06)", "scale(1)"] }, { duration: 0.8, ease: [0.33, 1, 0.68, 1] });
+        }, { margin: "0px 0px 10% 0px" });
         inView("[data-stagger]", function (el) {
-            animate(Array.prototype.slice.call(el.children), { opacity: [0, 1], transform: ["translateY(18px)", "translateY(0px)"] },
-                { duration: 0.6, ease: out, delay: stagger(0.06) });
-        }, { margin: "0px 0px -10% 0px" });
+            animate(Array.prototype.slice.call(el.children), { opacity: [0, 1], transform: ["translateY(10px)", "translateY(0px)"] },
+                { duration: 0.35, ease: out, delay: function (i) { return Math.min(i, 3) * 0.03; } }); // en fazla 0.09 s gecikme
+        }, { margin: "0px 0px 10% 0px" });
     }
 
     /* ---------- Kapanış: gökten üç elma düşer ---------- */
@@ -337,11 +279,11 @@
         if (!mark || reduce) return;
         inView(mark, function () {
             $$(".apple", mark).forEach(function (apple, i) {
-                animate(apple, { opacity: [0, 1] }, { duration: 0.2, delay: 0.15 * i });
+                animate(apple, { opacity: [0, 1] }, { duration: 0.15, delay: 0.06 * i });
                 animate(apple, { transform: ["translateY(-120%) rotate(-20deg)", "translateY(0%) rotate(0deg)"] },
-                    { type: "spring", stiffness: 160, damping: 11, mass: 1, delay: 0.15 * i });
+                    { type: "spring", stiffness: 220, damping: 14, mass: 1, delay: 0.06 * i });
             });
-        }, { amount: 0.4 });
+        }, { amount: 0.15 });
         // Elmanın üzerine gelince hafifçe sallanır
         hover(".closing-mark .apple", function (el) {
             animate(el, { rotate: [0, -8, 6, -3, 0] }, { duration: 0.7, ease: "easeInOut" });
@@ -427,6 +369,7 @@
         var wrap = $("[data-strip]");
         if (!wrap) return;
         var row = $("[data-cards]", wrap), sec = $("[data-pin-h]"), extra = 0;
+        var PIN_RATIO = 0.6; // sayfa 0.6 px kayınca şerit 1 px ilerler: sabitleme daha kısa sürer
         var step = function () { var c = row.firstElementChild; return c ? c.getBoundingClientRect().width + 16 : 300; };
         var behavior = reduce ? "auto" : "smooth";
         function pinOn() { return !!sec && wide.matches && !reduce && !wrap.classList.contains("is-grid"); }
@@ -435,7 +378,7 @@
                 sec.classList.add("is-pinned");
                 row.style.transform = "";
                 extra = Math.max(0, row.scrollWidth - row.clientWidth);
-                sec.style.height = (window.innerHeight + extra) + "px";
+                sec.style.height = (window.innerHeight + extra * PIN_RATIO) + "px";
             } else if (sec) {
                 sec.classList.remove("is-pinned");
                 sec.style.height = ""; row.style.transform = ""; extra = 0;
@@ -484,21 +427,6 @@
         // Resimler yüklenince şerit genişliği değişebilir
         $$("img", row).forEach(function (img) { if (!img.complete) img.addEventListener("load", layout, { once: true }); });
         layout();
-    }
-
-    /* ---------- Mekânlar: geniş ekranda kartlar yığılırken alttaki kart hafifçe küçülür ---------- */
-    function places() {
-        var cards = $$(".place");
-        if (cards.length < 2 || reduce || !wide.matches) return;
-        onFrame(function () {
-            for (var i = 0; i < cards.length - 1; i++) {
-                var top = parseFloat(getComputedStyle(cards[i]).top) || 0;
-                var next = cards[i + 1].getBoundingClientRect().top;
-                var q = clamp01(1 - (next - top) / (window.innerHeight * 0.7));
-                cards[i].style.transform = q > 0 ? "scale(" + (1 - 0.06 * q).toFixed(4) + ")" : "";
-            }
-        });
-        queue();
     }
 
     /* ---------- Tema seçici: üzerine gelince önizler, tıklayınca seçer; panel yumuşakça yenilenir ---------- */
@@ -568,13 +496,13 @@
         if (!scenes.length || reduce) return;
         scenes.forEach(function (s) { s.style.opacity = "0"; });
         inView(".scene", function (el) {
-            animate(el, { opacity: [0, 1] }, { duration: 0.5 });
+            animate(el, { opacity: [0, 1] }, { duration: 0.3 });
             var art = $(".scene-art", el), txt = $(".scene-text", el);
-            if (art) animate(art, { clipPath: ["inset(0% 0% 100% 0%)", "inset(0% 0% 0% 0%)"] }, { duration: 1, ease: inOut });
+            if (art) animate(art, { clipPath: ["inset(0% 0% 100% 0%)", "inset(0% 0% 0% 0%)"] }, { duration: 0.55, ease: inOut });
             var a = art && $(".apple", art);
-            if (a) animate(a, { transform: ["translateY(-40%) rotate(-18deg)", "translateY(0%) rotate(0deg)"] }, { type: "spring", stiffness: 150, damping: 12, delay: 0.25 });
-            if (txt) animate(txt, { opacity: [0, 1], transform: ["translateY(20px)", "translateY(0px)"] }, { duration: 0.8, ease: expo, delay: 0.2 });
-        }, { margin: "0px 0px -15% 0px" });
+            if (a) animate(a, { transform: ["translateY(-40%) rotate(-18deg)", "translateY(0%) rotate(0deg)"] }, { type: "spring", stiffness: 200, damping: 14, delay: 0.1 });
+            if (txt) animate(txt, { opacity: [0, 1], transform: ["translateY(12px)", "translateY(0px)"] }, { duration: 0.45, ease: expo, delay: 0.08 });
+        }, { margin: "0px 0px 10% 0px" });
     }
 
     /* ---------- Marka elması: üzerine gelince sallanır ---------- */
@@ -586,7 +514,7 @@
     }
 
     function init() {
-        heroLoad(); bookOpen(); bookTurn(); crossfade(); heroScroll(); flow(); reveals(); closing(); sample(); strip(); places(); themes(); chapters(); storyScenes(); brand();
+        heroLoad(); bookOpen(); bookTurn(); crossfade(); heroScroll(); reveals(); closing(); sample(); strip(); themes(); chapters(); storyScenes(); brand();
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

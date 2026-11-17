@@ -79,8 +79,9 @@ public class SecurityConfig {
                 .authenticationProvider(provider)
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/admin/login").permitAll()
-                        // Yapay zekâ sağlayıcıları ve yönetici hesapları yalnızca süper yöneticiye açıktır
-                        .requestMatchers("/admin/ai", "/admin/ai/**", "/admin/admins", "/admin/admins/**").hasAuthority(Role.SUPER_ADMIN)
+                        // Yapay zekâ sağlayıcıları, kullanım/maliyet raporu ve yönetici hesapları yalnızca süper yöneticiye açıktır
+                        .requestMatchers("/admin/ai", "/admin/ai/**", "/admin/admins", "/admin/admins/**",
+                                "/admin/usage", "/admin/usage/**").hasAuthority(Role.SUPER_ADMIN)
                         .anyRequest().hasAnyAuthority(Role.ADMIN, Role.SUPER_ADMIN))
                 .formLogin(f -> f.loginPage("/admin/login").defaultSuccessUrl("/admin", true)
                         .failureHandler(failureHandler("/admin/login")).permitAll())
@@ -95,12 +96,12 @@ public class SecurityConfig {
         return http
                 .authenticationProvider(provider)
                 .authorizeHttpRequests(a -> a
-                        .requestMatchers("/", "/login", "/register", "/verify-email",
+                        .requestMatchers("/", "/login", "/register", "/verify-email", "/kvkk",
                                 "/forgot-password", "/reset-password", "/css/**", "/fonts/**", "/js/**", "/img/**", "/error",
                                 "/library/images/*").permitAll()
                         .requestMatchers("/app/**").hasAuthority(Role.PARENT)
                         .anyRequest().denyAll())
-                .formLogin(f -> f.loginPage("/login").defaultSuccessUrl("/app", true)
+                .formLogin(f -> f.loginPage("/login").defaultSuccessUrl("/app/children", true)
                         .failureHandler(failureHandler("/login")).permitAll())
                 .logout(Customizer.withDefaults())
                 .build();

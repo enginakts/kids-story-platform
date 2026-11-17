@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('KVKK aydınlatma metni')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<header th:replace="~{fragments/layout :: publicNav}"></header>
+<!-- TASLAK: Uygulamanın gerçekte işlediği verilere göre hazırlanmıştır; yayından önce hukuki inceleme gerekir.
+     Köşeli parantezli alanlar (veri sorumlusu, iletişim adresi) doldurulmalıdır. -->
+<main id="main" class="legal">
+    <p class="alert alert-info" role="note"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
+        <span>Bu metin taslaktır; yayımlanmadan önce hukuki olarak incelenecektir.</span></p>
+    <h1>KVKK aydınlatma metni</h1>
+    <p class="lead">Masal Dünyası, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında, ebeveynlerin ve çocuklarının kişisel verilerini aşağıda açıklanan şekilde işler.</p>
+
+    <h2>1. Veri sorumlusu</h2>
+    <p>[Şirket unvanı], [adres]. İletişim: [e-posta adresi].</p>
+
+    <h2>2. Hangi verileri işliyoruz?</h2>
+    <ul>
+        <li><strong>Ebeveyn:</strong> ad, soyad, e-posta adresi, parolanızın geri döndürülemez özeti, üyelik ve son giriş tarihi, kayıt sırasında verdiğiniz onayın tarihi ve IP adresi, masal kredisi hareketleri.</li>
+        <li><strong>Çocuk:</strong> yalnızca takma ad, yaş ve isteğe bağlı olarak sevdiği hayvanlar, renkler, ilgi alanları ve uyku saati. <strong>Çocuğun soyadı, fotoğrafı ve konumu hiçbir zaman istenmez ve tutulmaz.</strong></li>
+        <li><strong>Masallar:</strong> seçtiğiniz kahraman, mekân ve tema; üretilen masal metinleri, sahne resimleri ve seslendirmeleri.</li>
+    </ul>
+
+    <h2>3. Hangi amaçlarla?</h2>
+    <p>Hesabınızı oluşturmak ve güvenliğini sağlamak (giriş, parola sıfırlama, hatalı giriş sınırı), çocuğunuzun yaşına ve ilgi alanlarına uygun masal üretmek, masalları size sunmak ve yasal yükümlülüklerimizi yerine getirmek.</p>
+
+    <h2>4. Hukuki sebep</h2>
+    <p>Hizmet sözleşmesinin kurulması ve ifası (KVKK m. 5/2-c), veri sorumlusunun meşru menfaati (m. 5/2-f) ve çocuğunuza ait veriler ile yurt dışına aktarım için verdiğiniz açık rıza (m. 5/1, m. 9).</p>
+
+    <h2>5. Kimlere aktarıyoruz?</h2>
+    <p>Masal metni, sahne resimleri ve seslendirme yapay zekâ hizmet sağlayıcıları aracılığıyla üretilir; bu sağlayıcıların bir kısmı yurt dışındadır. Bu hizmetlere <strong>çocuğunuzun adı gönderilmez</strong>; masalda geçecekse geçici bir yer tutucu ad kullanılır ve gerçek ad, masal hazırlandıktan sonra yalnızca bizim sunucumuzda eklenir. Gönderilenler yaş, tema, seçilen kahraman ve mekânın tanımı ile isteğe bağlı ilgi alanlarıdır.</p>
+
+    <h2>6. Ne kadar süre saklıyoruz?</h2>
+    <p>Verileriniz hesabınız açık olduğu sürece saklanır. Hesabınızı sildiğinizde ebeveyn bilgileriniz, çocuk profilleriniz, masallarınız, resimler ve sesler kalıcı olarak silinir. Keşfet'te herkese açık olarak yayımladığınız masallar silinmez; bu masallar hesabınızdan ayrılır, içlerinde geçen çocuğunuzun adı nötr bir adla değiştirilir ve seslendirmeleri silinir. Yapay zekâ kullanım istatistikleri kişisel veri içermeyecek şekilde anonim tutulur.</p>
+
+    <h2>7. Haklarınız</h2>
+    <p>KVKK m. 11 uyarınca verilerinizin işlenip işlenmediğini öğrenme, bilgi talep etme, düzeltilmesini veya silinmesini isteme ve itiraz etme haklarına sahipsiniz. Verilerinizi Profil sayfasındaki <strong>Verilerimi indir</strong> düğmesiyle indirebilir, <strong>Hesabımı sil</strong> ile kalıcı olarak silebilirsiniz. Diğer talepleriniz için: [e-posta adresi].</p>
+
+    <p class="muted">Sürüm: taslak · Son güncelleme: Kasım 2026</p>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

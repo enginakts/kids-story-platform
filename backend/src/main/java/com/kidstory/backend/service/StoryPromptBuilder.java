@@ -21,8 +21,9 @@ import java.util.stream.Stream;
  */
 public final class StoryPromptBuilder {
 
-    public static final String TEXT_TEMPLATE = "story.text.v3";
-    public static final String SCENE_TEMPLATE = "story.scenes.v1";
+    /** V12: sahne başına 3-5 cümle, giriş-gelişme-sonuç ve son cümlede ders (sahne sayısı ve görsel sayısı değişmez). */
+    public static final String TEXT_TEMPLATE = "story.text.v5"; // V17: aynı çağrıda 3 başlık adayı
+    public static final String SCENE_TEMPLATE = "story.scenes.v2";
     public static final String STYLE = "soft watercolor, whimsical children's book illustration, gentle pastel colors, clean lighting, no text";
     private static final List<String> PLACEHOLDERS = List.of("Kiko", "Lumo", "Pofi", "Tuti");
 

@@ -13,7 +13,7 @@
             <div class="book-copy auth-copy">
                 <th:block th:if="${success}">
                     <p class="alert alert-success" role="status"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>E-posta adresiniz doğrulandı</p>
-                    <a class="btn btn-primary btn-block" th:href="@{/app}">Kütüphaneme git</a>
+                    <a class="btn btn-primary btn-block" th:href="@{/app/children}">Uygulamaya git</a>
                 </th:block>
                 <th:block th:unless="${success}">
                     <h1 class="auth-title">Bağlantı geçersiz</h1>

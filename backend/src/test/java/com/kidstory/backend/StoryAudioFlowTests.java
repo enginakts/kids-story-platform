@@ -51,12 +51,12 @@ class StoryAudioFlowTests {
 
             Herkes huzurla uyudu.""";
 
-    private static final String SCENES = """
+    private static final String SCENES = StoryFlowTests.padScenes("""
             {"title":"Kiko'nun Paylaşma Günü","scenes":[
             {"text":"Kiko'ya bir sepet çilek geldi.","image_prompt":"a basket of strawberries"},
             {"text":"Kiko'nun gülümsemesi parladı.","image_prompt":"a smiling child"},
             {"text":"Dostlar el ele tutuştu.","image_prompt":"friends holding hands"},
-            {"text":"Herkes huzurla uyudu.","image_prompt":"friends sleeping under the moon"}]}""";
+            {"text":"Herkes huzurla uyudu.","image_prompt":"friends sleeping under the moon"}]}""");
 
     @Autowired MockMvc mvc;
     @Autowired JdbcTemplate jdbc;
@@ -97,6 +97,7 @@ class StoryAudioFlowTests {
 
         runAll();
 
+        jdbc.update("UPDATE stories SET saved_at = now() WHERE id = ?", storyId); // V16: listelerde yalnızca kaydedilmiş masal
         mvc.perform(get("/api/v1/stories").header("Authorization", "Bearer " + token))
                 .andExpect(jsonPath("$[0].audioReady").value(true));
         api(storyId).andExpect(jsonPath("$.audio.status").value("READY"))
@@ -105,7 +106,7 @@ class StoryAudioFlowTests {
                 .andExpect(jsonPath("$.scenes[0].audioDurationSeconds").value(3.25));
         // Ses kişiselleştirilmiş metinden üretilir; yatmadan önce masalı daha yavaş okunur.
         TtsClient.SpeechRequest first = tts.requests.getFirst();
-        assertThat(first.text()).isEqualTo("Ada'ya bir sepet çilek geldi.");
+        assertThat(first.text()).isEqualTo("Ada'ya bir sepet çilek geldi. " + StoryFlowTests.FILLER);
         assertThat(first.speed()).isEqualTo(0.88);
         assertThat(first.voiceId()).isEqualTo("nisan");
 
@@ -114,7 +115,7 @@ class StoryAudioFlowTests {
                 .andExpect(header().string("Content-Type", "audio/mpeg"))
                 .andExpect(header().string("Cache-Control", containsString("private")))
                 .andReturn().getResponse().getContentAsByteArray();
-        assertThat(new String(audio, StandardCharsets.UTF_8)).isEqualTo("ID3-ses:Ada'ya bir sepet çilek geldi.");
+        assertThat(new String(audio, StandardCharsets.UTF_8)).isEqualTo("ID3-ses:Ada'ya bir sepet çilek geldi. " + StoryFlowTests.FILLER);
         // Tarayıcı oynatıcısı parça parça ister (Range)
         mvc.perform(get("/api/v1/stories/" + storyId + "/scenes/1/audio").header("Authorization", "Bearer " + token).header("Range", "bytes=0-3"))
                 .andExpect(status().isPartialContent());
@@ -193,7 +194,8 @@ class StoryAudioFlowTests {
                 .andExpect(content().string(containsString("/app/stories/" + storyId + "/scenes/4/audio")))
                 .andExpect(content().string(containsString("Kikiri Türkçe TTS")))
                 .andExpect(content().string(not(containsString("Sesi hazırla"))));
-        mvc.perform(get("/app").session(session)).andExpect(content().string(containsString("Sesli")));
+        jdbc.update("UPDATE stories SET saved_at = now() WHERE id = ?", storyId); // V16: listelerde yalnızca kaydedilmiş masal
+        mvc.perform(get("/app/stories").session(session)).andExpect(content().string(containsString("Sesli")));
         mvc.perform(get("/app/stories/" + storyId + "/media-status").session(session))
                 .andExpect(jsonPath("$.audio.status").value("READY")).andExpect(jsonPath("$.scenes[1].audio").value("/app/stories/" + storyId + "/scenes/2/audio"));
         mvc.perform(get("/app/stories/" + storyId + "/scenes/2/audio").session(session))

@@ -47,7 +47,7 @@ class MailFailureTests {
         MockHttpSession session = new MockHttpSession();
         mvc.perform(post("/login").session(session).with(csrf()).param("username", email).param("password", "Parola123!"));
         mvc.perform(post("/app/verify-email/resend").session(session).with(csrf()))
-                .andExpect(redirectedUrl("/app?verificationFailed"));
+                .andExpect(redirectedUrl("/app/children?verificationFailed"));
 
         // Parola sıfırlamada hata dışarı yansımaz: kayıtlı olup olmadığı anlaşılmasın.
         mvc.perform(post("/api/v1/auth/password/forgot").contentType(MediaType.APPLICATION_JSON)

@@ -12,7 +12,7 @@ public final class StoryEnums {
 
     /** Masal uzunluğu: sahne sayısını ve hedef süreyi belirler. */
     public enum Length {
-        SHORT(4, 2), MEDIUM(5, 3), LONG(6, 4);
+        SHORT(4, 3), MEDIUM(5, 4), LONG(6, 5); // sahne sayısı aynı; sahneler uzadığı için okuma süresi 3-5 dk
 
         private final int scenes;
         private final int minutes;

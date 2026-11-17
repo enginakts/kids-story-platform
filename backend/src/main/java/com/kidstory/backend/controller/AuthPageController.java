@@ -3,6 +3,7 @@ package com.kidstory.backend.controller;
 import com.kidstory.backend.dto.ForgotPasswordRequest;
 import com.kidstory.backend.dto.ParentRegisterRequest;
 import com.kidstory.backend.dto.ResetPasswordRequest;
+import com.kidstory.backend.entity.Role;
 import com.kidstory.backend.exception.ConflictException;
 import com.kidstory.backend.exception.EmailDeliveryException;
 import com.kidstory.backend.exception.InvalidTokenException;
@@ -13,6 +14,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,9 +31,18 @@ public class AuthPageController {
     private final AuthService authService;
     private final AccountService accounts;
 
+    /** Tanıtım sayfası. Oturum açmış ebeveyn uygulamanın ana ekranına (çocuk listesi) yönlenir. */
     @GetMapping("/")
-    String home() {
-        return "index";
+    String home(Authentication auth) {
+        boolean parent = auth != null && auth.isAuthenticated()
+                && auth.getAuthorities().stream().anyMatch(a -> Role.PARENT.equals(a.getAuthority()));
+        return parent ? "redirect:/app/children" : "index";
+    }
+
+    /** KVKK aydınlatma metni (taslak; hukuki inceleme gerekir). Herkese açık. */
+    @GetMapping("/kvkk")
+    String kvkk() {
+        return "kvkk";
     }
 
     /** Giriş ve kayıt aynı kitabın iki sayfasıdır; ikisi de auth/entry şablonunu açar, "mode" açık sayfayı seçer. */
@@ -67,7 +78,7 @@ public class AuthPageController {
             return entry(model, "register", form);
         }
         http.login(form.email().trim(), form.password());
-        return "redirect:/app";
+        return "redirect:/app/children";
     }
 
     @GetMapping("/verify-email")
@@ -86,9 +97,9 @@ public class AuthPageController {
         try {
             accounts.sendVerification(user.id());
         } catch (EmailDeliveryException e) {
-            return "redirect:/app?verificationFailed";
+            return "redirect:/app/children?verificationFailed";
         }
-        return "redirect:/app?verificationSent";
+        return "redirect:/app/children?verificationSent";
     }
 
     @GetMapping("/forgot-password")

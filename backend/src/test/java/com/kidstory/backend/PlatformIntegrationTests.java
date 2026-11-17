@@ -43,7 +43,7 @@ class PlatformIntegrationTests {
         Integer tables = jdbc.queryForObject("""
                 SELECT count(*) FROM information_schema.tables
                 WHERE table_schema = 'public' AND table_name <> 'flyway_schema_history'""", Integer.class);
-        assertThat(tables).isEqualTo(30); // V11: library_images
+        assertThat(tables).isEqualTo(31); // V11: library_images, V14: ai_usage_events
         assertThat(jdbc.queryForObject("SELECT count(*) FROM roles", Integer.class)).isEqualTo(3);
     }
 
@@ -174,7 +174,7 @@ class PlatformIntegrationTests {
         register(email);
         mvc.perform(post("/login").with(csrf()).param("username", email).param("password", "Parola123!"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(result -> assertThat(result.getResponse().getRedirectedUrl()).endsWith("/app"));
+                .andExpect(result -> assertThat(result.getResponse().getRedirectedUrl()).endsWith("/app/children"));
         mvc.perform(post("/admin/login").with(csrf()).param("username", email).param("password", "Parola123!"))
                 .andExpect(result -> assertThat(result.getResponse().getRedirectedUrl()).contains("error"));
         mvc.perform(post("/admin/login").with(csrf()).param("username", "testadmin").param("password", "TestAdmin123!"))

@@ -63,7 +63,7 @@
                         <p th:replace="~{fragments/forms :: error('password')}"></p>
                     </div>
                     <label class="check"><input type="checkbox" name="consent" value="true" required>
-                        <span>18 yaşından büyük olduğumu ve çocuğum adına KVKK aydınlatma metnini onayladığımı kabul ediyorum.</span></label>
+                        <span>18 yaşından büyük olduğumu ve çocuğum adına <a th:href="@{/kvkk}" target="_blank" rel="noopener">KVKK aydınlatma metnini</a> onayladığımı kabul ediyorum.</span></label>
                     <p th:replace="~{fragments/forms :: error('consent')}"></p>
                     <button class="btn btn-primary btn-block" type="submit">Hesap oluştur</button>
                 </form>

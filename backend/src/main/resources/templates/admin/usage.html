@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Kullanım · Yönetim')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<div th:replace="~{fragments/admin :: adminNav('usage')}"></div>
+<!-- Yapay zekâ kullanım ve maliyet raporu (yalnızca süper yönetici). Veri: ai_usage_events (her dış çağrı denemesi)
+     ve ai_providers_config'teki limit/ücretler. Cloudflare'ın resmî günlük kullanımı ayrıca analiz API'sinden okunur. -->
+<main id="main" th:with="r=${report}, types=${ {'LLM':'Masal metni','SCENE':'Sahnelere bölme','IMAGE':'Görsel','TTS':'Seslendirme'} }">
+    <div th:replace="~{fragments/admin :: messages}"></div>
+    <header class="page-head">
+        <div>
+            <h1 class="page-title">Kullanım ve maliyet</h1>
+            <p class="page-lead">Her yapay zekâ çağrısı burada sayılır; yedeğe geçiş ve başarısız denemeler de dahil. Gün ve ay Türkiye saatine göredir. Maliyetler, aşağıda girdiğiniz ücretlerle hesaplanan tahminlerdir.</p>
+        </div>
+    </header>
+
+    <section aria-labelledby="totals-title">
+        <h2 id="totals-title" class="visually-hidden">Özet</h2>
+        <ul class="kpi-board">
+            <li class="kpi kpi-lead"><strong th:text="${r.today.calls}">0</strong><span>bugünkü çağrı</span>
+                <small th:text="${r.today.failed} + ' başarısız'">0 başarısız</small></li>
+            <li class="kpi"><strong th:text="${r.today.images}">0</strong><span>bugün çizilen görsel</span>
+                <small>sahne ve karakter portreleri</small></li>
+            <li class="kpi"><strong th:text="'$' + ${#numbers.formatDecimal(r.today.cost, 1, 'POINT', 2, 'COMMA')}">$0,00</strong><span>bugünkü tahmini maliyet</span></li>
+            <li class="kpi"><strong th:text="${r.month.calls}">0</strong><span>bu ayki çağrı</span>
+                <small th:text="${r.month.failed} + ' başarısız · ' + ${#numbers.formatInteger(r.month.tokens, 1, 'POINT')} + ' token'">0</small></li>
+            <li class="kpi kpi-warn"><strong th:text="'$' + ${#numbers.formatDecimal(r.month.cost, 1, 'POINT', 2, 'COMMA')}">$0,00</strong><span>bu ayki tahmini maliyet</span></li>
+        </ul>
+    </section>
+
+    <!-- Cloudflare'ın kendi sayacı: görsel kotasının resmî durumu -->
+    <section class="section" aria-labelledby="cf-title" th:with="cf=${cloudflare}">
+        <div class="section-head"><h2 id="cf-title">Görsel kotası (Cloudflare resmî)</h2>
+            <span class="muted" th:if="${cf.configured}" th:text="'Son güncelleme ' + ${#temporals.format(cf.fetchedAtLocal(), 'HH:mm')} + ' · en fazla 5 dakikada bir yenilenir'"></span></div>
+        <div class="card usage-quota" th:if="${cf.available}">
+            <p class="usage-quota-line"><strong th:text="${#numbers.formatInteger(cf.neurons, 1, 'POINT')}">0</strong>
+                <span th:text="' / ' + ${#numbers.formatInteger(cf.dailyNeurons, 1, 'POINT')} + ' nöron kullanıldı (bugün, UTC)'"> / 10.000 nöron</span></p>
+            <div class="meter" role="meter" aria-label="Cloudflare günlük kota kullanımı" th:attr="aria-valuenow=${cf.percent()}" aria-valuemin="0" aria-valuemax="100">
+                <span th:style="'width:' + ${cf.percent()} + '%'" th:classappend="${cf.percent() >= 80} ? 'is-high'"></span></div>
+            <p class="muted" th:text="'Kalan: ' + ${#numbers.formatInteger(cf.remaining(), 1, 'POINT')} + ' nöron · ' + ${cf.requests} + ' istek'">Kalan</p>
+        </div>
+        <p class="alert alert-info" role="status" th:unless="${cf.available}">
+            <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span th:text="${cf.message}">Alınamadı.</span></p>
+    </section>
+
+    <!-- Sağlayıcı başına kullanım; kalan, girilen limite göre -->
+    <section class="section" aria-labelledby="providers-title">
+        <div class="section-head"><h2 id="providers-title">Sağlayıcılar</h2></div>
+        <div class="table-wrap">
+            <table class="data-table usage-table">
+                <thead><tr><th>Görev</th><th>Sağlayıcı</th><th class="num">Bugün</th><th>Günlük kalan</th><th class="num">Bu ay</th><th>Aylık kalan</th>
+                    <th class="num">Token (ay)</th><th class="num">Maliyet (bugün / ay)</th><th>Son çağrı</th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${r.providers}" th:classappend="${!p.active} ? 'is-off'">
+                    <td th:text="${types.get(p.type) ?: p.type}">Masal metni</td>
+                    <td><strong th:text="${p.name}">groq</strong><br><small th:text="${p.model}">model</small></td>
+                    <td class="num"><span th:text="${p.todayCalls}">0</span><small th:if="${p.todayFailed > 0}" th:text="' (' + ${p.todayFailed} + ' hata)'"></small></td>
+                    <td>
+                        <th:block th:if="${p.dailyLimit != null}">
+                            <span th:text="${p.dailyRemaining()} + ' / ' + ${p.dailyLimit}">0 / 0</span>
+                            <div class="meter meter-sm" aria-hidden="true"><span th:style="'width:' + ${p.dailyPercent()} + '%'" th:classappend="${p.dailyPercent() >= 80} ? 'is-high'"></span></div>
+                        </th:block>
+                        <small th:unless="${p.dailyLimit != null}">limit girilmedi</small>
+                    </td>
+                    <td class="num"><span th:text="${p.monthCalls}">0</span><small th:if="${p.monthFailed > 0}" th:text="' (' + ${p.monthFailed} + ' hata)'"></small></td>
+                    <td>
+                        <th:block th:if="${p.monthlyLimit != null}">
+                            <span th:text="${p.monthlyRemaining()} + ' / ' + ${p.monthlyLimit}">0 / 0</span>
+                            <div class="meter meter-sm" aria-hidden="true"><span th:style="'width:' + ${p.monthlyPercent()} + '%'" th:classappend="${p.monthlyPercent() >= 80} ? 'is-high'"></span></div>
+                        </th:block>
+                        <small th:unless="${p.monthlyLimit != null}">limit girilmedi</small>
+                    </td>
+                    <td class="num" th:text="${p.monthTokens > 0} ? ${#numbers.formatInteger(p.monthTokens, 1, 'POINT')} : '—'">0</td>
+                    <td class="num" th:text="'$' + ${#numbers.formatDecimal(p.todayCost, 1, 'POINT', 4, 'COMMA')} + ' / $' + ${#numbers.formatDecimal(p.monthCost, 1, 'POINT', 4, 'COMMA')}">$0</td>
+                    <td><th:block th:if="${p.lastCallAt != null}"><span th:text="${#temporals.format(p.lastCallAt, 'dd.MM HH:mm')}"></span>
+                        <small th:if="${p.lastHttpStatus != null}" th:text="' · HTTP ' + ${p.lastHttpStatus}"></small></th:block>
+                        <small th:if="${p.lastCallAt == null}">bu ay yok</small></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Sağlayıcının kendi bildirdiği kalan kota (yanıt başlıkları; ek çağrı yok) -->
+    <section class="section" aria-labelledby="ratelimit-title" th:unless="${r.rateLimits.isEmpty()}">
+        <div class="section-head"><h2 id="ratelimit-title">Sağlayıcının bildirdiği kalan kota</h2></div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>Sağlayıcı</th><th>Başlık</th><th>Değer</th></tr></thead>
+                <tbody>
+                <th:block th:each="rl : ${r.rateLimits}">
+                    <tr th:each="h, st : ${rl.value.headers}">
+                        <td><th:block th:if="${st.first}"><strong th:text="${rl.key}">groq</strong><br>
+                            <small th:text="'son yanıt ' + ${#temporals.format(rl.value.seenAtLocal(), 'dd.MM HH:mm')}"></small></th:block></td>
+                        <td th:text="${ {'x-ratelimit-limit-requests':'İstek limiti (gün)','x-ratelimit-remaining-requests':'Kalan istek (gün)','x-ratelimit-reset-requests':'İstek sıfırlanması','x-ratelimit-limit-tokens':'Token limiti (dakika)','x-ratelimit-remaining-tokens':'Kalan token (dakika)','x-ratelimit-reset-tokens':'Token sıfırlanması'}.get(h.key) ?: h.key }">başlık</td>
+                        <td th:text="${h.value}">değer</td>
+                    </tr>
+                </th:block>
+                </tbody>
+            </table>
+        </div>
+        <p class="hint">Bu değerler sağlayıcının en son yanıtında gönderdiği başlıklardır; uygulama yeniden başlayınca ilk çağrıya kadar boş kalır.</p>
+    </section>
+
+    <!-- Limit ve ücretler: "kalan" ve maliyet hesabı bunlarla yapılır -->
+    <section class="section" aria-labelledby="limits-title">
+        <div class="section-head"><h2 id="limits-title">Limit ve ücretler</h2></div>
+        <p class="hint">Limit, sağlayıcı planınızdaki çağrı sayısıdır (boş bırakılırsa "kalan" hesaplanmaz). Ücretler ABD doları cinsinden tahmindir: görselde çağrı başı ücret, metinde 1.000 token ücreti girilir.</p>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>Sağlayıcı</th><th>Günlük limit</th><th>Aylık limit</th><th>Çağrı başı ($)</th><th>1K token ($)</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${r.providers}">
+                    <td><strong th:text="${p.name}">groq</strong><br><small th:text="${types.get(p.type) ?: p.type}"></small></td>
+                    <td colspan="5">
+                        <form class="inline-form usage-form" th:action="@{/admin/usage/{id}(id=${p.id})}" method="post">
+                            <label class="visually-hidden" th:for="'dl-' + ${p.id}" th:text="${p.name} + ' günlük limit'"></label>
+                            <input th:id="'dl-' + ${p.id}" name="dailyLimit" type="number" min="1" step="1" placeholder="—" th:value="${p.dailyLimit}">
+                            <label class="visually-hidden" th:for="'ml-' + ${p.id}" th:text="${p.name} + ' aylık limit'"></label>
+                            <input th:id="'ml-' + ${p.id}" name="monthlyLimit" type="number" min="1" step="1" placeholder="—" th:value="${p.monthlyLimit}">
+                            <label class="visually-hidden" th:for="'cc-' + ${p.id}" th:text="${p.name} + ' çağrı başı ücret'"></label>
+                            <input th:id="'cc-' + ${p.id}" name="costPerCall" type="number" min="0" step="0.000001" th:value="${p.costPerCall}">
+                            <label class="visually-hidden" th:for="'ct-' + ${p.id}" th:text="${p.name} + ' 1K token ücreti'"></label>
+                            <input th:id="'ct-' + ${p.id}" name="costPer1kTokens" type="number" min="0" step="0.000001" th:value="${p.costPer1kTokens}">
+                            <button class="btn btn-secondary btn-sm" type="submit">Kaydet</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="section" aria-labelledby="days-title">
+        <div class="section-head"><h2 id="days-title">Son 14 gün</h2></div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>Gün</th><th class="num">Masal metni</th><th class="num">Sahnelere bölme</th><th class="num">Görsel</th><th class="num">Ses</th><th class="num">Başarısız</th><th class="num">Tahmini maliyet</th></tr></thead>
+                <tbody>
+                <tr th:each="d : ${r.days}">
+                    <td th:text="${#temporals.format(d.day, 'dd.MM.yyyy')}">01.01.2026</td>
+                    <td class="num" th:text="${d.text}">0</td><td class="num" th:text="${d.scene}">0</td>
+                    <td class="num" th:text="${d.image}">0</td><td class="num" th:text="${d.tts}">0</td>
+                    <td class="num" th:text="${d.failed}">0</td>
+                    <td class="num" th:text="'$' + ${#numbers.formatDecimal(d.cost, 1, 'POINT', 4, 'COMMA')}">$0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="section" aria-labelledby="fail-title">
+        <div class="section-head"><h2 id="fail-title">Son hatalar</h2></div>
+        <p class="empty-line" th:if="${r.failures.isEmpty()}">Kayıtlı hata yok.</p>
+        <div class="table-wrap" th:unless="${r.failures.isEmpty()}">
+            <table class="data-table">
+                <thead><tr><th>Zaman</th><th>Sağlayıcı</th><th class="num">HTTP</th><th>Hata</th><th class="num">Masal</th></tr></thead>
+                <tbody>
+                <tr th:each="f : ${r.failures}">
+                    <td th:text="${#temporals.format(f.at, 'dd.MM HH:mm')}"></td>
+                    <td><strong th:text="${f.provider}"></strong><br><small th:text="${types.get(f.type) ?: f.type}"></small></td>
+                    <td class="num" th:text="${f.httpStatus} ?: '—'"></td>
+                    <td th:text="${f.error}"></td>
+                    <td class="num"><a th:if="${f.storyId != null}" th:href="@{/admin/stories/{id}(id=${f.storyId})}" th:text="'#' + ${f.storyId}"></a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

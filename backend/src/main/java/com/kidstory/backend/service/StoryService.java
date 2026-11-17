@@ -11,6 +11,8 @@ import com.kidstory.backend.entity.Parent;
 import com.kidstory.backend.entity.Story;
 import com.kidstory.backend.entity.StoryScene;
 import com.kidstory.backend.entity.StoryCharacter;
+import com.kidstory.backend.entity.StoryEnums;
+import com.kidstory.backend.exception.ConflictException;
 import com.kidstory.backend.exception.EmailNotVerifiedException;
 import com.kidstory.backend.exception.FieldValidationException;
 import com.kidstory.backend.exception.NotFoundException;
@@ -47,6 +49,12 @@ public class StoryService {
     private final BillingService billing;
     private final StoryAudioService audio;
     private final StoryImageService images;
+    private final ContentFilterService contentFilter;
+    private final MediaStorage storage;
+    private final SaveQuotaService saveQuota;
+
+    /** Başlık en fazla bu kadar karakter olabilir (ebeveyn düzenlemesi). */
+    static final int MAX_TITLE = 160;
 
     /** Krediyi harcar, masalı ve metin üretim işini kuyruğa koyar. Üretim arka planda yapılır. */
     @Transactional
@@ -100,14 +108,21 @@ public class StoryService {
     @Transactional(readOnly = true)
     public List<StorySummaryResponse> list(Long parentId) {
         Set<Long> withAudio = new HashSet<>(scenes.findStoryIdsWithFullAudio(parentId));
-        return stories.findByParentIdOrderByCreatedAtDesc(parentId).stream()
+        return stories.findByParentIdAndSavedAtIsNotNullOrderByCreatedAtDesc(parentId).stream()
+                .map(s -> StorySummaryResponse.from(s, withAudio.contains(s.getId()))).toList();
+    }
+
+    /** Yalnızca bu ebeveynin bu çocuğu için üretilmiş masallar (çocuğun sahipliğini çağıran ayrıca doğrular). */
+    @Transactional(readOnly = true)
+    public List<StorySummaryResponse> listForChild(Long parentId, Long childId) {
+        Set<Long> withAudio = new HashSet<>(scenes.findStoryIdsWithFullAudio(parentId));
+        return stories.findByParentIdAndChildIdAndSavedAtIsNotNullOrderByCreatedAtDesc(parentId, childId).stream()
                 .map(s -> StorySummaryResponse.from(s, withAudio.contains(s.getId()))).toList();
     }
 
     @Transactional(readOnly = true)
     public StoryDetailResponse get(Long parentId, Long storyId) {
-        Story story = stories.findByIdAndParentId(storyId, parentId)
-                .orElseThrow(() -> new NotFoundException("Masal bulunamadı"));
+        Story story = owned(parentId, storyId);
         List<StoryScene> sceneList = scenes.findByStoryIdOrderBySceneNumberAsc(storyId);
         List<StoryDetailResponse.Scene> list = sceneList.stream()
                 .map(s -> new StoryDetailResponse.Scene(s.getSceneNumber(), s.getSceneText(),
@@ -118,6 +133,85 @@ public class StoryService {
         StoryDetailResponse.Progress audioStatus = audio.status(storyId, sceneList);
         return new StoryDetailResponse(StorySummaryResponse.from(story, "READY".equals(audioStatus.status())),
                 StoryCatalog.style(story.getNarrationStyle()), list, audioStatus, images.status(storyId, sceneList));
+    }
+
+    /** "Son üretilen": süresi dolmamış en yeni geçici masal (childId null ise bütün çocuklar için). */
+    @Transactional(readOnly = true)
+    public java.util.Optional<StorySummaryResponse> latestUnsaved(Long parentId, Long childId) {
+        java.util.Optional<Story> story = childId == null
+                ? stories.findFirstByParentIdAndSavedAtIsNullAndCreatedAtAfterOrderByCreatedAtDesc(parentId, StoryRetention.cutoff())
+                : stories.findFirstByParentIdAndChildIdAndSavedAtIsNullAndCreatedAtAfterOrderByCreatedAtDesc(parentId, childId, StoryRetention.cutoff());
+        return story.filter(s -> s.getStatus() != StoryEnums.Status.FAILED).map(StorySummaryResponse::from);
+    }
+
+    /**
+     * "Bu masalı kaydet": kota denetimi (sunucuda), isteğe bağlı başlık düzeltmesi ve kaydetme.
+     * Yalnızca hazırlanmış (COMPLETED) ve süresi dolmamış geçici masal kaydedilir; zaten kayıtlıysa yalnızca başlık güncellenir.
+     */
+    @Transactional
+    public StorySummaryResponse save(Long parentId, Long storyId, String title) {
+        Story story = owned(parentId, storyId);
+        if (story.getStatus() != StoryEnums.Status.COMPLETED) {
+            throw new ConflictException("Masal henüz hazır değil; hazır olunca kaydedebilirsiniz.");
+        }
+        if (title != null && !title.isBlank()) {
+            story.setTitle(validTitle(title));
+        }
+        if (story.getSavedAt() == null) {
+            saveQuota.ensureCanSave(parentId);
+            story.setSavedAt(java.time.Instant.now());
+        }
+        return StorySummaryResponse.from(story);
+    }
+
+    /** "Kaydetme": geçici masal ve dosyaları silinir (kayıtlı masal bu yolla silinemez). Kredi iade edilmez (karar). */
+    @Transactional
+    public Long discard(Long parentId, Long storyId) {
+        Story story = owned(parentId, storyId);
+        if (story.getSavedAt() != null) {
+            throw new ConflictException("Kaydedilmiş masal bu işlemle silinemez.");
+        }
+        Long childId = story.getChild() == null ? null : story.getChild().getId();
+        stories.delete(story);
+        deleteFilesAfterCommit(storyId);
+        return childId;
+    }
+
+    /** Ebeveyn başlığı sonradan düzenler (güvenlik denetiminden geçer). */
+    @Transactional
+    public void rename(Long parentId, Long storyId, String title) {
+        owned(parentId, storyId).setTitle(validTitle(title));
+    }
+
+    String validTitle(String raw) {
+        String title = raw == null ? "" : raw.strip().replaceAll("\\s+", " ");
+        if (title.isEmpty() || title.length() > MAX_TITLE) {
+            throw new FieldValidationException("title", "Başlık 1-" + MAX_TITLE + " karakter olmalıdır");
+        }
+        contentFilter.findBlockedWord(title).ifPresent(w -> {
+            throw new FieldValidationException("title", "Bu başlık masal kurallarına uymuyor; lütfen başka bir başlık yazın.");
+        });
+        return title;
+    }
+
+    /** Sahiplik ve geçici masalın süresi: süresi dolmuş geçici masal artık yokmuş gibi davranır. */
+    private Story owned(Long parentId, Long storyId) {
+        Story story = stories.findByIdAndParentId(storyId, parentId)
+                .orElseThrow(() -> new NotFoundException("Masal bulunamadı"));
+        if (StoryRetention.expired(story)) {
+            throw new NotFoundException("Bu masalın süresi doldu; kaydedilmediği için silindi.");
+        }
+        return story;
+    }
+
+    private void deleteFilesAfterCommit(Long storyId) {
+        org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                new org.springframework.transaction.support.TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        storage.deleteFolder("stories/" + storyId);
+                    }
+                });
     }
 
     @Transactional(readOnly = true)

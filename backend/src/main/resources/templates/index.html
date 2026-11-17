@@ -4,45 +4,16 @@
 <body class="home">
 <svg th:replace="~{fragments/layout :: icons}"></svg>
 <a th:replace="~{fragments/layout :: skip}"></a>
-<header th:replace="~{fragments/layout :: publicNav}"></header>
-
-<!-- Masaüstü: sağda sabit bölüm menüsü. Aktif bölüm kırmızıya dolar, üzerinden ışık şeridi geçer. -->
-<aside class="rail" aria-label="Bölümler">
-    <a class="rail-brand" th:href="@{/}" aria-label="Masal Dünyası ana sayfa">
-        <svg class="apple" aria-hidden="true"><use href="#apple"/></svg><span>Masal Dünyası</span>
-    </a>
-    <nav>
-        <ul class="rail-nav">
-            <li><a href="#baslangic" data-chapter-link="baslangic"><span>Başlangıç</span></a></li>
-            <li><a href="#nasil" data-chapter-link="nasil"><span>Nasıl çalışır</span></a></li>
-            <li><a href="#ornek" data-chapter-link="ornek"><span>Örnek masal</span></a></li>
-            <li><a href="#kahramanlar" data-chapter-link="kahramanlar"><span>Kahramanlar</span></a></li>
-            <li><a href="#dunya" data-chapter-link="dunya"><span>Mekân ve tema</span></a></li>
-            <li><a href="#guvenlik" data-chapter-link="guvenlik"><span>Güvenlik</span></a></li>
-        </ul>
-    </nav>
-    <div class="rail-actions">
-        <a class="btn btn-primary btn-block" th:href="@{/register}">Ücretsiz başla</a>
-        <a class="btn btn-ghost-light btn-block" th:href="@{/login}">Giriş yap</a>
-    </div>
-    <a class="rail-gift" th:href="@{/register}">
-        <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
-        <span>İlk 3 masal hediye</span>
-        <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg>
-    </a>
-</aside>
+<header th:replace="~{fragments/layout :: homeNav}"></header>
+<!-- Hesap silindikten sonra (ProfilePageController) oturum kapanır ve buraya gelinir -->
+<p class="alert alert-success account-deleted" role="status" th:if="${param.hesapSilindi}">
+    <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>Hesabınız ve bütün verileriniz silindi. Bizi denediğiniz için teşekkür ederiz.</span></p>
 
 <main id="main">
 
     <!-- Bölüm: Başlangıç -->
     <section id="baslangic" class="chapter chapter-paper hero" data-chapter aria-labelledby="hero-title">
         <div class="hero-card">
-            <div class="apple-band" aria-hidden="true">
-                <svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg>
-                <svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg>
-                <svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg>
-                <svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg>
-            </div>
             <div class="hero-copy">
                 <h1 id="hero-title" class="lines">
                     <span class="line"><span data-line style="--i:0">Her gece ona</span></span>
@@ -53,11 +24,6 @@
                     <a class="btn btn-primary" th:href="@{/register}">Ücretsiz başla</a>
                     <span class="note">İlk 3 masal hediye</span>
                 </div>
-                <ul class="hero-links" data-load>
-                    <li><a class="flash" href="#nasil">Nasıl çalışır</a></li>
-                    <li><a class="flash" href="#ornek">Örnek masal</a></li>
-                    <li><a class="flash" href="#guvenlik">Güvenlik</a></li>
-                </ul>
             </div>
         </div>
         <div class="hero-stage" data-hero-stage>
@@ -74,19 +40,16 @@
     </section>
 
     <!-- Bölüm: Nasıl çalışır (gece zemini) -->
-    <section id="nasil" class="chapter chapter-ink pin-flow" data-chapter data-pin-flow aria-labelledby="nasil-title">
-        <div class="pin-stage">
+    <section id="nasil" class="chapter chapter-ink" data-chapter aria-labelledby="nasil-title">
         <div class="chapter-head">
             <h2 id="nasil-title" class="chapter-title" data-reveal>Seçimden masala</h2>
             <p data-reveal>Siz birkaç seçim yaparsınız, gerisini masal halleder. Çocuğunuzun yaşı, kahramanı ve teması tek bir kısa masalda buluşur.</p>
         </div>
-        <figure th:replace="~{fragments/flow :: flow}"></figure>
-        <ol class="flow-steps" data-stagger data-flow-steps>
-            <li><h3>Seçin</h3><p>Çocuğunuzu, kahramanı (11 tür, 9 renk), mekânı ve temayı listeden seçersiniz. Serbest metin yazılmaz.</p></li>
-            <li><h3>Yazılır</h3><p>Masal yazılır ve sahnelere bölünür. Korku, şiddet ve ayrılık içeren her şey denetimde ayıklanır.</p></li>
-            <li><h3>Okunur</h3><p>4-6 kısa sahne, her sahnede en fazla iki cümle: yatmadan önce 2-3 dakikalık bir masal.</p></li>
+        <ol class="flow-steps" data-stagger>
+            <li><span class="flow-num" aria-hidden="true">1</span><h3>Seçin</h3><p>Çocuğunuzu, kahramanı (11 tür, 9 renk), mekânı ve temayı listeden seçersiniz. Serbest metin yazılmaz.</p></li>
+            <li><span class="flow-num" aria-hidden="true">2</span><h3>Yazılır</h3><p>Masal yazılır ve sahnelere bölünür. Korku, şiddet ve ayrılık içeren her şey denetimde ayıklanır.</p></li>
+            <li><span class="flow-num" aria-hidden="true">3</span><h3>Okunur</h3><p>4-6 sahne, her sahnede kısa bir bölüm: yatmadan önce 3-5 dakikalık bir masal.</p></li>
         </ol>
-        </div>
     </section>
 
     <!-- Bölüm: Örnek masal. Genişleyen levha panelleri, sağda otomatik ilerleyen masal listesi -->
@@ -134,7 +97,7 @@
                     </button>
                 </div>
                 <div id="tale-panel" class="tale-reader" role="tabpanel" aria-live="polite">
-                    <p class="tale-text" data-tale-text>Güneşli bir sabah <span class="name">Ece</span> ile Pamuk, Çiçekli Orman'da bir sepet dolusu çilek buldu.</p>
+                    <p class="tale-text" data-tale-text>Bir varmış, bir yokmuş, Çiçekli Orman'da <span class="name">Ece</span> ile tavşan Pamuk yaşarmış. Güneşli bir sabah papatyaların arasında oynuyorlarmış. Birden ağacın dibinde bir sepet dolusu çilek bulmuşlar.</p>
                     <p class="scene-count" data-tale-count>Sahne 1 / 4</p>
                 </div>
                 <div class="tale-controls">
@@ -150,9 +113,9 @@
             </div>
         </div>
         <script type="application/json" id="tales">[
-            {"img":"paylasma","scenes":["Güneşli bir sabah {ad} ile Pamuk, Çiçekli Orman'da bir sepet dolusu çilek buldu.","Dostlar sepetin etrafında toplandı, herkes gülümsedi.","{ad} çilekleri tek tek saydı ve herkese eşit paylaştırdı.","Akşam olunca karınları tok, kalpleri sevinçle doluydu. Gökten üç elma düştü."]},
-            {"img":"kapi","scenes":["Bulut Şatosu'nun kapısında {ad} ile Leo, utangaç küçük bir fareyle karşılaştı.","Leo kocaman gülümsedi ve sordu: \"Bizimle oynar mısın?\"","{ad} en sevdiği oyunu anlattı, fare kıkırdayarak katıldı.","Gün batarken üçü el salladı: \"Yarın yine oynayalım!\""]},
-            {"img":"cayir","scenes":["Fikri, Çiçekli Orman'daki büyük çayırın öbür ucunu hiç görmemişti.","{ad} onun hortumunu tuttu: \"Birlikte bakalım mı?\"","Adım adım yürüdüler; çayırın ucunda rengârenk çiçekler vardı.","Fikri gülümsedi: \"Yanımda bir dost olunca cesaret de geliyor.\""]}
+            {"img":"paylasma","scenes":["Bir varmış, bir yokmuş, Çiçekli Orman'da {ad} ile tavşan Pamuk yaşarmış. Güneşli bir sabah papatyaların arasında oynuyorlarmış. Birden ağacın dibinde bir sepet dolusu çilek bulmuşlar.","Az sonra sincap ve kirpi de gelmiş. Ama sepette yalnızca dört çilek varmış. {ad} bir an düşünmüş: “Hepimize yeter mi?” Pamuk çilekleri yan yana dizmiş ve birlikte saymışlar.","Dört dost, dört çilek! Bu yüzden {ad} herkese birer çilek uzatmış. Sincap teşekkür edip kuyruğunu sallamış, kirpi neşeyle gülmüş. Paylaştıkça orman daha da şenlenmiş.","Akşam olunca dostlar yumuşak çimenlere uzanmış. Karınları tok, kalpleri sevinçle doluymuş. Gökten üç elma düşmüş. {ad}, paylaştıkça mutluluğun çoğaldığını öğrenmiş."]},
+            {"img":"kapi","scenes":["Bir varmış, bir yokmuş, Bulut Şatosu'nda {ad} ile aslan Leo yaşarmış. Her sabah pamuk bulutların üstünde koşup oynarlarmış. O gün şatonun kapısında utangaç, küçük bir fare görmüşler.","Fare kuyruğunu sarıp bir köşeye çekilmiş. Leo kocaman gülümseyip sormuş: “Bizimle oynar mısın?” Fare önce başını eğmiş. Bunun üzerine {ad}, en sevdiği saklambaç oyununu yavaşça anlatmış.","Fare kulaklarını dikip dinlemiş ve sonunda kıkırdamış. Üçü bulutların arkasına saklanıp birbirlerini aramışlar. Her bulunuşta kahkahaları şatoyu doldurmuş.","Gün batarken üçü el sallamış: “Yarın yine oynayalım!” Fare artık hiç utangaç değilmiş. {ad} ile Leo, bir gülümsemenin yeni bir dostluk başlatabildiğini öğrenmiş."]},
+            {"img":"cayir","scenes":["Bir varmış, bir yokmuş, Çiçekli Orman'da yavru fil Fikri yaşarmış. Fikri büyük çayırın kenarında oynamayı çok severmiş. Ama çayırın öbür ucunu hiç görmemiş.","Bir gün {ad} çayıra gelmiş. Fikri'nin öbür uca merakla baktığını görmüş. {ad} onun hortumunu tutmuş: “Birlikte bakalım mı?” Fikri önce biraz durmuş, sonra başını sallamış.","Adım adım yürümüşler. Uzun otlar ayaklarını gıdıklamış, kelebekler yanlarında uçmuş. Çayırın ucunda rengârenk çiçeklerle dolu bir tepe varmış.","Fikri çiçeklerin arasında mutlulukla dönmüş: “Yanımda bir dost olunca cesaret de geliyor.” Akşam güneşi ikisini sıcacık sarmış. Fikri, yeni bir şeyi bir dostla denemenin kolaylaştığını öğrenmiş."]}
         ]</script>
     </section>
 
@@ -199,10 +162,10 @@
 
         <div class="sub-title"><h3>Mekânlar</h3><span>3 hazır mekân</span></div>
         <ul class="places" data-stagger>
-            <li class="place" style="--i:0">
+            <li class="place">
                 <div class="place-art p-orange">
-                    <span class="ribbon-box" aria-hidden="true"><span class="ribbon">Hazır</span></span>
-                    <svg viewBox="0 0 400 480" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Güneşli bir ormanda ağaçlar ve çiçekler">
+                    <span class="place-tag" aria-hidden="true">Hazır</span>
+                    <svg viewBox="0 0 400 480" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Güneşli bir ormanda ağaçlar ve çiçekler">
                         <circle class="sun" cx="300" cy="104" r="50" fill="#f2f0e4"/>
                         <path d="M0 330 Q110 270 220 318 T400 300 V480 H0Z" fill="#f24405"/>
                         <rect x="92" y="226" width="16" height="110" rx="6" fill="#0e0d0d"/><circle cx="100" cy="206" r="58" fill="#0e0d0d"/>
@@ -217,10 +180,10 @@
                     <p>Güneşli, huzurlu ve renkli bir orman; yumuşak gün ışığında.</p>
                 </div>
             </li>
-            <li class="place" style="--i:1">
+            <li class="place">
                 <div class="place-art p-red">
-                    <span class="ribbon-box" aria-hidden="true"><span class="ribbon">Hazır</span></span>
-                    <svg viewBox="0 0 400 480" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Pamuk bulutların üzerinde bir şato">
+                    <span class="place-tag" aria-hidden="true">Hazır</span>
+                    <svg viewBox="0 0 400 480" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Pamuk bulutların üzerinde bir şato">
                         <circle class="sun" cx="96" cy="120" r="44" fill="#ff8c00"/>
                         <g fill="#0e0d0d">
                             <rect x="132" y="190" width="136" height="150"/>
@@ -238,10 +201,10 @@
                     <p>Pamuk bulutların üzerinde sevimli bir şato; pastel gün batımında.</p>
                 </div>
             </li>
-            <li class="place" style="--i:2">
+            <li class="place">
                 <div class="place-art p-paper">
-                    <span class="ribbon-box" aria-hidden="true"><span class="ribbon">Hazır</span></span>
-                    <svg viewBox="0 0 400 480" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Deniz kıyısında küçük renkli evler ve bir kayık">
+                    <span class="place-tag" aria-hidden="true">Hazır</span>
+                    <svg viewBox="0 0 400 480" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Deniz kıyısında küçük renkli evler ve bir kayık">
                         <circle class="sun" cx="310" cy="96" r="44" fill="#ff8c00"/>
                         <g><rect x="40" y="200" width="70" height="80" fill="#f24405"/><path d="M32 202 L75 160 L118 202Z" fill="#0e0d0d"/><rect x="66" y="240" width="18" height="40" fill="#0e0d0d"/></g>
                         <g><rect x="130" y="216" width="64" height="64" fill="#0e0d0d"/><path d="M122 218 L162 180 L202 218Z" fill="#ff8c00"/><rect x="152" y="236" width="20" height="20" fill="#f2f0e4"/></g>
@@ -296,20 +259,19 @@
             <div class="tile no"><strong>Cezalandırma</strong></div>
             <div class="tile no"><strong>Alay</strong></div>
             <div class="tile no"><strong>Tehlike</strong></div>
-            <div class="tile yes"><strong>Takma ad yeterli</strong><span>Soyad ve fotoğraf istemeyiz.</span></div>
-            <div class="tile yes"><strong>Ebeveyn seçer</strong><span>Masalı yalnızca siz oluşturursunuz.</span></div>
         </div>
+        <ul class="safety-notes">
+            <li><strong>Takma ad yeterli</strong><span>Soyad ve fotoğraf istemeyiz.</span></li>
+            <li><strong>Ebeveyn seçer</strong><span>Masalı yalnızca siz oluşturursunuz.</span></li>
+        </ul>
     </section>
 
-    <!-- Çağrı: tek kelime düğmenin kendisi, köşede hediye kurdelesi -->
-    <a class="cta-band" th:href="@{/register}" aria-label="Ücretsiz hesap açın ve başlayalım">
-        <span class="ribbon-box" aria-hidden="true"><span class="ribbon">Hediye</span></span>
-        <span class="cta-top">
-            <span class="cta-sentence">Ücretsiz hesap açın; ilk üç masal bizden.</span>
-            <svg class="icon cta-arrow" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
-        </span>
-        <span class="cta-word" aria-hidden="true">Başlayalım</span>
-    </a>
+    <!-- Çağrı: solda küçük hediye etiketi ve cümle, büyük başlık, altında tek düğme -->
+    <section class="cta-band" aria-labelledby="cta-title">
+        <p class="cta-top"><span class="cta-tag">Hediye</span><span class="cta-sentence">Ücretsiz hesap açın; ilk üç masal bizden.</span></p>
+        <h2 id="cta-title" class="cta-word">Başlayalım</h2>
+        <a class="btn btn-primary" th:href="@{/register}">Ücretsiz başla</a>
+    </section>
 
     <!-- Kapanış: gökten üç elma düştü, altta kırmızı bağlantı şeridi -->
     <footer class="closing" aria-label="Kapanış">
@@ -320,7 +282,9 @@
         <div class="closing-cols">
             <div><h3>Bu sayfada</h3><ul><li><a class="flash" href="#nasil">Nasıl çalışır</a></li><li><a class="flash" href="#ornek">Örnek masal</a></li><li><a class="flash" href="#kahramanlar">Kahramanlar</a></li><li><a class="flash" href="#guvenlik">Güvenlik</a></li></ul></div>
             <div><h3>Hesap</h3><ul><li><a class="flash" th:href="@{/forgot-password}">Parolamı unuttum</a></li></ul></div>
-            <p class="credits">Resimler: Virginia Albert, <i>The Tale of Peter Rabbit</i> (1918) levhaları; kamu malı, Wikimedia Commons üzerinden:
+            <details class="credits">
+                <summary>Görsel kaynakları</summary>
+                <p>Resimler: Virginia Albert, <i>The Tale of Peter Rabbit</i> (1918) levhaları; kamu malı, Wikimedia Commons üzerinden:
                 <a href="https://commons.wikimedia.org/wiki/File:Peter-rabbit-albert-11.png">11</a>,
                 <a href="https://commons.wikimedia.org/wiki/File:Peter-rabbit-albert-15.png">15</a>,
                 <a href="https://commons.wikimedia.org/wiki/File:Peter-rabbit-albert-36.png">36</a>,
@@ -329,6 +293,7 @@
                 <a href="https://commons.wikimedia.org/wiki/File:Peter-rabbit-albert-59.png">59</a>.
                 Kahraman resimleri: L. Leslie Brooke, <i>Johnny Crow's Garden</i> (1903); <i>Book of cats and dogs, for little folks</i> (1885); Joseph Smit, <i>Iguanodon feeding</i>; hepsi kamu malı, Wikimedia Commons. Robot ve mekân resimleri Masal Dünyası için çizildi.
                 Örnek masallar tanıtım amaçlıdır. © 2026 Masal Dünyası</p>
+            </details>
         </div>
         <nav class="link-bar" aria-label="Hesap bağlantıları">
             <a class="flash" th:href="@{/register}">Kayıt ol<svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
