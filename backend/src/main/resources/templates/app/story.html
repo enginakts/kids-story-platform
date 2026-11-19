@@ -1,16 +1,18 @@
 <!doctype html>
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(${detail.story.title})}"></head>
-<body>
+<body th:classappend="${detail.story.status == 'COMPLETED'} ? 'story-full'">
 <svg th:replace="~{fragments/layout :: icons}"></svg>
 <a th:replace="~{fragments/layout :: skip}"></a>
 <header th:replace="~{fragments/layout :: appNav(${user.displayName}, 'library')}"></header>
 <main id="main" class="story-page" th:with="s=${detail.story}, audio=${detail.audio}, images=${detail.images}">
-    <!-- Çocuk sayfasından açıldıysa (?child=ID) o çocuğa, değilse tüm masallara döner -->
-    <a class="btn btn-ghost btn-sm" th:if="${backChild}" th:href="@{/app/children/{id}(id=${backChild.id})}"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg><span th:text="'Geri: ' + ${backChild.name}">Geri: Defne</span></a>
-    <a class="btn btn-ghost btn-sm" th:unless="${backChild}" th:href="@{/app/stories}"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>Tüm masallar</a>
-    <p class="alert alert-success" role="status" th:if="${notice}"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span th:text="${notice}">Kaydedildi.</span></p>
-    <p class="alert alert-danger" role="alert" th:if="${problem}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span th:text="${problem}">Hata.</span></p>
+    <!-- Hazırlanırken ya da başarısız olduğunda: geri bağlantısı ve bildirimler sayfanın başında (tamamlanınca üst şeritte) -->
+    <th:block th:unless="${s.status == 'COMPLETED'}">
+        <a class="btn btn-ghost btn-sm" th:if="${backChild}" th:href="@{/app/children/{id}(id=${backChild.id})}"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg><span th:text="'Geri: ' + ${backChild.name}">Geri: Defne</span></a>
+        <a class="btn btn-ghost btn-sm" th:unless="${backChild}" th:href="@{/app/stories}"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>Tüm masallar</a>
+        <p class="alert alert-success" role="status" th:if="${notice}"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span th:text="${notice}">Kaydedildi.</span></p>
+        <p class="alert alert-danger" role="alert" th:if="${problem}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span th:text="${problem}">Hata.</span></p>
+    </th:block>
 
     <th:block th:if="${s.status == 'PENDING' or s.status == 'GENERATING'}">
         <section class="card generating" role="status" aria-live="polite">
@@ -43,96 +45,58 @@
     </section>
 
     <th:block th:if="${s.status == 'COMPLETED'}">
-        <header class="page-head story-head">
-            <div>
-            <h1 class="page-title" th:text="${s.title}">Masal başlığı</h1>
-            <ul class="chips">
-                <li class="chip chip-primary" th:text="${s.childName} + ' için'">Ada için</li>
-                <li class="chip" th:text="${s.theme}">Paylaşma</li>
-                <li class="chip" th:text="${detail.narrationStyle}">Sıcak</li>
-            </ul>
-            </div>
-        </header>
-
-        <!-- Geçici masal (V16): otomatik kaydedilmez. Ebeveyn başlığı düzeltip kaydeder ya da kaydetmez.
-             "Kaydetme" 5 saniyelik "Geri al" bildiriminden sonra gönderilir (story-save.js). -->
-        <section class="save-panel" id="kaydet" th:unless="${s.saved}" aria-labelledby="save-title">
-            <div class="save-copy">
-                <h2 id="save-title">Bu masal henüz kaydedilmedi</h2>
-                <p th:text="'Kaydederseniz ' + ${s.childName} + ' için masallar arasına eklenir. Kaydetmezseniz ' + ${expiresText} + ' sonrasında silinir.'">Kaydedin.</p>
-            </div>
-            <form id="save-form" class="save-form" th:action="@{/app/stories/{id}/save(id=${s.id})}" method="post">
-                <input type="hidden" name="child" th:if="${backChild}" th:value="${backChild.id}">
-                <div class="field">
-                    <label for="story-title">Masalın adı</label>
-                    <input id="story-title" name="title" type="text" maxlength="160" required th:value="${s.title}">
+        <!-- Tam ekran okuyucu: menü dışındaki alanın tamamı sahne resmidir (sayfa kaymaz, 100dvh). Üstte geri, ad ve kaydet;
+             altta koyu panelde sahne metni (ses çalarken okunan kelimeler renklenir) ve birbirinden ayrık düğmeler.
+             Betik yoksa sahneler alt alta, her biri kendi ses oynatıcısıyla okunur (reader.js çalışınca sayfalı olur). -->
+        <section class="reader story-stage" data-reader aria-labelledby="story-title" th:attr="data-total=${#lists.size(detail.scenes)}">
+            <header class="stage-top">
+                <a class="stage-chip stage-back" th:if="${backChild}" th:href="@{/app/children/{id}(id=${backChild.id})}"
+                   th:attr="aria-label='Geri: ' + ${backChild.name}"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg><span th:text="${backChild.name}">Defne</span></a>
+                <a class="stage-chip stage-back" th:unless="${backChild}" th:href="@{/app/stories}"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg><span>Tüm masallar</span></a>
+                <div class="stage-title">
+                    <h1 id="story-title" th:text="${s.title}">Masal başlığı</h1>
+                    <p class="stage-meta" th:text="${s.childName} + ' için · ' + ${s.theme} + ' · ' + ${detail.narrationStyle}">Ada için · Paylaşma · Sıcak</p>
                 </div>
-                <div class="btn-row">
-                    <button class="btn btn-primary" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Bu masalı kaydet</button>
-                    <button class="btn btn-secondary" type="submit" form="discard-form" data-discard>Kaydetme</button>
+                <div class="stage-actions">
+                    <!-- Geçici masal (V16): kaydedilmez. Kaydet penceresinde ad düzeltilip kaydedilir ya da kaydedilmez (story-save.js) -->
+                    <details class="save-pop" th:unless="${s.saved}">
+                        <summary class="btn btn-primary btn-sm"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Kaydet</summary>
+                        <div class="save-pop-body" role="group" aria-labelledby="save-title">
+                            <h2 id="save-title">Bu masal henüz kaydedilmedi</h2>
+                            <p th:text="'Kaydederseniz ' + ${s.childName} + ' için masallar arasına eklenir. Kaydetmezseniz ' + ${expiresText} + ' sonrasında silinir.'">Kaydedin.</p>
+                            <form id="save-form" class="form" th:action="@{/app/stories/{id}/save(id=${s.id})}" method="post">
+                                <input type="hidden" name="child" th:if="${backChild}" th:value="${backChild.id}">
+                                <div class="field">
+                                    <label for="story-title-input">Masalın adı</label>
+                                    <input id="story-title-input" name="title" type="text" maxlength="160" required th:value="${s.title}">
+                                </div>
+                                <div class="btn-row">
+                                    <button class="btn btn-primary" type="submit">Bu masalı kaydet</button>
+                                    <button class="btn btn-secondary" type="submit" form="discard-form" data-discard>Kaydetme</button>
+                                </div>
+                            </form>
+                        </div>
+                    </details>
+                    <!-- Kaydedildi: yalnızca simge; üzerine gelince, odaklanınca ya da dokununca açıklama açılır (reader.js) -->
+                    <button class="saved-info" type="button" th:if="${s.saved}" aria-describedby="saved-tip" aria-expanded="false" data-info>
+                        <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span class="visually-hidden">Kaydedildi</span>
+                        <span class="info-tip" id="saved-tip" role="tooltip" th:text="'Bu masal kaydedildi; ' + ${s.childName} + ' için masallar arasında.'">Bu masal kaydedildi.</span>
+                    </button>
                 </div>
-            </form>
-            <form id="discard-form" th:action="@{/app/stories/{id}/discard(id=${s.id})}" method="post" data-discard-form></form>
-        </section>
+            </header>
 
-        <!-- Ses ve resim durumu. Biri hazırlanırken okuyucu durumu yoklar ve hazır olan sahneleri sayfa yenilenmeden açar. -->
-        <section class="listen card" aria-labelledby="listen-title"
-                 th:attr="data-media-preparing=${audio.preparing() or images.preparing()},data-status-url=@{/app/stories/{id}/media-status(id=${s.id})}">
-            <div class="listen-copy">
-                <h2 id="listen-title" class="listen-title">
-                    <svg class="icon" aria-hidden="true"><use href="#i-volume"/></svg>
-                    <span th:switch="${audio.status}">
-                        <th:block th:case="'READY'">Sesli masal hazır</th:block>
-                        <th:block th:case="'PREPARING'">Masal seslendiriliyor</th:block>
-                        <th:block th:case="'PARTIAL'">Bazı sahnelerin sesi hazırlanamadı</th:block>
-                        <th:block th:case="'FAILED'">Ses hazırlanamadı</th:block>
-                        <th:block th:case="*">Masalı sesli dinleyin</th:block>
-                    </span>
-                </h2>
-                <p class="listen-note muted" data-audio-note role="status" aria-live="polite">
-                    <th:block th:if="${audio.preparing()}" th:text="${audio.ready} + ' / ' + ${audio.total} + ' sahne hazır. Masalı okumaya başlayabilirsiniz; sesler hazır oldukça açılır.'">2 / 5 sahne hazır.</th:block>
-                    <th:block th:if="${audio.status == 'READY'}">Sahneler sırayla okunur, bir sahne bitince sonrakine geçilir.</th:block>
-                    <th:block th:if="${audio.status == 'PARTIAL' or audio.status == 'FAILED'}">Ses servisine şu anda ulaşılamadı. Masalın metni hazır; sesi yeniden isteyebilirsiniz.</th:block>
-                    <th:block th:if="${audio.status == 'NONE'}">Bu masal için henüz ses hazırlanmadı.</th:block>
-                </p>
-                <div class="listen-progress" th:if="${audio.preparing()}" aria-hidden="true">
-                    <span data-audio-bar th:style="'width:' + ${audio.total == 0 ? 0 : audio.ready * 100 / audio.total} + '%'"></span>
-                </div>
-                <p class="art-note" data-image-note role="status" aria-live="polite" th:unless="${images.status == 'READY'}">
-                    <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
-                    <span th:switch="${images.status}">
-                        <th:block th:case="'PREPARING'" th:text="'Resimler çiziliyor: ' + ${images.ready} + ' / ' + ${images.total} + ' sahne hazır.'">Resimler çiziliyor.</th:block>
-                        <th:block th:case="'PARTIAL'">Bazı sahnelerin resmi çizilemedi.</th:block>
-                        <th:block th:case="'FAILED'">Resimler çizilemedi; resim servisine şu anda ulaşılamıyor.</th:block>
-                        <th:block th:case="*">Bu masal için henüz resim çizilmedi.</th:block>
-                    </span>
-                </p>
-            </div>
-            <div class="listen-actions">
-                <button class="btn btn-primary" type="button" data-listen hidden th:if="${audio.ready > 0 or audio.preparing()}">
-                    <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span>Baştan dinle</span></button>
-                <form th:if="${audio.canRequest()}" th:action="@{/app/stories/{id}/audio(id=${s.id})}" method="post">
-                    <input type="hidden" name="child" th:if="${backChild}" th:value="${backChild.id}">
-                    <button class="btn btn-secondary" type="submit"
-                            th:text="${audio.status == 'NONE'} ? 'Sesi hazırla' : 'Sesi yeniden hazırla'">Sesi hazırla</button>
-                </form>
-                <form th:if="${images.canRequest()}" th:action="@{/app/stories/{id}/images(id=${s.id})}" method="post">
-                    <input type="hidden" name="child" th:if="${backChild}" th:value="${backChild.id}">
-                    <button class="btn btn-secondary" type="submit"
-                            th:text="${images.status == 'NONE'} ? 'Resimleri çiz' : 'Resimleri yeniden çiz'">Resimleri çiz</button>
-                </form>
-            </div>
-        </section>
+            <p class="stage-flash alert alert-success" role="status" th:if="${notice}"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span th:text="${notice}">Kaydedildi.</span></p>
+            <p class="stage-flash alert alert-danger" role="alert" th:if="${problem}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span th:text="${problem}">Hata.</span></p>
 
-        <!-- Okuyucu: betik yoksa tüm sahneler alt alta, her biri kendi ses oynatıcısıyla.
-             Betik varsa sayfa sayfa okunur; sesli okumada bir sahne bitince sonrakine geçilir. -->
-        <section class="reader" data-reader aria-label="Masal" th:attr="data-total=${#lists.size(detail.scenes)}">
+            <div class="stage-panel" aria-hidden="true"></div>
+
             <ol class="scenes">
                 <li class="scene" th:each="scene : ${detail.scenes}" th:id="'sahne-' + ${scene.sceneNumber}"
                     th:attr="data-scene=${scene.sceneNumber},data-duration=${scene.audioDurationSeconds}">
                     <div class="scene-art" th:classappend="${scene.imageUrl != null} ? 'has-art'">
                         <img th:if="${scene.imageUrl != null}" th:src="@{/app/stories/{id}/scenes/{n}/image(id=${s.id},n=${scene.sceneNumber})}"
-                             alt="" width="1024" height="768" th:attr="loading=${scene.sceneNumber == 1} ? 'eager' : 'lazy'" decoding="async">
+                             th:alt="'Sahne ' + ${scene.sceneNumber} + ' resmi'" width="1024" height="768"
+                             th:attr="loading=${scene.sceneNumber == 1} ? 'eager' : 'lazy'" decoding="async">
                         <th:block th:if="${scene.imageUrl == null}">
                             <svg class="apple" aria-hidden="true"><use href="#apple"/></svg>
                             <p class="scene-note" th:text="${images.preparing()} ? 'Resim çiziliyor…' : 'Bu sahnenin resmi yok.'">Resim çiziliyor…</p>
@@ -140,7 +104,7 @@
                     </div>
                     <div class="scene-body">
                         <span class="scene-number" th:text="'Sahne ' + ${scene.sceneNumber} + ' / ' + ${#lists.size(detail.scenes)}">Sahne 1 / 5</span>
-                        <p class="scene-text" th:classappend="${#strings.length(scene.text) > 420} ? 'is-long'" th:text="${scene.text}">Sahne metni</p>
+                        <p class="scene-text" th:text="${scene.text}" data-scene-text>Sahne metni</p>
                         <audio class="scene-audio" controls preload="none" th:if="${scene.audioUrl != null}"
                                th:src="@{/app/stories/{id}/scenes/{n}/audio(id=${s.id},n=${scene.sceneNumber})}"
                                th:attr="aria-label='Sahne ' + ${scene.sceneNumber} + ' sesi'"></audio>
@@ -148,47 +112,82 @@
                 </li>
             </ol>
 
-            <div class="reader-bar" data-reader-bar hidden>
-                <button class="reader-btn" type="button" data-prev aria-label="Önceki sahne">
-                    <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg></button>
-                <button class="reader-play" type="button" data-play aria-label="Bu sahneyi dinle" disabled>
-                    <svg class="icon icon-play" aria-hidden="true"><use href="#i-play"/></svg>
-                    <svg class="icon icon-pause" aria-hidden="true"><use href="#i-pause"/></svg></button>
-                <button class="reader-btn" type="button" data-next aria-label="Sonraki sahne">
-                    <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
-                <ol class="reader-dots" data-dots aria-label="Sahneler"></ol>
-                <label class="reader-auto check">
-                    <input type="checkbox" data-auto checked>
-                    <span>Sahneleri kendiliğinden çevir</span>
-                </label>
+            <!-- Alt sıra: solda okuma düğmeleri, sağda ses ve resim durumu. Dar ekranda iki satıra iner, öğeler üst üste binmez. -->
+            <div class="stage-bottom">
+                <div class="reader-bar" data-reader-bar hidden>
+                    <button class="reader-btn" type="button" data-prev aria-label="Önceki sahne">
+                        <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg></button>
+                    <button class="reader-play" type="button" data-play aria-label="Bu sahneyi dinle" disabled>
+                        <svg class="icon icon-play" aria-hidden="true"><use href="#i-play"/></svg>
+                        <svg class="icon icon-pause" aria-hidden="true"><use href="#i-pause"/></svg></button>
+                    <button class="reader-btn" type="button" data-next aria-label="Sonraki sahne">
+                        <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+                    <ol class="reader-dots" data-dots aria-label="Sahneler"></ol>
+                    <label class="reader-auto check">
+                        <input type="checkbox" data-auto checked>
+                        <span>Kendiliğinden çevir</span>
+                    </label>
+                </div>
+
+                <div class="stage-status" th:attr="data-media-preparing=${audio.preparing() or images.preparing()},data-status-url=@{/app/stories/{id}/media-status(id=${s.id})}">
+                    <button class="btn btn-secondary btn-sm" type="button" data-listen hidden th:if="${audio.ready > 0 or audio.preparing()}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span>Baştan dinle</span></button>
+                    <p class="status-note" data-audio-note role="status" aria-live="polite">
+                        <svg class="icon" aria-hidden="true"><use href="#i-volume"/></svg><span data-audio-text>
+                        <th:block th:if="${audio.preparing()}" th:text="'Masal seslendiriliyor: ' + ${audio.ready} + ' / ' + ${audio.total} + ' sahne hazır'">Masal seslendiriliyor: 2 / 5 sahne hazır</th:block>
+                        <th:block th:if="${audio.status == 'READY'}">Sesli masal hazır</th:block>
+                        <th:block th:if="${audio.status == 'PARTIAL' or audio.status == 'FAILED'}">Ses hazırlanamadı</th:block>
+                        <th:block th:if="${audio.status == 'NONE'}">Ses henüz hazırlanmadı</th:block></span>
+                    </p>
+                    <p class="status-note" data-image-note role="status" aria-live="polite" th:unless="${images.status == 'READY'}">
+                        <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
+                        <span th:switch="${images.status}">
+                            <th:block th:case="'PREPARING'" th:text="'Resimler çiziliyor: ' + ${images.ready} + ' / ' + ${images.total} + ' sahne hazır.'">Resimler çiziliyor</th:block>
+                            <th:block th:case="'PARTIAL'">Bazı resimler çizilemedi</th:block>
+                            <th:block th:case="'FAILED'">Resimler çizilemedi</th:block>
+                            <th:block th:case="*">Resim henüz çizilmedi</th:block>
+                        </span>
+                    </p>
+                    <form th:if="${audio.canRequest()}" th:action="@{/app/stories/{id}/audio(id=${s.id})}" method="post">
+                        <input type="hidden" name="child" th:if="${backChild}" th:value="${backChild.id}">
+                        <button class="btn btn-secondary btn-sm" type="submit"
+                                th:text="${audio.status == 'NONE'} ? 'Sesi hazırla' : 'Sesi yeniden hazırla'">Sesi hazırla</button>
+                    </form>
+                    <form th:if="${images.canRequest()}" th:action="@{/app/stories/{id}/images(id=${s.id})}" method="post">
+                        <input type="hidden" name="child" th:if="${backChild}" th:value="${backChild.id}">
+                        <button class="btn btn-secondary btn-sm" type="submit"
+                                th:text="${images.status == 'NONE'} ? 'Resimleri çiz' : 'Resimleri yeniden çiz'">Resimleri çiz</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Masalın sonu: son sahneden sonra sahnenin üzerinde açılır -->
+            <div class="story-end" data-story-end>
+                <div class="three-apples" aria-hidden="true">
+                    <svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg>
+                </div>
+                <p>Gökten üç elma düştü.</p>
+                <div class="story-end-actions">
+                    <button class="btn btn-ghost" type="button" data-restart hidden>
+                        <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>Başa dön</button>
+                    <th:block th:unless="${s.saved}">
+                        <button class="btn btn-primary" type="submit" form="save-form">Bu masalı kaydet</button>
+                        <button class="btn btn-secondary" type="submit" form="discard-form" data-discard>Kaydetme</button>
+                    </th:block>
+                    <a class="btn btn-secondary" th:href="@{/app/stories/new}" th:if="${s.saved}">Yeni bir masal</a>
+                </div>
+                <p class="credit" th:if="${audio.ready > 0 or images.ready > 0}">
+                    <th:block th:if="${images.ready > 0}">Resimler yapay zekâ ile çizildi.</th:block>
+                    <th:block th:if="${audio.ready > 0}">Seslendirme: Kikiri Türkçe TTS (Kokoro-82M tabanlı, CC BY-SA 3.0).</th:block></p>
             </div>
         </section>
 
-        <div class="story-end" data-story-end>
-            <div class="three-apples" aria-hidden="true">
-                <svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg>
-            </div>
-            <p>Gökten üç elma düştü.</p>
-            <div class="story-end-actions">
-                <button class="btn btn-ghost" type="button" data-restart hidden>
-                    <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>Başa dön</button>
-                <th:block th:unless="${s.saved}">
-                    <button class="btn btn-primary" type="submit" form="save-form">Bu masalı kaydet</button>
-                    <button class="btn btn-secondary" type="submit" form="discard-form" data-discard>Kaydetme</button>
-                </th:block>
-                <a class="btn btn-secondary" th:href="@{/app/stories/new}" th:if="${s.saved}">Yeni bir masal</a>
-            </div>
-        </div>
+        <form id="discard-form" th:action="@{/app/stories/{id}/discard(id=${s.id})}" method="post" data-discard-form th:unless="${s.saved}"></form>
         <!-- "Kaydetme" sonrası 5 saniyelik geri alma bildirimi -->
         <div class="undo-toast" data-undo-toast hidden role="status" aria-live="polite">
             <span data-undo-text>Masal silinecek…</span>
             <button class="btn btn-secondary btn-sm" type="button" data-undo>Geri al</button>
         </div>
-
-        <p class="credit" th:if="${audio.ready > 0 or images.ready > 0}">
-            <th:block th:if="${images.ready > 0}">Resimler yapay zekâ ile çizildi.</th:block>
-            <th:block th:if="${audio.ready > 0}">Seslendirme: <a href="https://huggingface.co/duxx/kikiri-turkish-base" rel="noopener" target="_blank">Kikiri Türkçe TTS</a>
-            (Kokoro-82M tabanlı, CC BY-SA 3.0).</th:block></p>
         <script defer th:src="@{/js/reader.js}"></script>
         <script defer th:src="@{/js/story-save.js}" th:unless="${s.saved}"></script>
     </th:block>

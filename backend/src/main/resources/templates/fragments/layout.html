@@ -72,10 +72,11 @@
     </div>
 </header>
 
-<!-- Ana sayfa gezinmesi: üstte sabit çubuk. Geniş ekranda (≥1200px) solda logo, ortada bölüm bağlantıları, sağda giriş ve kayıt;
+<!-- Tanıtım sayfalarının gezinmesi: üstte sabit çubuk. Her bağlantı ayrı bir sayfadır (SitePageController); active o sayfanın anahtarıdır.
+     Geniş ekranda (≥1200px) solda logo, ortada sayfa bağlantıları, sağda giriş ve kayıt;
      dar ekranda logo ve menü düğmesi, menü aşağı açılan tam genişlik panel (nav.js; uygulama menüsüyle aynı davranış).
-     Aktif bölüm motion.js (chapters) tarafından işaretlenir. -->
-<header th:fragment="homeNav" class="site-header home-nav" data-app-shell data-wide="(min-width: 1200px)">
+     Bulunulan sayfa sunucuda işaretlenir (is-active, aria-current="page"). -->
+<header th:fragment="homeNav(active)" class="site-header home-nav" data-app-shell data-wide="(min-width: 1200px)">
     <div class="header-inner">
         <a class="brand" th:href="@{/}" aria-label="Masal Dünyası ana sayfa">
             <svg class="apple" aria-hidden="true"><use href="#apple"/></svg><span>Masal Dünyası</span>
@@ -86,12 +87,12 @@
         <div class="home-menu" id="home-menu">
             <nav aria-label="Bölümler">
                 <ul class="home-links">
-                    <li><a href="#baslangic" data-chapter-link="baslangic">Başlangıç</a></li>
-                    <li><a href="#nasil" data-chapter-link="nasil">Nasıl çalışır</a></li>
-                    <li><a href="#ornek" data-chapter-link="ornek">Örnek masal</a></li>
-                    <li><a href="#kahramanlar" data-chapter-link="kahramanlar">Kahramanlar</a></li>
-                    <li><a href="#dunya" data-chapter-link="dunya">Mekân ve tema</a></li>
-                    <li><a href="#guvenlik" data-chapter-link="guvenlik">Güvenlik</a></li>
+                    <li><a th:href="@{/}" th:classappend="${active == 'baslangic'} ? 'is-active'" th:attr="aria-current=${active == 'baslangic'} ? 'page' : null">Başlangıç</a></li>
+                    <li><a th:href="@{/nasil-calisir}" th:classappend="${active == 'nasil'} ? 'is-active'" th:attr="aria-current=${active == 'nasil'} ? 'page' : null">Nasıl çalışır</a></li>
+                    <li><a th:href="@{/ornek-masal}" th:classappend="${active == 'ornek'} ? 'is-active'" th:attr="aria-current=${active == 'ornek'} ? 'page' : null">Örnek masal</a></li>
+                    <li><a th:href="@{/kahramanlar}" th:classappend="${active == 'kahramanlar'} ? 'is-active'" th:attr="aria-current=${active == 'kahramanlar'} ? 'page' : null">Kahramanlar</a></li>
+                    <li><a th:href="@{/mekan-ve-tema}" th:classappend="${active == 'dunya'} ? 'is-active'" th:attr="aria-current=${active == 'dunya'} ? 'page' : null">Mekân ve tema</a></li>
+                    <li><a th:href="@{/guvenlik}" th:classappend="${active == 'guvenlik'} ? 'is-active'" th:attr="aria-current=${active == 'guvenlik'} ? 'page' : null">Güvenlik</a></li>
                 </ul>
             </nav>
             <div class="home-actions">

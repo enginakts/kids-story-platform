@@ -96,3 +96,19 @@ Hareket katmanı **Motion** (motion.dev, Framer Motion'ın React gerektirmeyen s
 * Seçili menü öğesi `aria-current="page"` taşır.
 * Ana sayfadaki örnek masal sekmeleri `role="tablist"` kullanır ve ok tuşlarıyla gezilir; girilen takma ad hiçbir yere gönderilmez.
 * Yalnızca ikondan oluşan veya bağlamı belirsiz düğmeler `aria-label` alır.
+
+## Tanıtım sayfaları (giriş yapmadan)
+
+Üst menüdeki her bağlantı ayrı bir sayfadır (`SitePageController`, şablonlar `templates/site/`, ortak parçalar `fragments/site.html`, hareket `static/js/site.js`). Hepsi ana sayfanın sistemini kullanır; her sayfanın kendi kaydırma hareketi vardır.
+
+| Sayfa | Adres | Kaydırma ve etkileşim |
+|---|---|---|
+| Başlangıç | `/` | Ana sayfa tek sayfa tasarımında kalır (bütün bölümler: hero, Seçimden masala, Bir masal deneyin, Kahramanlar, Mekân ve tema, Masala giremez, kapanış). Yalnızca üst menü bağlantıları bölümlere kaydırmak yerine ayrı sayfaları açar. |
+| Nasıl çalışır | `/nasil-calisir` | Bulut videolu giriş; "Bir masal nasıl hazırlanır" sahnesi sabitlenir, kaydırdıkça dört adım (seçin, yazılır, resimlenir, seslendirilir) canlanır (dar ekranda kendiliğinden ilerler); "Beğendiğinizi saklayın" kaydet/kaydetme denemesi (5 sn geri al); sık sorulanlar. |
+| Örnek masal | `/ornek-masal` | Masal deneme alanı (takma adla okuma); masalın dört sahnesi geniş ekranda sabitlenip yatay kayar, takma ad sahnelere de yazılır; tavşan videolu bant. |
+| Kahramanlar | `/kahramanlar` | Tavşan videolu giriş; yönetim kütüphanesindeki yayındaki karakterler dönen kartlar olarak (dokununca kişiliği); on bir tür şeridi (sabitlenip yatay kayar). |
+| Mekân ve tema | `/mekan-ve-tema` | Yönetim kütüphanesindeki mekânlar ekranı kaplayan, üst üste binen paneller; her panelde yerin videosu (orman: dere, bulut: bulutlar, kıyı: dalgalar) ya da örnek resmi; tema seçici. |
+| Güvenlik | `/guvenlik` | Masala giremeyen konular panosu; "Adı yapay zekâya gitmez" canlı gösterimi (takma ad yazıldıkça seçimler, yapay zekâya giden istek ve dönen masal güncellenir); gece gökyüzü videolu "Kontrol sizde". |
+
+* **Videolar:** `static/video/` altında beş sessiz döngü (tavşan, bulut, dalga, dere, gece; Wikimedia Commons, kaynaklar `credits.json` ve sayfa altındaki "Görsel kaynakları"). Ekrana girince oynar, çıkınca durur; "hareketi azalt" açıksa yalnızca kapak karesi görünür. Yazı videonun üzerine binmez; altyazı dolu bir etikettedir.
+* **Hareketi azalt:** sabitlenen sahneler ve üst üste binen paneller normal akışa döner, her şey baştan görünür.

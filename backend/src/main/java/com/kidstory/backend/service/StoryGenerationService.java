@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Masal üretim işinin adımları: 1) Trendyol LLM metni yazar, 2) Gemini sahnelere böler, 3) sahne resimleri ve sesleri kuyruğa girer.
@@ -84,9 +85,13 @@ public class StoryGenerationService {
     /** İşlem dışında: iki aşamalı LLM çağrısı ve doğrulama. Hata fırlatırsa iş yeniden denenir. */
     public Generated generate(Prepared prepared) {
         AtomicReference<String> textProvider = new AtomicReference<>();
+        // Dil denetimi çağrının içinde: Türkçe olmayan yanıt o sağlayıcının hatası sayılır, AiRouter sıradakine geçer;
+        // hiçbiri Türkçe yazmazsa iş yeniden denenir. İngilizce masal ebeveyne ulaşmaz.
         String rawText = router.call(AiProviderConfig.Type.LLM, LlmClient.class, (client, config) -> {
             textProvider.set(config.getProviderName());
-            return client.complete(prepared.textRequest(), config);
+            String raw = client.complete(prepared.textRequest(), config);
+            TurkishText.require(raw, "Masal metni");
+            return raw;
         });
         StoryText candidates = parser.parseText(rawText, prepared.childAllowed(), prepared.placeholder());
         // Başlık: aynı çağrıdaki adaylardan, ebeveynin diğer başlıklarıyla çakışmayan ve içeriğe uygun olanı (ek çağrı yok)
@@ -97,11 +102,13 @@ public class StoryGenerationService {
 
         AtomicReference<String> sceneProvider = new AtomicReference<>();
         LlmRequest sceneRequest = prepared.sceneRequest().apply(text);
-        String rawScenes = router.call(AiProviderConfig.Type.SCENE, LlmClient.class, (client, config) -> {
+        // Sahne bölücü metni çevirmemeli: yalnızca sahne metinleri denetlenir (resim tarifleri bilerek İngilizcedir)
+        StoryDraft draft = router.call(AiProviderConfig.Type.SCENE, LlmClient.class, (client, config) -> {
             sceneProvider.set(config.getProviderName());
-            return client.complete(sceneRequest, config);
+            StoryDraft parsed = parser.parse(client.complete(sceneRequest, config), prepared.childAllowed(), prepared.placeholder());
+            TurkishText.require(parsed.scenes().stream().map(StoryDraft.Scene::text).collect(Collectors.joining(" ")), "Sahne metni");
+            return parsed;
         });
-        StoryDraft draft = parser.parse(rawScenes, prepared.childAllowed(), prepared.placeholder());
         return new Generated(draft, textProvider.get() + "+" + sceneProvider.get(), title);
     }
 

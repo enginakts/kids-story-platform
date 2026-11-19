@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Kahramanlar')}"></head>
+<body class="home site-page">
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<header th:replace="~{fragments/layout :: homeNav('kahramanlar')}"></header>
+<main id="main">
+
+    <!-- Giriş: solda başlık, sağda doğada bir tavşan -->
+    <section class="page-hero page-hero-orange" aria-labelledby="page-title">
+        <div class="page-hero-copy">
+            <h1 id="page-title" class="lines">
+                <span class="line"><span data-line style="--i:0">Kahramanlar</span></span>
+            </h1>
+            <p class="page-lead" data-load>Her kahraman bir kez özenle çizilir ve masalın her sahnesinde aynı görünür. Çocuğunuz Pamuk'u ikinci masalda da hemen tanır.</p>
+            <a class="btn btn-primary" data-load href="#hazir">Kahramanları tanıyın</a>
+        </div>
+        <div class="page-hero-media media-frame" data-parallax>
+            <video th:replace="~{fragments/site :: loop('tavsan')}"></video>
+            <p class="media-caption">Doğada bir tavşan.</p>
+        </div>
+    </section>
+
+    <!-- Hazır kahramanlar: yönetim panelinde yayına alınan karakterler (CharacterService.presets). Karta dokununca döner,
+         arkasında kişiliği ve görünüşü yazar (site.js: flips). Örnek resmi olmayan karakter gravürle gösterilir. -->
+    <section id="hazir" class="ready chapter-paper" aria-labelledby="ready-title">
+        <div class="chapter-head">
+            <h2 id="ready-title" class="chapter-title" data-reveal>Masal için hazır</h2>
+            <p data-reveal>Bunlar şu anda masallarda seçebileceğiniz kahramanlar. Bir karta dokunun; kahraman size kendini tanıtsın.</p>
+        </div>
+        <p class="empty-line" th:if="${#lists.isEmpty(characters)}">Kahramanlar hazırlanıyor; çok yakında burada.</p>
+        <ul class="flip-grid" th:unless="${#lists.isEmpty(characters)}" data-stagger>
+            <li class="flip" th:each="c, st : ${characters}" th:with="art=${@heroArt.of(c.species)}">
+                <button type="button" class="flip-btn" aria-pressed="false" data-flip>
+                    <span class="flip-face flip-front" th:style="'--card-bg:' + ${c.colorHex}">
+                        <img th:if="${c.cover() != null}" class="flip-photo" th:src="@{${c.cover()}}" th:alt="${c.name} + ' örnek resmi'" loading="lazy">
+                        <img th:if="${c.cover() == null and art != null}" class="flip-engraving" th:src="@{'/img/heroes/' + ${art}}" th:alt="${c.species} + ' çizimi'" loading="lazy">
+                        <span class="flip-name"><strong th:text="${c.name}">Pamuk</strong><span th:text="${c.species}">Tavşan</span></span>
+                    </span>
+                    <span class="flip-face flip-back">
+                        <strong th:text="${c.name}">Pamuk</strong>
+                        <span class="flip-traits" th:text="${c.personalityTraits} ?: 'Sevecen bir dost.'">Meraklı, nazik</span>
+                        <span class="flip-look">
+                            <span th:if="${c.colorLabel}" th:text="${c.colorLabel}">Beyaz</span>
+                            <span th:if="${c.outfitCode != null and c.outfitCode != 'YOK'}" th:text="${c.outfitLabel}">Atkı</span>
+                            <span th:if="${c.accessoryCode != null and c.accessoryCode != 'YOK'}" th:text="${c.accessoryLabel}">Gözlük</span>
+                        </span>
+                        <span class="flip-hint">Masal oluştururken seçebilirsiniz</span>
+                    </span>
+                </button>
+            </li>
+        </ul>
+    </section>
+
+    <!-- Türler: geniş ekranda sabitlenen ve kaydırınca yatay ilerleyen şerit; şerit/ızgara görünümü (motion.js: strip) -->
+    <section id="kahramanlar" class="chapter chapter-orange pin-hscroll" data-chapter data-pin-h aria-labelledby="kahraman-title">
+        <div class="pin-stage">
+        <div class="chapter-head chapter-head-row">
+            <h2 id="kahraman-title" class="chapter-title" data-reveal>On bir tür</h2>
+            <div class="view-switch" role="group" aria-label="Görünüm">
+                <span>Görünüm</span>
+                <button type="button" class="flash" aria-pressed="true" data-view="strip">Şerit</button>
+                <button type="button" class="flash" aria-pressed="false" data-view="grid">Izgara</button>
+            </div>
+        </div>
+        <p class="chapter-lead" data-reveal>Kahramanlarımız bu on bir türden doğar. Rengini, kıyafetini ve aksesuarını ekibimiz seçer; siz masal için birini seçersiniz.</p>
+        <div class="hero-strip" data-strip>
+            <ul class="cards" data-cards>
+                <li class="card-hero c-red"><div class="card-art"><img th:src="@{/img/heroes/tavsan.webp}" alt="Ceketini geride bırakıp koşan bir tavşan çizimi" loading="lazy"></div><div class="card-name"><strong>Tavşan</strong><span>Hazır: Pamuk</span><svg class="icon card-corner" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></div><p>Mavi atkılı Pamuk; meraklı, nazik ve yardımsever.</p></li>
+                <li class="card-hero c-ink"><div class="card-art"><img th:src="@{/img/heroes/aslan.webp}" alt="Kapı kemerinin yanında oturan, boynunda fular olan bir aslan" loading="lazy"></div><div class="card-name"><strong>Aslan</strong><span>Hazır: Leo</span><svg class="icon card-corner" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></div><p>Kırmızı papyonlu Leo; cesur, neşeli ve paylaşımcı.</p></li>
+                <li class="card-hero c-paper"><div class="card-art"><img th:src="@{/img/heroes/fil.webp}" alt="Bir tabureye oturmuş, düşünceli bir fil" loading="lazy"></div><div class="card-name"><strong>Fil</strong><span>Hazır: Fikri</span><svg class="icon card-corner" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></div><p>Papatya taçlı Fikri; düşünceli, sakin ve sevecen.</p></li>
+                <li class="card-hero c-red"><div class="card-art"><img th:src="@{/img/heroes/kedi.webp}" alt="Bir evin önünde çimenlere uzanmış bir kedi" loading="lazy"></div><div class="card-name"><strong>Kedi</strong><svg class="icon card-corner" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></div><p>Yumuşak patili bir dost; rengini ve kıyafetini siz seçersiniz.</p></li>
+                <li class="card-hero c-ink"><div class="card-art"><img th:src="@{/img/heroes/kopek.webp}" alt="Sandalyede oturan tüylü küçük bir köpek" loading="lazy"></div><div class="card-name"><strong>Köpek</strong><svg class="icon card-corner" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></div><p>Neşeli ve sadık; sırt çantasıyla maceraya hazır.</p></li>
+                <li class="card-hero c-paper"><div class="card-art"><img th:src="@{/img/heroes/ayi.webp}" alt="Ağacın altında ayakta duran bir ayı ve yanında bir karga" loading="lazy"></div><div class="card-name"><strong>Ayıcık</strong><svg class="icon card-corner" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></div><p>Yıldızlı pijamasıyla uyku masallarının sevilen kahramanı.</p></li>
+                <li class="card-hero c-red"><div class="card-art"><img th:src="@{/img/heroes/tilki.webp}" alt="Arka ayakları üzerinde dikilen bir tilki" loading="lazy"></div><div class="card-name"><strong>Tilki</strong><svg class="icon card-corner" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></div><p>Sarı yağmurluğuyla meraklı bir keşifçi.</p></li>
+                <li class="card-hero c-ink"><div class="card-art"><img th:src="@{/img/heroes/penguen.webp}" alt="Yan yana duran iki penguen" loading="lazy"></div><div class="card-name"><strong>Penguen</strong><svg class="icon card-corner" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></div><p>Minik adımlarla büyük işler başaran bir dost.</p></li>
+                <li class="card-hero c-paper"><div class="card-art"><img th:src="@{/img/heroes/baykus.webp}" alt="Tek ayağını kaldırmış, şaşkın bakan bir baykuş" loading="lazy"></div><div class="card-name"><strong>Baykuş</strong><svg class="icon card-corner" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></div><p>Yuvarlak gözlükleriyle bilge bir anlatıcı.</p></li>
+                <li class="card-hero c-red"><div class="card-art"><img th:src="@{/img/heroes/dinozor.webp}" alt="Palmiyelerin arasında ağaçtan yaprak yiyen bir İguanodon" loading="lazy"></div><div class="card-name"><strong>Dinozor</strong><svg class="icon card-corner" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></div><p>Sevimli ve dost canlısı bir yavru dinozor.</p></li>
+                <li class="card-hero c-ink"><div class="card-art"><img th:src="@{/img/heroes/robot.svg}" alt="Kalbi elma biçiminde, gülümseyen küçük bir robot" loading="lazy"></div><div class="card-name"><strong>Robot</strong><svg class="icon card-corner" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></div><p>Küçük, yuvarlak ve her zaman yardımsever.</p></li>
+            </ul>
+            <div class="strip-arrows">
+                <button type="button" class="strip-arrow flash" data-strip-prev aria-label="Önceki kahramanlar"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg></button>
+                <button type="button" class="strip-arrow flash" data-strip-next aria-label="Sonraki kahramanlar"><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+            </div>
+        </div>
+        </div>
+    </section>
+
+
+    <th:block th:replace="~{fragments/site :: pageEnd}"></th:block>
+</main>
+<script defer th:src="@{/js/site.js}"></script>
+</body>
+</html>

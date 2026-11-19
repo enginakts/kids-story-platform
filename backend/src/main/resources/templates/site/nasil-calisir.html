@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Nasıl çalışır')}"></head>
+<body class="home site-page">
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<header th:replace="~{fragments/layout :: homeNav('nasil')}"></header>
+<main id="main">
+
+    <!-- Giriş: solda başlık, sağda akşam bulutları (zaman akar, masal hazırlanır) -->
+    <section class="page-hero page-hero-ink" aria-labelledby="page-title">
+        <div class="page-hero-copy">
+            <h1 id="page-title" class="lines">
+                <span class="line"><span data-line style="--i:0">Seçimden</span></span>
+                <span class="line"><span data-line style="--i:1">masala</span></span>
+            </h1>
+            <p class="page-lead" data-load>Siz birkaç seçim yaparsınız; masal yazılır, sahnelere bölünür, resimlenir ve seslendirilir. Yatmadan önce 3-5 dakikalık bir masal.</p>
+            <dl class="hero-facts" data-load>
+                <div><dt>Okunabilir</dt><dd>~16 sn</dd></div>
+                <div><dt>Resimler hazır</dt><dd>~37 sn</dd></div>
+                <div><dt>Ses hazır</dt><dd>~77 sn</dd></div>
+            </dl>
+        </div>
+        <div class="page-hero-media media-frame" data-parallax>
+            <video th:replace="~{fragments/site :: loop('bulut')}"></video>
+            <p class="media-caption">Akşam bulutları; masalınız bu sürede hazırlanır.</p>
+        </div>
+    </section>
+
+    <!-- Hazırlanış: geniş ekranda sahne sabitlenir, kaydırdıkça dört adım sırayla canlanır (site.js: steps).
+         Dar ekranda ve "hareketi azalt" açıkken adımlar alt alta, hepsi görünür. -->
+    <section class="steps chapter-paper" data-steps aria-labelledby="steps-title">
+        <div class="steps-stage">
+            <div class="steps-side">
+                <h2 id="steps-title" class="chapter-title" data-reveal>Bir masal nasıl hazırlanır</h2>
+                <ol class="steps-list">
+                    <li class="is-on"><h3>Seçin</h3><p>Çocuğunuzu, kahramanı, mekânı ve temayı listeden seçersiniz. Serbest metin yazılmaz.</p></li>
+                    <li><h3>Yazılır</h3><p>Masal yazılır ve sahnelere bölünür. Korku, şiddet ve ayrılık denetimde ayıklanır.</p></li>
+                    <li><h3>Resimlenir</h3><p>Her sahne için bir resim çizilir; kahraman her resimde aynı görünür.</p></li>
+                    <li><h3>Seslendirilir</h3><p>Masal Türkçe seslendirilir; sahneler okunurken kendiliğinden ilerler.</p></li>
+                </ol>
+                <div class="steps-bar" aria-hidden="true"><span data-steps-bar></span></div>
+            </div>
+            <div class="steps-device" aria-hidden="true">
+                <div class="step-view is-on">
+                    <p class="device-title">Yeni masal</p>
+                    <ul class="pick-list">
+                        <li><span>Çocuk</span><strong>Defne, 5 yaş</strong></li>
+                        <li><span>Kahraman</span><strong>Pamuk, tavşan</strong></li>
+                        <li><span>Mekân</span><strong>Çiçekli Orman</strong></li>
+                        <li><span>Tema</span><strong>Paylaşma</strong></li>
+                    </ul>
+                    <span class="device-btn">Masalı oluştur</span>
+                </div>
+                <div class="step-view">
+                    <p class="device-title">Paylaşınca Çoğalan Mutluluk</p>
+                    <p class="type-text" data-type>Bir varmış, bir yokmuş, Çiçekli Orman'da Defne ile tavşan Pamuk yaşarmış. Güneşli bir sabah papatyaların arasında oynuyorlarmış. Birden ağacın dibinde bir sepet dolusu çilek bulmuşlar.</p>
+                </div>
+                <div class="step-view">
+                    <div class="device-plate"><img th:src="@{/img/tales/paylasma-900.webp}" alt="" width="847" height="1124" loading="lazy"></div>
+                    <p class="device-meta">Sahne 1 / 4 · resim hazır</p>
+                </div>
+                <div class="step-view">
+                    <div class="device-plate is-small"><img th:src="@{/img/tales/paylasma-900.webp}" alt="" width="847" height="1124" loading="lazy"></div>
+                    <div class="wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                    <p class="device-meta">Dinleniyor · 0:42 / 3:10</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Kaydet ya da bırak: masal önce geçici açılır; kaydetmezseniz 24 saat sonra silinir. Deneme düğmeleri yalnızca bu sayfada çalışır. -->
+    <section class="keep chapter-orange" aria-labelledby="keep-title">
+        <div class="keep-copy">
+            <h2 id="keep-title" class="chapter-title" data-reveal>Beğendiğinizi saklayın</h2>
+            <p data-reveal>Yeni masal önce geçici açılır. Beğenirseniz kütüphanenize kaydedersiniz; kaydetmediğiniz masal 24 saat sonra kendiliğinden silinir. Yanlışlıkla "Kaydetme" derseniz 5 saniye içinde geri alabilirsiniz.</p>
+        </div>
+        <div class="keep-demo" data-keep>
+            <div class="keep-card">
+                <img th:src="@{/img/tales/cayir-900.webp}" alt="Tavşan yeşil bir çayırın üzerinden zıplayarak geçiyor" width="878" height="1164" loading="lazy">
+                <div class="keep-body">
+                    <p class="keep-title">Fikri ve Büyük Çayır</p>
+                    <p class="keep-state" data-keep-state aria-live="polite">Bu masal henüz kaydedilmedi.</p>
+                    <div class="keep-actions">
+                        <button type="button" class="btn btn-primary flash" data-keep-save>Bu masalı kaydet</button>
+                        <button type="button" class="btn btn-secondary flash" data-keep-drop>Kaydetme</button>
+                    </div>
+                </div>
+            </div>
+            <p class="keep-note">Deneme: bu düğmeler hiçbir şey kaydetmez.</p>
+        </div>
+    </section>
+
+    <!-- Sık sorulanlar -->
+    <section class="faq chapter-grid" aria-labelledby="faq-title">
+        <h2 id="faq-title" class="chapter-title" data-reveal>Merak edilenler</h2>
+        <div class="faq-list" data-stagger>
+            <details><summary>Bir masal ne kadar sürer?</summary><p>Kısa, orta ve uzun seçenekleri vardır: 4-6 sahne, sesli okumada 3-5 dakika. Uyku masalı anlatımı daha yavaş ve sakindir.</p></details>
+            <details><summary>Hangi yaşlar için?</summary><p>3-7 yaş. Cümleler kısadır, her sahnede tek bir olay vardır ve masal her zaman huzurlu biter.</p></details>
+            <details><summary>Bir masal kaç kredi?</summary><p>Her masal 1 kredidir. Yeni hesaba ilk 3 masal hediyedir. Masal oluşturulamazsa krediniz kendiliğinden iade edilir.</p></details>
+            <details><summary>Ses ve resimler gelmezse ne olur?</summary><p>Masal yine okunur. Resim ya da ses hazırlanamazsa birkaç kez yeniden denenir; masal sayfasındaki düğmeyle siz de yeniden isteyebilirsiniz.</p></details>
+            <details><summary>Masalı çocuğum kendi başına açabilir mi?</summary><p>Masalı yalnızca ebeveyn oluşturur ve kaydeder. Kayıtlı masallar çocuğa özel masal sayfasında, büyük düğmelerle okunur.</p></details>
+            <details><summary>Masal nasıl biter?</summary><p>Her masal sevgi, paylaşım ya da dostlukla ve "Gökten üç elma düştü" ile, uykuya hazır bir sakinlikte biter.</p></details>
+        </div>
+    </section>
+
+    <th:block th:replace="~{fragments/site :: pageEnd}"></th:block>
+</main>
+<script defer th:src="@{/js/site.js}"></script>
+</body>
+</html>

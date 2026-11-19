@@ -149,6 +149,33 @@ class StoryFlowTests {
     }
 
     @Test
+    void englishTextIsRejectedAndRetriedUntilTurkish() throws Exception {
+        long storyId = id(request(false));
+        text.willReturn("""
+                BAŞLIKLAR: Pamuk and the Berries | Pamuk's Sharing Day | Four Berries
+
+                Once upon a time there was a little bunny named Pamuk. She lived in the forest with her friends and they were very happy.
+
+                One day they found a basket of berries. There were only four berries, but the friends shared them all together.""");
+        worker.runOnce();
+        // İngilizce metin reddedilir: sahne bölücüye gitmez, masal tamamlanmaz, iş yeniden denenmek üzere kuyrukta kalır
+        assertThat(jobStatus(storyId)).isEqualTo("QUEUED");
+        assertThat(scenes.requests).isEmpty();
+        assertThat(jdbc.queryForObject("SELECT last_error FROM generation_jobs WHERE story_id = ?", String.class, storyId))
+                .contains("Türkçe değil");
+
+        retryNow(storyId);
+        text.willReturn(TEXT.replace("Kiko'nun ", "").replace("Kiko'ya", "Pamuk'a").replace("Kiko'nun", "Pamuk'un"));
+        scenes.willReturn(story("Pamuk'un Paylaşma Günü", "Pamuk'a bir sepet çilek geldi.", "Pamuk'un gülümsemesi parladı."));
+        worker.runOnce();
+        assertThat(jdbc.queryForObject("SELECT status FROM stories WHERE id = ?", String.class, storyId)).isEqualTo("COMPLETED");
+        // Masal metni talimatı Türkçe yazmayı açıkça ister (V18)
+        assertThat(text.requests.getLast().systemPrompt()).contains("yalnızca Türkçe yaz");
+        assertThat(text.requests.getLast().userPrompt()).contains("Masalın tamamını Türkçe yaz.");
+        assertThat(scenes.requests.getLast().systemPrompt()).contains("asla İngilizceye ya da başka bir dile çevirme");
+    }
+
+    @Test
     void failuresInEitherStageRetryThenRefund() throws Exception {
         long storyId = id(request(false));
         text.willFail(new IllegalStateException("Featherless isteği başarısız: HTTP 503"));

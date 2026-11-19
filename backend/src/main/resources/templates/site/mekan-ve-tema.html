@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mekân ve tema')}"></head>
+<body class="home site-page">
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<header th:replace="~{fragments/layout :: homeNav('dunya')}"></header>
+<main id="main">
+
+    <!-- Giriş: solda başlık, sağda çayır gravürü (aşağıdaki mekân panellerinde videolar oynar) -->
+    <section class="page-hero page-hero-ink" aria-labelledby="page-title">
+        <div class="page-hero-copy">
+            <h1 id="page-title" class="lines">
+                <span class="line"><span data-line style="--i:0">Mekân ve tema</span></span>
+            </h1>
+            <p class="page-lead" data-load>Masal nerede geçecek, ne öğretecek? İkisi de listeden seçilir; masala yalnızca bu seçimler gider.</p>
+            <a class="btn btn-primary" data-load href="#mekanlar">Mekânları gezin</a>
+        </div>
+        <div class="page-hero-media media-frame" data-parallax>
+            <img th:src="@{/img/tales/cayir-900.webp}" alt="Tavşan yeşil bir çayırın üzerinden zıplayarak geçiyor" width="878" height="1164">
+            <p class="media-caption">Virginia Albert, çayırda bir tavşan (1918).</p>
+        </div>
+    </section>
+
+    <!-- Mekânlar: yönetim panelindeki yayındaki mekânlar (CharacterService.locations). Geniş ekranda her mekân ekranı kaplayan
+         bir paneldir; kaydırdıkça bir sonraki panel öncekinin üstüne kayar (CSS sticky + site.js: stack). Her panelde o yerin
+         videosu ya da yöneticinin yüklediği örnek resim vardır. -->
+    <section id="mekanlar" class="places-page" aria-labelledby="places-title">
+        <div class="chapter-head places-head">
+            <h2 id="places-title" class="chapter-title" data-reveal>Masallar nerede geçer</h2>
+            <p data-reveal th:text="${#lists.size(places)} + ' mekân hazır. Her birinin ışığı ve sabit öğeleri her sahne resminde yeniden çizilir; çocuğunuz ormanı ikinci masalda da tanır.'">Mekânlar hazır.</p>
+        </div>
+        <p class="empty-line" th:if="${#lists.isEmpty(places)}">Mekânlar hazırlanıyor; çok yakında burada.</p>
+        <ol class="place-stack" th:unless="${#lists.isEmpty(places)}" data-stack>
+            <li class="place-panel" th:each="p, st : ${places}" th:classappend="${ {'pp-ink', 'pp-orange', 'pp-red', 'pp-paper'}[st.index % 4] }">
+                <div class="place-media">
+                    <th:block th:if="${p.video() != null}"><video th:replace="~{fragments/site :: loop(${p.video()})}"></video></th:block>
+                    <img th:if="${p.video() == null and p.place().cover() != null}" th:src="@{${p.place().cover()}}" th:alt="${p.place().name()} + ' örnek resmi'" loading="lazy">
+                    <svg th:if="${p.video() == null and p.place().cover() == null}" class="apple place-apple" aria-hidden="true"><use href="#apple"/></svg>
+                </div>
+                <div class="place-text" data-stagger>
+                    <h3 th:text="${p.place().name()}">Çiçekli Orman</h3>
+                    <p class="place-kind" th:text="${p.place().environmentType()}">Orman</p>
+                    <p class="place-desc" th:text="${p.place().atmosphereDescription()}">Güneşli, huzurlu ve renkli bir orman.</p>
+                </div>
+            </li>
+        </ol>
+    </section>
+
+    <!-- Temalar: üzerine gelince önizler, tıklayınca seçer (motion.js: themes) -->
+    <section class="chapter chapter-ink" aria-labelledby="themes-title">
+        <div class="chapter-head">
+            <h2 id="themes-title" class="chapter-title" data-reveal>Sekiz tema</h2>
+            <p data-reveal>Her masal bir şey öğretir ama ders vermez. Bir tema seçin ve o temayla yazılmış bir masaldan cümleyi okuyun.</p>
+        </div>
+        
+        <div class="themes" data-themes>
+            <div class="theme-list" role="tablist" aria-label="Masal temaları" aria-orientation="vertical">
+                <button class="theme-btn is-active flash" type="button" role="tab" aria-selected="true" aria-controls="theme-panel" data-desc="Yeni bir arkadaşla tanışmak ve birlikte oynamak." data-sample="Pamuk, utangaç yeni komşusuna en sevdiği oyunu öğretti.">Dostluk</button>
+                <button class="theme-btn flash" type="button" role="tab" aria-selected="false" aria-controls="theme-panel" tabindex="-1" data-desc="Bir işi el ele vererek kolaylaştırmak." data-sample="Leo ile Fikri ağır sepeti birlikte taşıyınca yol kısalıverdi.">Yardımlaşma</button>
+                <button class="theme-btn flash" type="button" role="tab" aria-selected="false" aria-controls="theme-panel" tabindex="-1" data-desc="Elindekini paylaşınca mutluluğun çoğaldığını görmek." data-sample="Bir sepet çilek, paylaşılınca herkese yetti.">Paylaşma</button>
+                <button class="theme-btn flash" type="button" role="tab" aria-selected="false" aria-controls="theme-panel" tabindex="-1" data-desc="Çiçeklere, ağaçlara ve hayvanlara özen göstermek." data-sample="Tilki, kuruyan çiçeği her sabah sulayıp yeniden açtırdı.">Doğa sevgisi</button>
+                <button class="theme-btn flash" type="button" role="tab" aria-selected="false" aria-controls="theme-panel" tabindex="-1" data-desc="Sevinci, kırgınlığı ve merakı adlandırmayı öğrenmek." data-sample="Ayıcık &quot;Biraz kırgınım&quot; dedi; dostları onu sabırla dinledi.">Duyguları tanıma</button>
+                <button class="theme-btn flash" type="button" role="tab" aria-selected="false" aria-controls="theme-panel" tabindex="-1" data-desc="Yeni bir şeyi bir dostun yanında denemek." data-sample="Penguen, arkadaşının yanında ilk kez yeni bir şarkı söyledi.">Cesaret</button>
+                <button class="theme-btn flash" type="button" role="tab" aria-selected="false" aria-controls="theme-panel" tabindex="-1" data-desc="Diş fırçalamak, el yıkamak ve dinlenmek." data-sample="Baykuş dişlerini fırçaladı, sonra sıcacık yatağına kıvrıldı.">Kişisel bakım</button>
+                <button class="theme-btn flash" type="button" role="tab" aria-selected="false" aria-controls="theme-panel" tabindex="-1" data-desc="Oyuncakları toplamak ve uyku saatine hazırlanmak." data-sample="Robot oyuncakları tek tek topladı; oda pırıl pırıl oldu.">Günlük alışkanlıklar</button>
+            </div>
+            <div id="theme-panel" class="theme-panel" role="tabpanel" aria-live="polite">
+                <svg class="apple theme-apple" aria-hidden="true"><use href="#apple"/></svg>
+                <p class="theme-name" data-theme-name>Dostluk</p>
+                <p class="theme-desc" data-theme-desc>Yeni bir arkadaşla tanışmak ve birlikte oynamak.</p>
+                <blockquote class="theme-sample"><p data-theme-sample>Pamuk, utangaç yeni komşusuna en sevdiği oyunu öğretti.</p></blockquote>
+                <p class="theme-note">Bu temayla yazılmış bir masaldan örnek cümle</p>
+            </div>
+        </div>
+    </section>
+
+    <th:block th:replace="~{fragments/site :: pageEnd}"></th:block>
+</main>
+<script defer th:src="@{/js/site.js}"></script>
+</body>
+</html>

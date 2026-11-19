@@ -5,6 +5,9 @@
  *  - Tek bir ses öğesi sahnenin sesini çalar; "Sahneleri kendiliğinden çevir" açıksa sahne bitince sonrakine geçilir.
  *  - Ses veya resim hazırlanıyorsa durum 4 saniyede bir yoklanır; hazır olanlar sayfa yenilenmeden açılır.
  *  - "Hareketi azalt" açıksa sayfa geçişi canlandırılmaz.
+ *  - Tam ekran okuyucuda (story-stage) sahne metni kelimelere bölünür; ses çalarken okunan kelimeler renklenir
+ *    (kelime zamanlaması olmadığı için ilerleme kelime uzunluğu ve noktalamaya göre tahmin edilir). Metin paneli
+ *    taşırırsa yazı boyutu kademeli küçülür. Sayfa kaymadığı için sayfa kaydırma çağrıları yoktur.
  */
 (function () {
     "use strict";
@@ -51,6 +54,62 @@
     });
 
     function sceneNo(i) { return scenes[i].getAttribute("data-scene"); }
+
+    // ---- Okunan kelimeleri renklendirme ----
+    function words(i) {
+        var p = scenes[i].querySelector("[data-scene-text]");
+        if (!p) return null;
+        if (!p._words) {
+            var text = p.textContent, list = [], total = 0;
+            p.textContent = "";
+            text.split(/(\s+)/).forEach(function (part) {
+                if (!part) return;
+                if (/^\s+$/.test(part)) { p.appendChild(document.createTextNode(part)); return; }
+                var span = document.createElement("span");
+                span.className = "w";
+                span.textContent = part;
+                p.appendChild(span);
+                // Ağırlık: harf sayısı + noktalamadan sonraki kısa duraklama
+                var weight = part.length + 1 + (/[.!?…]["”']?$/.test(part) ? 6 : /[,;:]$/.test(part) ? 3 : 0);
+                list.push({ el: span, start: total, end: total + weight });
+                total += weight;
+            });
+            p._words = list; p._total = total || 1;
+        }
+        return p;
+    }
+    function highlight(i, frac) {
+        var p = words(i);
+        if (!p) return;
+        var at = frac * p._total;
+        p._words.forEach(function (w) {
+            w.el.classList.toggle("is-read", frac >= 1 || w.end <= at);
+            w.el.classList.toggle("is-now", frac > 0 && frac < 1 && w.start <= at && w.end > at);
+        });
+    }
+    function clearHighlight(i) { highlight(i, 0); }
+    var raf = null;
+    function follow() {
+        cancelAnimationFrame(raf);
+        if (!playing) return;
+        var d = player.duration || parseFloat(scenes[current].getAttribute("data-duration")) || 0;
+        if (d > 0) highlight(current, Math.min(1, player.currentTime / d));
+        raf = requestAnimationFrame(follow);
+    }
+
+    // ---- Metni panele sığdırma: taşarsa yazı kademeli küçülür (en az 17px; yine taşarsa panel içinde kayar) ----
+    function fit(i) {
+        var body = scenes[i].querySelector(".scene-body"), p = scenes[i].querySelector("[data-scene-text]");
+        if (!body || !p || !reader.classList.contains("story-stage")) return;
+        p.style.removeProperty("--reader-fs");
+        var size = parseFloat(getComputedStyle(p).fontSize);
+        while (body.scrollHeight > body.clientHeight + 1 && size > 17) {
+            size -= 1;
+            p.style.setProperty("--reader-fs", size + "px");
+        }
+    }
+    var fitTimer = null;
+    window.addEventListener("resize", function () { clearTimeout(fitTimer); fitTimer = setTimeout(function () { fit(current); }, 120); });
     function hasAudio(i) { return !!urls[sceneNo(i)]; }
 
     function render(direction) {
@@ -71,8 +130,10 @@
         playBtn.setAttribute("aria-label", playing ? "Duraklat" : (hasAudio(current) ? "Bu sahneyi dinle" : "Bu sahnenin sesi henüz hazır değil"));
         reader.classList.toggle("is-playing", playing);
         if (end) end.classList.toggle("is-shown", finished);
+        fit(current);
         if (direction && !reduce && window.Motion) {
-            window.Motion.animate(scenes[current], { opacity: [0, 1], transform: ["translateX(" + (direction * 28) + "px)", "translateX(0px)"] },
+            var parts = Array.prototype.slice.call(scenes[current].querySelectorAll(".scene-art, .scene-body"));
+            window.Motion.animate(parts, { opacity: [0, 1], transform: ["translateX(" + (direction * 28) + "px)", "translateX(0px)"] },
                 { duration: 0.42, ease: [0.22, 1, 0.36, 1] });
         }
     }
@@ -91,7 +152,7 @@
         }
         playing = true;
         render();
-        player.play().catch(function () { playing = false; render(); });
+        player.play().then(follow).catch(function () { playing = false; render(); });
     }
 
     function go(i, keepPlaying) {
@@ -100,12 +161,13 @@
             stop();
             finished = true;
             render();
-            if (end) end.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
             return;
         }
         var direction = i > current ? 1 : (i < current ? -1 : 0);
         finished = false;
+        clearHighlight(current);
         current = i;
+        clearHighlight(current);
         player.pause();
         player.removeAttribute("data-scene");
         playing = false;
@@ -115,6 +177,7 @@
 
     player.addEventListener("ended", function () {
         playing = false;
+        highlight(current, 1);
         if (autoBox.checked) {
             // Sayfa çevrilmeden önce kısa bir nefes; sonraki sahnenin sesi yoksa okuma orada durur.
             setTimeout(function () { go(current + 1, current + 1 < scenes.length && hasAudio(current + 1)); }, 700);
@@ -124,27 +187,30 @@
     });
     // Sahne değişirken gelen eski "pause" olayı yeni çalmayı durdurmuş saymasın: yalnızca gerçekten duruyorsa.
     player.addEventListener("pause", function () { if (!player.ended && player.paused && playing) { playing = false; render(); } });
-    player.addEventListener("play", function () { playing = true; render(); });
+    player.addEventListener("play", function () { playing = true; render(); follow(); });
+    player.addEventListener("seeked", follow);
 
     prevBtn.addEventListener("click", function () { go(current - 1, playing); });
     nextBtn.addEventListener("click", function () { go(current + 1, playing); });
     playBtn.addEventListener("click", function () { playing ? stop() : playCurrent(); render(); });
-    if (restart) restart.addEventListener("click", function () {
-        go(0, false);
-        reader.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-    });
+    if (restart) restart.addEventListener("click", function () { go(0, false); });
     if (listen) {
         listen.hidden = false;
-        listen.addEventListener("click", function () {
-            go(0, true);
-            reader.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-        });
+        listen.addEventListener("click", function () { go(0, true); });
     }
     document.addEventListener("keydown", function (e) {
         if (e.target.closest("input, textarea, select") || e.metaKey || e.ctrlKey || e.altKey) return;
         if (e.key === "ArrowRight") { go(current + 1, playing); e.preventDefault(); }
         if (e.key === "ArrowLeft") { go(current - 1, playing); e.preventDefault(); }
     });
+
+    // "Kaydedildi" simgesi: dokununca açıklama açılır/kapanır; dışarı tıklayınca ya da Escape ile kapanır
+    var info = document.querySelector("[data-info]");
+    if (info) {
+        info.addEventListener("click", function (e) { e.stopPropagation(); info.setAttribute("aria-expanded", info.getAttribute("aria-expanded") === "true" ? "false" : "true"); });
+        document.addEventListener("click", function () { info.setAttribute("aria-expanded", "false"); });
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape") info.setAttribute("aria-expanded", "false"); });
+    }
 
     // Adres #sahne-3 ise o sahneden başlanır
     var m = /^#sahne-(\d+)$/.exec(location.hash);
@@ -183,13 +249,15 @@
                 });
                 var a = s.audio, im = s.images;
                 if (progress) progress.style.width = (a.total ? Math.round(a.ready * 100 / a.total) : 0) + "%";
-                if (note && a.status === "PREPARING") note.textContent = a.ready + " / " + a.total + " sahne hazır. Masalı okumaya başlayabilirsiniz; sesler hazır oldukça açılır.";
-                else if (note && a.status === "READY") { note.textContent = "Tüm sahnelerin sesi hazır."; if (progress) progress.parentNode.hidden = true; }
-                else if (note && a.status !== "NONE") note.textContent = "Bazı sahnelerin sesi hazırlanamadı. Sayfayı yenileyip sesi yeniden isteyebilirsiniz.";
+                var noteSpan = note && note.querySelector("[data-audio-text]");
+                var noteText = function (t) { if (noteSpan) noteSpan.textContent = t; else if (note) note.textContent = t; };
+                if (a.status === "PREPARING") noteText("Masal seslendiriliyor: " + a.ready + " / " + a.total + " sahne hazır");
+                else if (a.status === "READY") { noteText("Sesli masal hazır"); if (progress) progress.parentNode.hidden = true; }
+                else if (a.status !== "NONE") noteText("Bazı sahnelerin sesi hazırlanamadı");
                 if (imageNote) {
                     if (im.status === "PREPARING") imageNote.textContent = "Resimler çiziliyor: " + im.ready + " / " + im.total + " sahne hazır.";
                     else if (im.status === "READY") imageNote.parentNode.hidden = true;
-                    else imageNote.textContent = "Bazı sahnelerin resmi çizilemedi. Sayfayı yenileyip yeniden isteyebilirsiniz.";
+                    else imageNote.textContent = "Bazı resimler çizilemedi";
                 }
                 render();
                 // Okuma kesilmesin diye sayfa yenilenmez; ikisi de bitince yoklama durur.

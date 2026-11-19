@@ -4,7 +4,7 @@
 <body class="home">
 <svg th:replace="~{fragments/layout :: icons}"></svg>
 <a th:replace="~{fragments/layout :: skip}"></a>
-<header th:replace="~{fragments/layout :: homeNav}"></header>
+<header th:replace="~{fragments/layout :: homeNav('baslangic')}"></header>
 <!-- Hesap silindikten sonra (ProfilePageController) oturum kapanır ve buraya gelinir -->
 <p class="alert alert-success account-deleted" role="status" th:if="${param.hesapSilindi}">
     <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>Hesabınız ve bütün verileriniz silindi. Bizi denediğiniz için teşekkür ederiz.</span></p>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Güvenlik')}"></head>
+<body class="home site-page">
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<header th:replace="~{fragments/layout :: homeNav('guvenlik')}"></header>
+<main id="main">
+
+    <!-- Giriş: masala giremeyen konular panosu -->
+    <section id="guvenlik" class="chapter chapter-grid page-first" data-chapter aria-labelledby="guvenlik-title">
+        <div class="board" data-stagger>
+            <div class="tile tile-lead">
+                <h1 id="guvenlik-title" class="chapter-title page-h1">Masallarda ve verilerde güvenlik</h1>
+                <p>Masal Dünyası 3-7 yaş için yazar. Bu konular hiçbir masala giremez; yazılan her metin ayrıca bir denetimden geçer ve çocuğunuzun adı yapay zekâya gönderilmez.</p>
+            </div>
+            <div class="tile no"><strong>Korku</strong></div>
+            <div class="tile no"><strong>Canavar</strong></div>
+            <div class="tile no"><strong>Şiddet</strong></div>
+            <div class="tile no"><strong>Ayrılık</strong></div>
+            <div class="tile no"><strong>Karanlıkta kaybolmak</strong></div>
+            <div class="tile no"><strong>Cezalandırma</strong></div>
+            <div class="tile no"><strong>Alay</strong></div>
+            <div class="tile no"><strong>Tehlike</strong></div>
+        </div>
+    </section>
+
+    <!-- Canlı öğe: çocuğun adı yapay zekâya gitmez. Takma ad yazıldıkça üç sütun güncellenir (site.js: privacy).
+         Gerçek işleyiş: StoryPromptBuilder adı yer tutucuyla değiştirir, ChildNamePersonalizer masal gelince geri koyar;
+         resim isteğine "a small child" gider. -->
+    <section class="privacy chapter-ink" data-privacy aria-labelledby="privacy-title">
+        <div class="chapter-head">
+            <h2 id="privacy-title" class="chapter-title" data-reveal>Adı yapay zekâya gitmez</h2>
+            <p data-reveal>Çocuğunuzun takma adını yazın ve bir masalın yolculuğunu izleyin. Ad bu sayfadan hiçbir yere gönderilmez.</p>
+        </div>
+        <div class="privacy-input">
+            <div class="field"><label for="pv-name">Takma ad</label><input id="pv-name" type="text" value="Ece" maxlength="16" autocomplete="off" spellcheck="false" data-pv-name></div>
+            <div class="field"><label for="pv-age">Yaş</label>
+                <select id="pv-age" data-pv-age><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option></select></div>
+        </div>
+        <ol class="privacy-flow" aria-live="polite">
+            <li class="pv-step">
+                <h3>Siz seçersiniz</h3>
+                <div class="pv-pic is-engraving"><img th:src="@{/img/heroes/tavsan.webp}" alt="Ceketini geride bırakıp koşan bir tavşan çizimi" loading="lazy"></div>
+                <dl>
+                    <div><dt>Çocuk</dt><dd><span data-pv-out="name">Ece</span>, <span data-pv-out="age">5</span> yaş</dd></div>
+                    <div><dt>Kahraman</dt><dd>Pamuk, tavşan</dd></div>
+                    <div><dt>Mekân</dt><dd>Çiçekli Orman</dd></div>
+                </dl>
+            </li>
+            <li class="pv-step pv-ai">
+                <h3>Yapay zekâya giden</h3>
+                <div class="pv-pic"><img th:src="@{/img/tales/sepet-900.webp}" alt="Kolunda sepetle yürüyen bir tavşan; resimde çocuğa dair ad yok" loading="lazy"></div>
+                <p class="pv-quote">"Masalda <mark>Kiko</mark> adında <span data-pv-out="age">5</span> yaşında bir çocuk da ana karakterle birlikte yer alsın."</p>
+                <p class="pv-quote" lang="en">Resim için: "<mark>a small child</mark> holds a basket of strawberries"</p>
+                <p class="pv-note">Adın yerine "Kiko" gider; resim isteğine çocuğa dair hiçbir ad gitmez.</p>
+            </li>
+            <li class="pv-step">
+                <h3>Size dönen masal</h3>
+                <div class="pv-pic"><img th:src="@{/img/tales/paylasma-900.webp}" alt="Üç tavşan turuncu bir kâsenin başında birlikte yemek yiyor" loading="lazy"></div>
+                <p class="pv-story">Bir varmış, bir yokmuş, Çiçekli Orman'da <strong data-pv-out="name">Ece</strong> ile tavşan Pamuk yaşarmış. Dört dost, dört çilek! <strong data-pv-out="name">Ece</strong> herkese birer çilek uzatmış.</p>
+                <p class="pv-note">Ad, masal size ulaşınca bizim sunucumuzda yerine konur.</p>
+            </li>
+        </ol>
+    </section>
+
+    <!-- Ebeveyn denetimi: dört güvence, solda gece gökyüzü -->
+    <section class="guard chapter-paper" aria-labelledby="guard-title">
+        <div class="guard-media media-frame" data-parallax>
+            <video th:replace="~{fragments/site :: loop('gece')}"></video>
+            <p class="media-caption">Sakin bir gece gökyüzü.</p>
+        </div>
+        <div class="guard-copy">
+            <h2 id="guard-title" class="chapter-title" data-reveal>Kontrol sizde</h2>
+            <ul class="guard-list" data-stagger>
+                <li><strong>Takma ad yeterli</strong><span>Soyad, fotoğraf ya da okul istemeyiz. Çocuk profilinde yalnızca takma ad, yaş ve sevdiği şeyler bulunur.</span></li>
+                <li><strong>Masalı ebeveyn oluşturur</strong><span>Masalı siz oluşturur ve kaydedersiniz. Kaydetmediğiniz masal 24 saat sonra silinir.</span></li>
+                <li><strong>Verileriniz sizin</strong><span>Profil sayfanızdan bütün verilerinizi indirebilir, hesabınızı bütün verileriyle silebilirsiniz.</span></li>
+                <li><strong>Her metin denetlenir</strong><span>Yazılan masal ve başlık, yasak konular listesinden geçer; uymayan metin size hiç ulaşmaz.</span></li>
+            </ul>
+            <a class="btn btn-secondary" th:href="@{/kvkk}">KVKK aydınlatma metni</a>
+        </div>
+    </section>
+
+    <th:block th:replace="~{fragments/site :: pageEnd}"></th:block>
+</main>
+<script defer th:src="@{/js/site.js}"></script>
+</body>
+</html>

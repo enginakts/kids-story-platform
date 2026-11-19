@@ -98,7 +98,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/", "/login", "/register", "/verify-email", "/kvkk",
                                 "/forgot-password", "/reset-password", "/css/**", "/fonts/**", "/js/**", "/img/**", "/error",
-                                "/library/images/*").permitAll()
+                                "/library/images/*", "/video/**",
+                                "/nasil-calisir", "/ornek-masal", "/kahramanlar", "/mekan-ve-tema", "/guvenlik").permitAll()
                         .requestMatchers("/app/**").hasAuthority(Role.PARENT)
                         .anyRequest().denyAll())
                 .formLogin(f -> f.loginPage("/login").defaultSuccessUrl("/app/children", true)

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Tanıtım sayfalarının (/, /nasil-calisir, /ornek-masal, /kahramanlar, /mekan-ve-tema, /guvenlik) ortak parçaları. -->
+
+<!-- Sessiz döngü video. Süs niteliğindedir (aria-hidden); site.js görünür olduğunda oynatır, ekrandan çıkınca durdurur.
+     "Hareketi azalt" açıksa ya da betik yoksa yalnızca kapak karesi görünür (autoplay yok). Videolar: static/video, kaynaklar credits.json -->
+<video th:fragment="loop(name)" class="loop-video" muted loop playsinline preload="none" aria-hidden="true" data-loop
+       th:attr="poster=@{'/video/' + ${name} + '-poster.jpg'}">
+    <source th:src="@{'/video/' + ${name} + '.webm'}" type="video/webm">
+</video>
+
+<!-- Sayfa sonu: çağrı bandı ve kapanış (gökten üç elma düştü, alt bağlantı şeridi, görsel kaynakları) -->
+<th:block th:fragment="pageEnd">
+    <section class="cta-band" aria-labelledby="cta-title">
+        <p class="cta-sentence">Ücretsiz hesap açın; ilk üç masal bizden hediye.</p>
+        <h2 id="cta-title" class="cta-word">Başlayalım</h2>
+        <a class="btn btn-primary" th:href="@{/register}">Ücretsiz başla</a>
+    </section>
+
+    <footer class="closing" aria-label="Kapanış">
+        <div class="closing-mark" aria-hidden="true">
+            <svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg><svg class="apple"><use href="#apple"/></svg>
+        </div>
+        <p class="closing-line">Gökten üç elma düştü: biri size, biri çocuğunuza, biri de masalı dinleyenlere.</p>
+        <div class="closing-cols">
+            <div><h3>Masal Dünyası</h3><ul>
+                <li><a class="flash" th:href="@{/nasil-calisir}">Nasıl çalışır</a></li>
+                <li><a class="flash" th:href="@{/ornek-masal}">Örnek masal</a></li>
+                <li><a class="flash" th:href="@{/kahramanlar}">Kahramanlar</a></li>
+                <li><a class="flash" th:href="@{/mekan-ve-tema}">Mekân ve tema</a></li>
+                <li><a class="flash" th:href="@{/guvenlik}">Güvenlik</a></li>
+            </ul></div>
+            <div><h3>Hesap</h3><ul>
+                <li><a class="flash" th:href="@{/forgot-password}">Parolamı unuttum</a></li>
+                <li><a class="flash" th:href="@{/kvkk}">KVKK aydınlatma metni</a></li>
+            </ul></div>
+            <details class="credits">
+                <summary>Görsel kaynakları</summary>
+                <p>Resimler: Virginia Albert, <i>The Tale of Peter Rabbit</i> (1918) levhaları; kamu malı, Wikimedia Commons üzerinden:
+                <a href="https://commons.wikimedia.org/wiki/File:Peter-rabbit-albert-11.png">11</a>,
+                <a href="https://commons.wikimedia.org/wiki/File:Peter-rabbit-albert-15.png">15</a>,
+                <a href="https://commons.wikimedia.org/wiki/File:Peter-rabbit-albert-36.png">36</a>,
+                <a href="https://commons.wikimedia.org/wiki/File:Peter-rabbit-albert-47.png">47</a>,
+                <a href="https://commons.wikimedia.org/wiki/File:Peter-rabbit-albert-54.png">54</a>,
+                <a href="https://commons.wikimedia.org/wiki/File:Peter-rabbit-albert-59.png">59</a>.
+                Kahraman resimleri: L. Leslie Brooke, <i>Johnny Crow's Garden</i> (1903); <i>Book of cats and dogs, for little folks</i> (1885); Joseph Smit, <i>Iguanodon feeding</i>; hepsi kamu malı, Wikimedia Commons. Robot ve mekân çizimleri Masal Dünyası için çizildi.</p>
+                <p>Videolar (Wikimedia Commons):
+                <a href="https://commons.wikimedia.org/wiki/File:European_Rabbit_2025_06_18_02.webm">"European Rabbit 2025 06 18 02"</a>, Alexis Lours, CC BY 4.0;
+                <a href="https://commons.wikimedia.org/wiki/File:Moving_clouds_timelapse_1152x694x10fps.ogv">"Moving clouds timelapse"</a>, Stefan von Halenbach, kamu malı;
+                <a href="https://commons.wikimedia.org/wiki/File:Water_waves_in_Herzliya_beach.webm">"Water waves in Herzliya beach"</a>, דוד שי, CC BY-SA 4.0;
+                <a href="https://commons.wikimedia.org/wiki/File:Cascading_stream_at_Cascade_Springs,_May_17.webm">"Cascading stream at Cascade Springs"</a>, An Errant Knight, CC BY-SA 4.0;
+                <a href="https://commons.wikimedia.org/wiki/File:Aurora-Iceland_Northern_Lights_timelapse_2026-02-06.hd.webm">"Aurora-Iceland Northern Lights timelapse"</a>, G. Edward Johnson, CC BY 4.0.
+                Örnek masallar tanıtım amaçlıdır. © 2026 Masal Dünyası</p>
+            </details>
+        </div>
+        <nav class="link-bar" aria-label="Hesap bağlantıları">
+            <a class="flash" th:href="@{/register}">Kayıt ol<svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+            <a class="flash" th:href="@{/login}">Giriş yap<svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+            <a class="flash" th:href="@{/ornek-masal}">Örnek masal<svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        </nav>
+    </footer>
+</th:block>
+</body>
+</html>

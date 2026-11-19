@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Örnek masal')}"></head>
+<body class="home site-page">
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<header th:replace="~{fragments/layout :: homeNav('ornek')}"></header>
+<main id="main">
+
+    <!-- Canlı öğe: genişleyen levha panelleri, otomatik ilerleyen masal listesi ve takma ad (motion.js: sample) -->
+    <section id="ornek" class="chapter chapter-grid page-first" data-chapter aria-labelledby="ornek-title">
+        <div class="chapter-head">
+            <h1 id="ornek-title" class="chapter-title page-h1">Bir masal deneyin</h1>
+            <p data-reveal>Bir masal seçin, takma adı yazın ve sahne sahne okuyun. Ad yalnızca bu sayfada kullanılır, hiçbir yere gönderilmez.</p>
+        </div>
+        <div class="reel-wrap" data-sample>
+            <div class="reel-frame" data-reveal="mask">
+                <span class="corner tl" aria-hidden="true"></span><span class="corner tr" aria-hidden="true"></span>
+                <span class="corner bl" aria-hidden="true"></span><span class="corner br" aria-hidden="true"></span>
+                <div class="reel" aria-hidden="true">
+                    <div class="reel-panel is-active" data-panel="0">
+                        <img th:src="@{/img/tales/paylasma-900.webp}" alt="" width="847" height="1124">
+                        <span class="reel-label">Paylaşma</span>
+                    </div>
+                    <div class="reel-panel" data-panel="1">
+                        <img th:src="@{/img/tales/kapi-900.webp}" alt="" width="866" height="1148">
+                        <span class="reel-label">Dostluk</span>
+                    </div>
+                    <div class="reel-panel" data-panel="2">
+                        <img th:src="@{/img/tales/cayir-900.webp}" alt="" width="878" height="1164">
+                        <span class="reel-label">Cesaret</span>
+                    </div>
+                </div>
+                <p class="reel-credit">Resimler: Virginia Albert, Peter Rabbit, 1918</p>
+            </div>
+            <div class="reel-side">
+                <div class="tale-list" role="tablist" aria-label="Örnek masallar">
+                    <button class="tale-item is-active" type="button" role="tab" aria-selected="true" aria-controls="tale-panel" data-tale="0">
+                        <span class="tale-name">Paylaşınca Çoğalan Mutluluk</span>
+                        <span class="tale-meta">Paylaşma · Pamuk ile · Çiçekli Orman</span>
+                        <span class="tale-progress" aria-hidden="true"></span>
+                    </button>
+                    <button class="tale-item" type="button" role="tab" aria-selected="false" aria-controls="tale-panel" data-tale="1" tabindex="-1">
+                        <span class="tale-name">Bulut Şatosu'nda Yeni Bir Dost</span>
+                        <span class="tale-meta">Dostluk · Leo ile · Bulut Şatosu</span>
+                        <span class="tale-progress" aria-hidden="true"></span>
+                    </button>
+                    <button class="tale-item" type="button" role="tab" aria-selected="false" aria-controls="tale-panel" data-tale="2" tabindex="-1">
+                        <span class="tale-name">Fikri ve Büyük Çayır</span>
+                        <span class="tale-meta">Cesaret · Fikri ile · Çiçekli Orman</span>
+                        <span class="tale-progress" aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div id="tale-panel" class="tale-reader" role="tabpanel" aria-live="polite">
+                    <p class="tale-text" data-tale-text>Bir varmış, bir yokmuş, Çiçekli Orman'da <span class="name">Ece</span> ile tavşan Pamuk yaşarmış. Güneşli bir sabah papatyaların arasında oynuyorlarmış. Birden ağacın dibinde bir sepet dolusu çilek bulmuşlar.</p>
+                    <p class="scene-count" data-tale-count>Sahne 1 / 4</p>
+                </div>
+                <div class="tale-controls">
+                    <div class="name-field">
+                        <label for="child-name">Çocuğunuzun takma adı</label>
+                        <input id="child-name" type="text" value="Ece" maxlength="16" autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="sample-actions">
+                        <button class="cell cell-soft flash" type="button" data-next>Sonraki sahne<svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+                        <a class="cell cell-ink flash" th:href="@{/register}">Bu masalı oluştur<svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="application/json" id="tales">[
+            {"img":"paylasma","scenes":["Bir varmış, bir yokmuş, Çiçekli Orman'da {ad} ile tavşan Pamuk yaşarmış. Güneşli bir sabah papatyaların arasında oynuyorlarmış. Birden ağacın dibinde bir sepet dolusu çilek bulmuşlar.","Az sonra sincap ve kirpi de gelmiş. Ama sepette yalnızca dört çilek varmış. {ad} bir an düşünmüş: “Hepimize yeter mi?” Pamuk çilekleri yan yana dizmiş ve birlikte saymışlar.","Dört dost, dört çilek! Bu yüzden {ad} herkese birer çilek uzatmış. Sincap teşekkür edip kuyruğunu sallamış, kirpi neşeyle gülmüş. Paylaştıkça orman daha da şenlenmiş.","Akşam olunca dostlar yumuşak çimenlere uzanmış. Karınları tok, kalpleri sevinçle doluymuş. Gökten üç elma düşmüş. {ad}, paylaştıkça mutluluğun çoğaldığını öğrenmiş."]},
+            {"img":"kapi","scenes":["Bir varmış, bir yokmuş, Bulut Şatosu'nda {ad} ile aslan Leo yaşarmış. Her sabah pamuk bulutların üstünde koşup oynarlarmış. O gün şatonun kapısında utangaç, küçük bir fare görmüşler.","Fare kuyruğunu sarıp bir köşeye çekilmiş. Leo kocaman gülümseyip sormuş: “Bizimle oynar mısın?” Fare önce başını eğmiş. Bunun üzerine {ad}, en sevdiği saklambaç oyununu yavaşça anlatmış.","Fare kulaklarını dikip dinlemiş ve sonunda kıkırdamış. Üçü bulutların arkasına saklanıp birbirlerini aramışlar. Her bulunuşta kahkahaları şatoyu doldurmuş.","Gün batarken üçü el sallamış: “Yarın yine oynayalım!” Fare artık hiç utangaç değilmiş. {ad} ile Leo, bir gülümsemenin yeni bir dostluk başlatabildiğini öğrenmiş."]},
+            {"img":"cayir","scenes":["Bir varmış, bir yokmuş, Çiçekli Orman'da yavru fil Fikri yaşarmış. Fikri büyük çayırın kenarında oynamayı çok severmiş. Ama çayırın öbür ucunu hiç görmemiş.","Bir gün {ad} çayıra gelmiş. Fikri'nin öbür uca merakla baktığını görmüş. {ad} onun hortumunu tutmuş: “Birlikte bakalım mı?” Fikri önce biraz durmuş, sonra başını sallamış.","Adım adım yürümüşler. Uzun otlar ayaklarını gıdıklamış, kelebekler yanlarında uçmuş. Çayırın ucunda rengârenk çiçeklerle dolu bir tepe varmış.","Fikri çiçeklerin arasında mutlulukla dönmüş: “Yanımda bir dost olunca cesaret de geliyor.” Akşam güneşi ikisini sıcacık sarmış. Fikri, yeni bir şeyi bir dostla denemenin kolaylaştığını öğrenmiş."]}
+        ]</script>
+    </section>
+
+
+    <!-- Sahne sahne: masalın dört sahnesi. Geniş ekranda bölüm sabitlenir ve aşağı kaydırma sahneleri yatay kaydırır
+         (site.js: hscroll); dar ekranda parmakla kaydırılan şerit. Takma ad yukarıdaki alandan gelir. -->
+    <section class="scenes chapter-ink" data-hscroll aria-labelledby="scenes-title">
+        <div class="hscroll-stage">
+            <div class="scenes-head">
+                <h2 id="scenes-title" class="chapter-title" data-reveal>Paylaşınca Çoğalan Mutluluk</h2>
+                <p data-reveal>Bir masal böyle görünür: her sahnede kısa bir bölüm ve bir resim. Okurken sahneler sayfa gibi ilerler.</p>
+            </div>
+            <ul class="sp-row" data-hscroll-row data-stagger>
+                <li class="sp-panel">
+                    <div class="sp-art"><img th:src="@{/img/tales/sepet-900.webp}" alt="Turuncu pelerinli anne tavşan, kolunda sepetle yürüyüşe çıkıyor" loading="lazy"></div>
+                    <div class="sp-copy">
+                        <p class="sp-count">Sahne 1 / 4</p>
+                        <p class="sp-text">Bir varmış, bir yokmuş, Çiçekli Orman'da <span class="name" data-name>Ece</span> ile tavşan Pamuk yaşarmış. Güneşli bir sabah papatyaların arasında oynuyorlarmış. Birden ağacın dibinde bir sepet dolusu çilek bulmuşlar.</p>
+                    </div>
+                </li>
+                <li class="sp-panel">
+                    <div class="sp-art"><img th:src="@{/img/tales/aile-900.webp}" alt="Anne tavşan, çiçekli bir bayırda yavrularının giysilerini düzeltiyor" loading="lazy"></div>
+                    <div class="sp-copy">
+                        <p class="sp-count">Sahne 2 / 4</p>
+                        <p class="sp-text">Az sonra sincap ve kirpi de gelmiş. Ama sepette yalnızca dört çilek varmış. <span class="name" data-name>Ece</span> bir an düşünmüş: “Hepimize yeter mi?” Pamuk çilekleri yan yana dizmiş ve birlikte saymışlar.</p>
+                    </div>
+                </li>
+                <li class="sp-panel">
+                    <div class="sp-art"><img th:src="@{/img/tales/paylasma-900.webp}" alt="Üç tavşan turuncu bir kâsenin başında birlikte yemek yiyor" loading="lazy"></div>
+                    <div class="sp-copy">
+                        <p class="sp-count">Sahne 3 / 4</p>
+                        <p class="sp-text">Dört dost, dört çilek! Bu yüzden <span class="name" data-name>Ece</span> herkese birer çilek uzatmış. Sincap teşekkür edip kuyruğunu sallamış, kirpi neşeyle gülmüş. Paylaştıkça orman daha da şenlenmiş.</p>
+                    </div>
+                </li>
+                <li class="sp-panel">
+                    <div class="sp-art"><img th:src="@{/img/tales/cayir-900.webp}" alt="Tavşan yeşil bir çayırın üzerinden zıplayarak geçiyor" loading="lazy"></div>
+                    <div class="sp-copy">
+                        <p class="sp-count">Sahne 4 / 4</p>
+                        <p class="sp-text">Akşam olunca dostlar yumuşak çimenlere uzanmış. Karınları tok, kalpleri sevinçle doluymuş. Gökten üç elma düşmüş. <span class="name" data-name>Ece</span>, paylaştıkça mutluluğun çoğaldığını öğrenmiş.</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Video bandı: doğada gerçek bir tavşan -->
+    <section class="film-band chapter-paper" aria-labelledby="film-title">
+        <div class="film-copy">
+            <h2 id="film-title" class="chapter-title" data-reveal>Çayırdan masala</h2>
+            <p data-reveal>Masallarımızın kahramanları gerçek hayvanlardan esinlenir: meraklı, yumuşak ve hep birlikte. Çocuğunuz masalda tanıdığı tavşanı bahçede de görür.</p>
+            <a class="btn btn-primary" th:href="@{/register}">Kendi masalınızı oluşturun</a>
+        </div>
+        <div class="film-media media-frame" data-parallax>
+            <video th:replace="~{fragments/site :: loop('tavsan')}"></video>
+            <p class="media-caption">Doğada bir tavşan.</p>
+        </div>
+    </section>
+
+    <th:block th:replace="~{fragments/site :: pageEnd}"></th:block>
+</main>
+<script defer th:src="@{/js/site.js}"></script>
+</body>
+</html>
