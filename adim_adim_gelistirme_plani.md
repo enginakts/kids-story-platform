@@ -18,7 +18,7 @@ Proje küçük, test edilebilir adımlarla ilerler. Her adım hem web arayüzün
 | 4 | Karakter rehberi (ebeveyne ait) ve sistem mekân şablonları; arayüz tasarım sistemi | Vize | İncelemede |
 | 5 | Masal sihirbazı; Trendyol LLM ile metin, Gemini Flash ile sahnelere bölme; içerik güvenliği, kredi | Vize | İncelemede |
 | 6 | Görsel üretimi (Cloudflare FLUX.2 klein), karakter referans portreleri ve dosya depolama | Vize | İncelemede |
-| 7 | TTS (Kikiri, ücretsiz Türkçe model) ve masal okuyucu | Vize | İncelemede |
+| 7 | TTS (Gemini TTS, yedek Azure Speech; ilk sürümde Kikiri) ve masal okuyucu | Vize | İncelemede |
 | 8 | Kütüphane, favoriler ve ebeveyn kilidi | Vize | Planlandı |
 | 9 | Özel/herkese açık masal, keşfet, denetim kuyruğu | Vize | Planlandı |
 | 10 | Yönetim paneli: kullanıcı, masal, kara liste, prompt, sağlayıcı yönetimi | Vize | Planlandı |
@@ -78,6 +78,8 @@ Adım 6 ve 7 incelendikten sonra Adım 8 (kütüphane, favoriler ve ebeveyn kili
 * **Açık konular:** Gerçek Cloudflare çağrısı henüz denenmedi (hesap bilgileri bekleniyor); karakter tutarlılığının ve çizim tarzının kalitesi gerçek resimlerle değerlendirilmeli. Yerel dosya deposu tek sunucu içindir; bulut adımında S3 uyumlu bir depoya geçilmeli.
 
 ## Adım 7 kararları (Kikiri TTS ve masal okuyucu)
+
+> **Güncelleme (V19):** Python ile çalışan Kikiri servisi (`tts-service/`) kaldırıldı; bellek yükü ve ayrı servis bakımı gerektiriyordu. Seslendirme artık bulut servislerindedir: önce **Gemini TTS** (`GeminiTtsClient`, `gemini-3.8-flash-lite-tts`, Gemini anahtarı, ücretsiz kota), kota dolunca **Azure AI Speech** (`AzureSpeechTtsClient`, `tr-TR-EmelNeural`, ücretsiz F0). Gemini TTS talimat kabul etmez ve metne yazılan talimatı sesli okur; bu yüzden yalnızca masal metni gönderilir, anlatım hızı yalnızca Azure'da (SSML) uygulanır. Bu değişiklikle seslendirilen metin (çocuğun adı dahil) Google'a veya Microsoft'a gider; aşağıdaki "Çocuk verisi" maddesi buna göre yeniden değerlendirilmelidir. Aşağıdaki maddeler ilk sürümün (Kikiri) kayıtlarıdır.
 
 * **Model:** Proje sahibinin kararıyla Hugging Face'teki ücretsiz **Kikiri Türkçe TTS** (`duxx/kikiri-turkish-base`, Kokoro-82M'den türetilmiş, tek ses: Nisan). Model için Hugging Face'te hazır bir çalıştırma servisi yoktur; bu yüzden kendi küçük servisimizde çalışır (`tts-service/`, FastAPI). Servis yerelde veya ücretsiz, özel (private) bir Hugging Face Space'te aynı Dockerfile ile çalışır.
 * **Neden ayrı servis:** Model Python (PyTorch) gerektirir. Spring uygulaması servise `KikiriTtsClient` ile HTTP üzerinden bağlanır (`ai_providers_config` içinde `TTS` / `kikiri`). Başka bir TTS sağlayıcısına geçmek için yeni bir adaptör ve tablo satırı yeterlidir.

@@ -4,7 +4,9 @@ import com.kidstory.backend.service.ai.CloudflareImageClient;
 import com.kidstory.backend.service.ai.FeatherlessLlmClient;
 import com.kidstory.backend.service.ai.GeminiLlmClient;
 import com.kidstory.backend.service.ai.GroqLlmClient;
-import com.kidstory.backend.service.ai.KikiriTtsClient;
+import com.kidstory.backend.service.ai.MurfTtsClient;
+import com.kidstory.backend.service.ai.AzureSpeechTtsClient;
+import com.kidstory.backend.service.ai.GeminiTtsClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
@@ -53,13 +55,29 @@ public class AiConfig {
         return new CloudflareImageClient(builder, baseUrl, accountId, apiToken);
     }
 
-    /** Seslendirme: kendi çalıştırdığımız Kikiri TTS servisi (tts-service). Kapatılırsa geliştirmede taslak ses kullanılır. */
+    /** Seslendirme (1. sıra): Gemini TTS, sahnelere bölmeyle aynı Gemini anahtarı. Model adı ai_providers_config'ten. */
     @Bean
-    @ConditionalOnExpression("${app.ai.kikiri.enabled:true}")
-    KikiriTtsClient kikiriTtsClient(RestClient.Builder builder, @Value("${app.ai.kikiri.base-url}") String baseUrl,
-                                    @Value("${app.ai.kikiri.token:}") String token,
-                                    @Value("${app.ai.kikiri.hf-token:}") String hfToken) {
-        return new KikiriTtsClient(builder, baseUrl, token, hfToken);
+    @ConditionalOnExpression("'${app.ai.gemini.api-key:}' != ''")
+    GeminiTtsClient geminiTtsClient(RestClient.Builder builder, @Value("${app.ai.gemini.base-url}") String baseUrl,
+                                    @Value("${app.ai.gemini.api-key}") String apiKey,
+                                    @Value("${app.ai.gemini.tts-voice}") String voice) {
+        return new GeminiTtsClient(builder, baseUrl, apiKey, voice);
+    }
+
+    /** Seslendirme (2. sıra): Murf AI. Çok dilli ses Türkçe konuşur; ses kimliği ai_providers_config'ten. */
+    @Bean
+    @ConditionalOnExpression("'${app.ai.murf.api-key:}' != ''")
+    MurfTtsClient murfTtsClient(RestClient.Builder builder, @Value("${app.ai.murf.base-url}") String baseUrl,
+                                @Value("${app.ai.murf.api-key}") String apiKey, @Value("${app.ai.murf.style:}") String style) {
+        return new MurfTtsClient(builder, baseUrl, apiKey, style);
+    }
+
+    /** Seslendirme (3. sıra): Azure AI Speech. Önceki sağlayıcılar kota dolunca ya da hata verince devreye girer. Ses adı ai_providers_config'ten. */
+    @Bean
+    @ConditionalOnExpression("'${app.ai.azure-speech.key:}' != ''")
+    AzureSpeechTtsClient azureSpeechTtsClient(RestClient.Builder builder, @Value("${app.ai.azure-speech.base-url}") String baseUrl,
+                                              @Value("${app.ai.azure-speech.key}") String key) {
+        return new AzureSpeechTtsClient(builder, baseUrl, key);
     }
 
     @Bean

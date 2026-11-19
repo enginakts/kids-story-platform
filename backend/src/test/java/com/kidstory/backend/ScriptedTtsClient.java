@@ -1,7 +1,7 @@
 package com.kidstory.backend;
 
 import com.kidstory.backend.entity.AiProviderConfig;
-import com.kidstory.backend.service.ai.KikiriTtsClient;
+import com.kidstory.backend.service.ai.GeminiTtsClient;
 import com.kidstory.backend.service.ai.TtsClient;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -11,11 +11,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-/** Testlerde Kikiri ses servisinin yerine geçer; istekleri kaydeder, istenirse hata verir. */
+/** Testlerde Gemini ses servisinin yerine geçer; istekleri kaydeder, istenirse hata verir. */
 public class ScriptedTtsClient implements TtsClient {
 
     public final List<SpeechRequest> requests = new CopyOnWriteArrayList<>();
     private volatile RuntimeException failure;
+    private final String name;
+
+    public ScriptedTtsClient() {
+        this(GeminiTtsClient.NAME);
+    }
+
+    /** Başka bir sağlayıcının yerine geçmek için (ör. "murf"). */
+    public ScriptedTtsClient(String name) {
+        this.name = name;
+    }
 
     public void failWith(RuntimeException e) {
         failure = e;
@@ -28,7 +38,7 @@ public class ScriptedTtsClient implements TtsClient {
 
     @Override
     public String providerName() {
-        return KikiriTtsClient.NAME;
+        return name;
     }
 
     @Override

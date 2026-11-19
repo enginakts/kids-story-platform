@@ -108,7 +108,7 @@ class StoryAudioFlowTests {
         TtsClient.SpeechRequest first = tts.requests.getFirst();
         assertThat(first.text()).isEqualTo("Ada'ya bir sepet çilek geldi. " + StoryFlowTests.FILLER);
         assertThat(first.speed()).isEqualTo(0.88);
-        assertThat(first.voiceId()).isEqualTo("nisan");
+        assertThat(first.voiceId()).isNull(); // sağlayıcının ayarlı sesi
 
         byte[] audio = mvc.perform(get("/api/v1/stories/" + storyId + "/scenes/1/audio").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
@@ -141,7 +141,7 @@ class StoryAudioFlowTests {
     void audioFailureKeepsStoryAndCreditAndCanBeRequestedAgain() throws Exception {
         long storyId = completedStory("WARM");
         int creditsAfterStory = credits();
-        tts.failWith(new IllegalStateException("Kikiri ses servisine ulaşılamadı (http://localhost:8000)"));
+        tts.failWith(new IllegalStateException("Gemini TTS servisine ulaşılamadı"));
         for (int attempt = 0; attempt < 3; attempt++) {
             jdbc.update("UPDATE generation_jobs SET run_after = now() WHERE story_id = ?", storyId);
             runAll();
@@ -192,7 +192,7 @@ class StoryAudioFlowTests {
         mvc.perform(get("/app/stories/" + storyId).session(session))
                 .andExpect(content().string(containsString("Sesli masal hazır")))
                 .andExpect(content().string(containsString("/app/stories/" + storyId + "/scenes/4/audio")))
-                .andExpect(content().string(containsString("Kikiri Türkçe TTS")))
+                .andExpect(content().string(containsString("Seslendirme yapay zekâ ile yapıldı")))
                 .andExpect(content().string(not(containsString("Sesi hazırla"))));
         jdbc.update("UPDATE stories SET saved_at = now() WHERE id = ?", storyId); // V16: listelerde yalnızca kaydedilmiş masal
         mvc.perform(get("/app/stories").session(session)).andExpect(content().string(containsString("Sesli")));

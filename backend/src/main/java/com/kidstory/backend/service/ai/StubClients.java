@@ -110,9 +110,9 @@ class StubClients {
         }
     }
 
-    /** Kikiri kapalıyken: metin uzunluğuna göre sessiz bir WAV. Kikiri açıksa yüklenmez (hata taslağa düşmesin). */
+    /** Ses anahtarı (Gemini, Murf veya Azure) yokken: metin uzunluğuna göre sessiz bir WAV. Anahtar varsa yüklenmez (hata taslağa düşmesin). */
     @Bean
-    @ConditionalOnExpression("!${app.ai.kikiri.enabled:true}")
+    @ConditionalOnExpression("'${app.ai.gemini.api-key:}' == '' and '${app.ai.murf.api-key:}' == '' and '${app.ai.azure-speech.key:}' == ''")
     TtsClient stubTts() {
         return new TtsClient() {
             @Override

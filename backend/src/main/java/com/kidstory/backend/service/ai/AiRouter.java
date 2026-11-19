@@ -38,8 +38,22 @@ public class AiRouter {
 
     public <C extends AiClient, R> R call(AiProviderConfig.Type type, Class<C> clientType,
                                           BiFunction<C, AiProviderConfig, R> action) {
+        return call(type, clientType, null, action);
+    }
+
+    /**
+     * Yalnızca verilen sağlayıcıları, verilen sırayla dener (ör. seslendirme planlayıcısının masal başına sırası).
+     * order null ise bütün etkin sağlayıcılar yönetimdeki öncelikle denenir.
+     */
+    public <C extends AiClient, R> R call(AiProviderConfig.Type type, Class<C> clientType, List<String> order,
+                                          BiFunction<C, AiProviderConfig, R> action) {
         RuntimeException last = null;
-        for (AiProviderConfig config : configs.findByProviderTypeAndActiveTrueOrderByPriorityAsc(type)) {
+        List<AiProviderConfig> list = new java.util.ArrayList<>(configs.findByProviderTypeAndActiveTrueOrderByPriorityAsc(type));
+        if (order != null) {
+            list.removeIf(c -> !order.contains(c.getProviderName()));
+            list.sort(java.util.Comparator.comparingInt(c -> order.indexOf(c.getProviderName())));
+        }
+        for (AiProviderConfig config : list) {
             C client = find(clientType, config.getProviderName());
             if (client == null) {
                 continue;

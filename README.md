@@ -14,7 +14,7 @@ Proje tek bir Spring Boot uygulamasıdır. Web arayüzü Thymeleaf ile sunucuda 
 | Veritabanı | PostgreSQL 16 | Şema yalnızca Flyway ile yönetilir |
 | Masal metni | Groq (`openai/gpt-oss-120b`); yedek: Trendyol LLM (`Trendyol-LLM-8B-T1`), Featherless AI | `AiRouter`, `ai_providers_config` (`LLM`) öncelik sırasıyla sağlayıcı dener |
 | Sahnelere bölme | Google Gemini Flash (`gemini-3.6-flash`) | Aynı yönlendirici, `SCENE` rolü; JSON şemalı çıktı |
-| Seslendirme (TTS) | Kikiri Türkçe TTS (ücretsiz model, kendi servisimiz `tts-service/`) | `TtsClient`, `KikiriTtsClient`; `ai_providers_config` (`TTS`) |
+| Seslendirme (TTS) | Google Gemini TTS (`gemini-3.8-flash-lite-tts`, ücretsiz kota); yedekler: Murf AI (`en-US-natalie`, Türkçe konuşur), Azure AI Speech (`tr-TR-EmelNeural`, ücretsiz F0) | `TtsClient`, `GeminiTtsClient`, `MurfTtsClient`, `AzureSpeechTtsClient`; `ai_providers_config` (`TTS`) |
 | Sahne resimleri | Cloudflare Workers AI, FLUX.2 [klein] 4B (günde yaklaşık 90 ücretsiz resim) | `ImageClient`, `CloudflareImageClient`; `ai_providers_config` (`IMAGE`); karakter referans portreleri |
 | Üretim kuyruğu | Veritabanı kuyruğu | `generation_jobs`; ücretsiz katmanda Redis gerektirmez |
 | Giriş | E-posta ve parola | Ebeveyn ve yönetici ayrı tablo, ayrı giriş |
@@ -66,17 +66,13 @@ Veriler `backend/.devdb` klasöründe kalıcıdır. Sıfırlamak için uygulamay
 
 ### Ses servisi (masal seslendirme)
 
-Masalların sesi ayrı bir Python servisinde, ücretsiz Kikiri Türkçe TTS modeliyle üretilir. Kurulum ve Hugging Face Space'e taşıma: [tts-service/README.md](./tts-service/README.md). Kısaca (PowerShell):
+Masalların sesi bulut servisleriyle üretilir; ayrı bir servis kurmak gerekmez. Sıra `ai_providers_config` (`TTS`) tablosundadır ve yönetim panelinden değiştirilebilir:
 
-```powershell
-cd tts-service
-py -3.11 -m venv .venv
-.venv\Scripts\python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
-.venv\Scripts\python -m pip install -r requirements.txt
-.venv\Scripts\python -m uvicorn app:app --port 8000
-```
+1. **Gemini TTS:** `GEMINI_API_KEY` yeterlidir (sahnelere bölmeyle aynı anahtar). Ses adı `GEMINI_TTS_VOICE` ile seçilir (varsayılan `Kore`). Ücretsiz kota dolunca (HTTP 429) sıradaki sağlayıcıya geçilir.
+2. **Murf AI (yedek):** `MURF_API_KEY` (murf.ai > API > API Keys). Murf'te yerli Türkçe ses yoktur; çok dilli sesler `tr-TR` ile Türkçe konuşur. Ses kimliği tablodaki model adıdır (varsayılan `en-US-natalie`), tarz `MURF_STYLE` (varsayılan `Narration`). Murf kelime zamanlamalarını da döndürür; sahneye kaydedilir.
+3. **Azure AI Speech (son yedek):** `AZURE_SPEECH_KEY` ve `AZURE_SPEECH_REGION` (portal.azure.com > Speech kaynağı > Keys and Endpoint; ücretsiz F0 katmanı ayda 0,5 milyon karakter). Türkçe ses, tablodaki model adıdır (`tr-TR-EmelNeural` veya `tr-TR-AhmetNeural`).
 
-Spring uygulaması servisi `http://localhost:8000` adresinde arar (`KIKIRI_TTS_URL`). Servis kapalıysa masallar yine oluşur, sesler birkaç kez yeniden denenir ve masal sayfasında "Sesi yeniden hazırla" düğmesi çıkar. Servis hiç kullanılmayacaksa `KIKIRI_TTS_ENABLED=false` ile sessiz taslak ses kullanılır (yalnızca geliştirme). Ses dosyaları `backend/media` klasörüne yazılır (git'e girmez).
+İki anahtar da yoksa geliştirmede sessiz taslak ses kullanılır. Ses hazırlanamazsa masal yine okunur, sesler birkaç kez yeniden denenir ve masal sayfasında "Sesi yeniden hazırla" düğmesi çıkar. Ses dosyaları `backend/media` klasörüne yazılır (git'e girmez).
 
 ### Sahne resimleri (Cloudflare)
 
@@ -123,7 +119,7 @@ Geliştirmede e-posta gönderilmez; doğrulama ve sıfırlama bağlantıları ko
 
 Masal üretimi iki aşamalıdır: metni **Groq** (`openai/gpt-oss-120b`) yazar, **Gemini Flash** sahnelere böler; Featherless (Trendyol LLM) anahtarı verilirse yedektir. Üretimde `GROQ_API_KEY` ve `GEMINI_API_KEY` zorunludur. Geliştirmede anahtarı olmayan aşama için sabit bir taslak kullanılır. Yerelde gerçek sağlayıcılarla denemek için `backend/.env.example` dosyasını `backend/.env` adıyla kopyalayıp anahtarları yazın (`GROQ_API_KEY=...` biçiminde). `.env` git'e girmez ve uygulama `backend` klasöründen çalıştırıldığında kendiliğinden okunur. Aynı adlı ortam değişkenleri `.env`'deki değerleri ezer.
 
-Sahne resimleri için `CLOUDFLARE_ACCOUNT_ID` ve `CLOUDFLARE_API_TOKEN` zorunludur (Cloudflare panelinde AI > Workers AI > REST API; token yalnızca Workers AI iznine sahip olmalıdır). Seslendirme için `KIKIRI_TTS_URL` (ses servisinin adresi) ve `MEDIA_DIR` (ses dosyalarının kalıcı klasörü) zorunludur; servis internete açıksa `KIKIRI_TTS_TOKEN`, özel Hugging Face Space için `KIKIRI_TTS_HF_TOKEN` verilir.
+Sahne resimleri için `CLOUDFLARE_ACCOUNT_ID` ve `CLOUDFLARE_API_TOKEN` zorunludur (Cloudflare panelinde AI > Workers AI > REST API; token yalnızca Workers AI iznine sahip olmalıdır). Seslendirme `GEMINI_API_KEY` ile çalışır; `MEDIA_DIR` (ses dosyalarının kalıcı klasörü) zorunludur. Yedekler için isteğe bağlı `MURF_API_KEY`, `AZURE_SPEECH_KEY` ve `AZURE_SPEECH_REGION` verilir.
 
 İlk yönetici için `ADMIN_USERNAME`, `ADMIN_EMAIL` ve `ADMIN_PASSWORD` verilir. Taslak yapay zekâ adaptörleri `prod` profilinde yüklenmez.
 

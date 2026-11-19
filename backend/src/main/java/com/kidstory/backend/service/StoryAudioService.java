@@ -38,16 +38,19 @@ public class StoryAudioService {
 
     private static final Logger log = LoggerFactory.getLogger(StoryAudioService.class);
 
-    /** Kikiri modelinin tek hazır sesi. Karakter başına ses (voice_id) model yeni sesler sununca kullanılacak. */
-    public static final String DEFAULT_VOICE = "nisan";
+    /** null: sağlayıcının ayarlı sesi (Gemini: app.ai.gemini.tts-voice, Azure: ai_providers_config model adı). */
+    public static final String DEFAULT_VOICE = null;
 
     private final GenerationJobRepository jobs;
     private final StorySceneRepository scenes;
     private final StoryRepository stories;
     private final AiRouter router;
     private final MediaStorage storage;
+    private final TtsPlanner planner;
 
-    public record Prepared(Long jobId, Long sceneId, Long storyId, int sceneNumber, String text, double speed) {
+    /** provider: masala atanmış seslendirme sağlayıcısı (TtsPlanner); null ise yönetimdeki öncelik geçerlidir. */
+    public record Prepared(Long jobId, Long sceneId, Long storyId, int sceneNumber, String text, double speed, String provider,
+                           boolean lastAttempt) {
     }
 
     public record Generated(TtsClient.SpeechResult speech, String provider) {
@@ -92,13 +95,15 @@ public class StoryAudioService {
         StoryScene scene = job.getScene();
         Story story = job.getStory();
         return new Prepared(jobId, scene.getId(), story.getId(), scene.getSceneNumber(), spoken(scene.getVoiceText()),
-                speed(story.getNarrationStyle()));
+                speed(story.getNarrationStyle()), planner.assign(story.getId()), job.getAttemptCount() >= job.getMaxAttempts());
     }
 
     /** İşlem dışında: sağlayıcı çağrısı. Hata fırlatırsa iş yeniden denenir. */
     public Generated synthesize(Prepared prepared) {
         AtomicReference<String> provider = new AtomicReference<>();
-        TtsClient.SpeechResult speech = router.call(AiProviderConfig.Type.TTS, TtsClient.class, (client, config) -> {
+        // Masalın sağlayıcısı; kotası bittiyse ya da son denemeyse diğerleri kullanım ve kota durumuna göre sırayla
+        TtsClient.SpeechResult speech = router.call(AiProviderConfig.Type.TTS, TtsClient.class,
+                planner.order(prepared.provider(), prepared.lastAttempt()), (client, config) -> {
             provider.set(config.getProviderName());
             return client.synthesize(new TtsClient.SpeechRequest(prepared.text(), DEFAULT_VOICE, prepared.speed()), config);
         });
