@@ -1,5 +1,5 @@
 /*
- * Tanıtım sayfalarının hareketleri (ana sayfadaki kapılar, /nasil-calisir, /ornek-masal, /kahramanlar, /mekan-ve-tema, /guvenlik).
+ * Tanıtım sayfalarının hareketleri (/nasil-calisir, /ornek-masal, /kahramanlar, /mekan-ve-tema, /guvenlik).
  * motion.js ile aynı kurallar: yalnızca transform ve opacity canlandırılır; "hareketi azalt" açıksa yolculuk ve döngüler
  * kapanır, içerik bitmiş hâliyle görünür. Her parça yalnızca sayfada kendi öğesi varsa çalışır.
  * Etkileşimler (kart çevirme, kaydet denemesi, gizlilik gösterimi, takma ad) Motion olmadan da çalışır.
@@ -75,16 +75,15 @@
         });
     }
 
-    /* ---------- Üst üste binen paneller (ana sayfadaki kapılar, mekânlar): altta kalan panel hafifçe küçülüp çekilir ---------- */
+    /* ---------- Üst üste binen mekân panelleri: altta kalan panel hafifçe küçülüp çekilir ---------- */
     function stacks() {
-        $$("[data-doors], [data-stack]").forEach(function (list) {
+        $$("[data-stack]").forEach(function (list) {
             var items = Array.prototype.slice.call(list.children);
             if (items.length < 2 || reduce) return;
             onFrame(function () {
                 var on = mid.matches;
                 items.forEach(function (item, i) {
-                    var card = item.firstElementChild || item;
-                    if (list.hasAttribute("data-stack")) card = item;
+                    var card = item;
                     var next = items[i + 1];
                     if (!on || !next) { card.style.transform = ""; card.style.opacity = ""; card.style.visibility = ""; return; }
                     var top = item.getBoundingClientRect().top, nTop = next.getBoundingClientRect().top;

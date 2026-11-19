@@ -219,7 +219,7 @@
 
     // ---- Ses veya resim hazırlanırken durum yoklaması ----
     if (!panel || panel.getAttribute("data-media-preparing") !== "true") return;
-    var note = panel.querySelector("[data-audio-note]"), progress = panel.querySelector("[data-audio-bar]");
+    var note = panel.querySelector("[data-audio-note]");
     var imageNote = panel.querySelector("[data-image-note] span");
     var statusUrl = panel.getAttribute("data-status-url"), tries = 0;
 
@@ -248,11 +248,10 @@
                     if (sc.image) showImage(i, sc.image);
                 });
                 var a = s.audio, im = s.images;
-                if (progress) progress.style.width = (a.total ? Math.round(a.ready * 100 / a.total) : 0) + "%";
                 var noteSpan = note && note.querySelector("[data-audio-text]");
                 var noteText = function (t) { if (noteSpan) noteSpan.textContent = t; else if (note) note.textContent = t; };
                 if (a.status === "PREPARING") noteText("Masal seslendiriliyor: " + a.ready + " / " + a.total + " sahne hazır");
-                else if (a.status === "READY") { noteText("Sesli masal hazır"); if (progress) progress.parentNode.hidden = true; }
+                else if (a.status === "READY") noteText("Sesli masal hazır");
                 else if (a.status !== "NONE") noteText("Bazı sahnelerin sesi hazırlanamadı");
                 if (imageNote) {
                     if (im.status === "PREPARING") imageNote.textContent = "Resimler çiziliyor: " + im.ready + " / " + im.total + " sahne hazır.";

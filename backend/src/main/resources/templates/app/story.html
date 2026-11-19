@@ -88,7 +88,6 @@
             <p class="stage-flash alert alert-success" role="status" th:if="${notice}"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span th:text="${notice}">Kaydedildi.</span></p>
             <p class="stage-flash alert alert-danger" role="alert" th:if="${problem}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span th:text="${problem}">Hata.</span></p>
 
-            <div class="stage-panel" aria-hidden="true"></div>
 
             <ol class="scenes">
                 <li class="scene" th:each="scene : ${detail.scenes}" th:id="'sahne-' + ${scene.sceneNumber}"
