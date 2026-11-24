@@ -81,7 +81,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/login").permitAll()
                         // Yapay zekâ sağlayıcıları, kullanım/maliyet raporu ve yönetici hesapları yalnızca süper yöneticiye açıktır
                         .requestMatchers("/admin/ai", "/admin/ai/**", "/admin/admins", "/admin/admins/**",
-                                "/admin/usage", "/admin/usage/**").hasAuthority(Role.SUPER_ADMIN)
+                                "/admin/usage", "/admin/usage/**", "/admin/keys", "/admin/keys/**").hasAuthority(Role.SUPER_ADMIN)
                         .anyRequest().hasAnyAuthority(Role.ADMIN, Role.SUPER_ADMIN))
                 .formLogin(f -> f.loginPage("/admin/login").defaultSuccessUrl("/admin", true)
                         .failureHandler(failureHandler("/admin/login")).permitAll())

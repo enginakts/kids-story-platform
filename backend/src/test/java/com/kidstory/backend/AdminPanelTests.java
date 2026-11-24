@@ -35,7 +35,7 @@ class AdminPanelTests {
     @Test
     void superAdminSeesEveryPage() throws Exception {
         MockHttpSession s = adminSession("testadmin", "TestAdmin123!");
-        for (String path : new String[] {"/admin", "/admin/stories", "/admin/parents", "/admin/characters", "/admin/locations", "/admin/ai", "/admin/usage", "/admin/admins"}) {
+        for (String path : new String[] {"/admin", "/admin/stories", "/admin/parents", "/admin/characters", "/admin/locations", "/admin/ai", "/admin/keys", "/admin/usage", "/admin/admins"}) {
             mvc.perform(get(path).session(s)).andExpect(status().isOk());
         }
     }

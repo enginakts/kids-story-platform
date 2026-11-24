@@ -33,13 +33,18 @@ public class MurfTtsClient implements TtsClient {
     private final RestClient.Builder builder;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     private final String baseUrl;
-    private final String apiKey;
+    private final ApiKeyRing keys;
     private final String style;
 
     public MurfTtsClient(RestClient.Builder builder, String baseUrl, String apiKey, String style) {
+        this(builder, baseUrl, ApiKeyRing.single(NAME, apiKey), style);
+    }
+
+    /** keys: birincil ve yedek Murf hesapları (V22). */
+    public MurfTtsClient(RestClient.Builder builder, String baseUrl, ApiKeyRing keys, String style) {
         this.builder = builder;
         this.baseUrl = baseUrl.replaceAll("/+$", "");
-        this.apiKey = apiKey;
+        this.keys = keys;
         this.style = style;
     }
 
@@ -53,8 +58,18 @@ public class MurfTtsClient implements TtsClient {
         return AiProviderConfig.Type.TTS;
     }
 
+    /** Açık anahtarı kalmayan sağlayıcı seçilmez (seslendirme planlayıcısı). */
+    @Override
+    public boolean hasUsableKey() {
+        return keys.hasUsable();
+    }
+
     @Override
     public SpeechResult synthesize(SpeechRequest request, AiProviderConfig config) {
+        return keys.call(key -> synthesize(request, config, key));
+    }
+
+    private SpeechResult synthesize(SpeechRequest request, AiProviderConfig config, ApiCredential key) {
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(http);
         factory.setReadTimeout(Duration.ofMillis(config.getTimeoutMs()));
         RestClient client = builder.clone().requestFactory(factory).baseUrl(baseUrl).build();
@@ -72,7 +87,7 @@ public class MurfTtsClient implements TtsClient {
         body.put("rate", Math.max(-50, Math.min(50, (int) Math.round((request.speed() - 1.0) * 100))));
         try {
             ResponseEntity<Response> entity = client.post().uri("/v1/speech/generate")
-                    .header("api-key", apiKey)
+                    .header("api-key", key.secret())
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
@@ -95,8 +110,11 @@ public class MurfTtsClient implements TtsClient {
         } catch (RestClientResponseException e) {
             int status = e.getStatusCode().value();
             UsageMeter.status(status);
+            if (KeyRejectedException.rejects(status)) {
+                throw new KeyRejectedException(status == HttpStatus.PAYMENT_REQUIRED.value() ? "Murf karakter kotası bitti (HTTP 402)" : "Murf anahtarı reddedildi: HTTP " + status, status);
+            }
             if (status == HttpStatus.TOO_MANY_REQUESTS.value() || status == HttpStatus.SERVICE_UNAVAILABLE.value()) {
-                throw new RateLimitedException("Murf", OpenAiCompatibleLlmClient.retryAfter(e));
+                throw new RateLimitedException("Murf", OpenAiCompatibleLlmClient.retryAfter(e), status);
             }
             // 402: karakter kotası bitti. Gövde log'a yazılmaz (metin çocuğun adını içerebilir); yalnızca durum kodu.
             throw new IllegalStateException(status == HttpStatus.PAYMENT_REQUIRED.value()

@@ -26,14 +26,19 @@ public abstract class OpenAiCompatibleLlmClient implements LlmClient {
     private final RestClient.Builder builder;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     private final String baseUrl;
-    private final String apiKey;
+    private final ApiKeyRing keys;
 
     protected OpenAiCompatibleLlmClient(String name, String displayName, RestClient.Builder builder, String baseUrl, String apiKey) {
+        this(name, displayName, builder, baseUrl, ApiKeyRing.single(name, apiKey));
+    }
+
+    /** keys: .env'deki birincil ve yedek anahtarlar (API anahtarı yönetimi, V22). */
+    protected OpenAiCompatibleLlmClient(String name, String displayName, RestClient.Builder builder, String baseUrl, ApiKeyRing keys) {
         this.name = name;
         this.displayName = displayName;
         this.builder = builder;
         this.baseUrl = baseUrl.replaceAll("/+$", "");
-        this.apiKey = apiKey;
+        this.keys = keys;
     }
 
     @Override
@@ -54,8 +59,18 @@ public abstract class OpenAiCompatibleLlmClient implements LlmClient {
         return content;
     }
 
+    /** Açık anahtarı kalmayan sağlayıcı seçilmez (seslendirme planlayıcısı). */
+    @Override
+    public boolean hasUsableKey() {
+        return keys.hasUsable();
+    }
+
     @Override
     public String complete(LlmRequest request, AiProviderConfig config) {
+        return keys.call(key -> complete(request, config, key));
+    }
+
+    private String complete(LlmRequest request, AiProviderConfig config, ApiCredential key) {
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(http);
         factory.setReadTimeout(Duration.ofMillis(config.getTimeoutMs()));
         RestClient client = builder.clone().requestFactory(factory).baseUrl(baseUrl).build();
@@ -70,7 +85,7 @@ public abstract class OpenAiCompatibleLlmClient implements LlmClient {
 
         try {
             ResponseEntity<ChatResponse> entity = client.post().uri("/chat/completions")
-                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Authorization", "Bearer " + key.secret())
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
@@ -98,6 +113,9 @@ public abstract class OpenAiCompatibleLlmClient implements LlmClient {
         } catch (RestClientResponseException e) {
             UsageMeter.status(e.getStatusCode().value());
             meterRateLimit(e.getResponseHeaders());
+            if (KeyRejectedException.rejects(e.getStatusCode().value())) {
+                throw new KeyRejectedException(displayName + " anahtarı reddedildi: HTTP " + e.getStatusCode().value(), e.getStatusCode().value());
+            }
             if (e.getStatusCode().value() == HttpStatus.TOO_MANY_REQUESTS.value()) {
                 throw new RateLimitedException(displayName, retryAfter(e));
             }

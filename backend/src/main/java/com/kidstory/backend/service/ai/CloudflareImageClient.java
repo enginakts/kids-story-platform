@@ -32,13 +32,18 @@ public class CloudflareImageClient implements ImageClient {
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     private final String baseUrl;
     private final String accountId;
-    private final String apiToken;
+    private final ApiKeyRing keys;
 
     public CloudflareImageClient(RestClient.Builder builder, String baseUrl, String accountId, String apiToken) {
+        this(builder, baseUrl, accountId, ApiKeyRing.single(NAME, apiToken));
+    }
+
+    /** keys: birincil ve yedek Cloudflare hesapları; yedeğin hesap kimliği yoksa birincil hesap kullanılır (V22). */
+    public CloudflareImageClient(RestClient.Builder builder, String baseUrl, String accountId, ApiKeyRing keys) {
         this.builder = builder;
         this.baseUrl = baseUrl.replaceAll("/+$", "");
         this.accountId = accountId;
-        this.apiToken = apiToken;
+        this.keys = keys;
     }
 
     @Override
@@ -51,15 +56,26 @@ public class CloudflareImageClient implements ImageClient {
         return AiProviderConfig.Type.IMAGE;
     }
 
+    /** Açık anahtarı kalmayan sağlayıcı seçilmez (seslendirme planlayıcısı). */
+    @Override
+    public boolean hasUsableKey() {
+        return keys.hasUsable();
+    }
+
     @Override
     public ImageResult generate(ImageRequest request, AiProviderConfig config) {
+        return keys.call(key -> generate(request, config, key));
+    }
+
+    private ImageResult generate(ImageRequest request, AiProviderConfig config, ApiCredential key) {
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(http);
         factory.setReadTimeout(Duration.ofMillis(config.getTimeoutMs()));
         RestClient client = builder.clone().requestFactory(factory).baseUrl(baseUrl).build();
         String model = config.getActiveModelName();
-        String uri = "/accounts/" + accountId + "/ai/run/" + model;
+        String account = key.account() == null || key.account().isBlank() ? accountId : key.account();
+        String uri = "/accounts/" + account + "/ai/run/" + model;
         try {
-            RestClient.RequestBodySpec spec = client.post().uri(uri).header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken);
+            RestClient.RequestBodySpec spec = client.post().uri(uri).header(HttpHeaders.AUTHORIZATION, "Bearer " + key.secret());
             Envelope envelope = (supportsMultipart(model)
                     ? spec.contentType(MediaType.MULTIPART_FORM_DATA).body(form(request))
                     : spec.contentType(MediaType.APPLICATION_JSON).body(Map.of("prompt", request.prompt(), "steps", 4)))
@@ -74,6 +90,9 @@ public class CloudflareImageClient implements ImageClient {
             return new ImageResult(image, mimeType(image));
         } catch (RestClientResponseException e) {
             UsageMeter.status(e.getStatusCode().value());
+            if (KeyRejectedException.rejects(e.getStatusCode().value())) {
+                throw new KeyRejectedException("Cloudflare görsel" + " anahtarı reddedildi: HTTP " + e.getStatusCode().value(), e.getStatusCode().value());
+            }
             if (e.getStatusCode().value() == HttpStatus.TOO_MANY_REQUESTS.value()) {
                 // Günlük ücretsiz kota veya hız sınırı
                 throw new RateLimitedException("Cloudflare görsel", OpenAiCompatibleLlmClient.retryAfter(e));

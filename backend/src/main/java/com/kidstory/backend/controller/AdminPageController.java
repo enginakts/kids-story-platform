@@ -38,6 +38,7 @@ public class AdminPageController {
     private final AdminService admin;
     private final AiUsageService usage;
     private final CloudflareUsageService cloudflareUsage;
+    private final com.kidstory.backend.service.ApiKeyAdminService apiKeys;
 
     @ModelAttribute
     void common(@AuthenticationPrincipal AppUser user, Model model) {
@@ -132,6 +133,27 @@ public class AdminPageController {
             redirect.addFlashAttribute("problem", e.getMessage());
         }
         return "redirect:/admin/ai";
+    }
+
+    // ---------- API anahtarları (süper yönetici, V22) ----------
+
+    @GetMapping("/keys")
+    String keys(Model model) {
+        model.addAttribute("groups", apiKeys.overview());
+        return "admin/keys";
+    }
+
+    @PostMapping("/keys/{service}/{slot}")
+    String setKey(@AuthenticationPrincipal AppUser user, @PathVariable String service, @PathVariable int slot,
+                  @RequestParam boolean enabled, HttpServletRequest request, RedirectAttributes redirect) {
+        try {
+            apiKeys.setEnabled(user.id(), service, slot, enabled, request.getRemoteAddr());
+            redirect.addFlashAttribute("notice", enabled ? "Anahtar açıldı; sıradaki çağrılarda yeniden kullanılır."
+                    : "Anahtar kapatıldı; bu servis artık yedek anahtarla (yoksa sıradaki sağlayıcıyla) çalışır.");
+        } catch (IllegalArgumentException e) {
+            redirect.addFlashAttribute("problem", e.getMessage());
+        }
+        return "redirect:/admin/keys#" + service;
     }
 
     // ---------- Kullanım ve maliyet raporu (süper yönetici, V14) ----------

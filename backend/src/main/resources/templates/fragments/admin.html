@@ -28,6 +28,8 @@
                     <svg class="icon" aria-hidden="true"><use href="#i-map-pin"/></svg><span>Mekânlar</span></a></li>
                 <li th:if="${superAdmin}"><a th:href="@{/admin/ai}" th:attr="aria-current=${active == 'ai'} ? 'page' : null">
                     <svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg><span>Yapay zekâ</span></a></li>
+                <li th:if="${superAdmin}"><a th:href="@{/admin/keys}" th:attr="aria-current=${active == 'keys'} ? 'page' : null">
+                    <svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg><span>API anahtarları</span></a></li>
                 <li th:if="${superAdmin}"><a th:href="@{/admin/usage}" th:attr="aria-current=${active == 'usage'} ? 'page' : null">
                     <svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg><span>Kullanım</span></a></li>
                 <li th:if="${superAdmin}"><a th:href="@{/admin/admins}" th:attr="aria-current=${active == 'admins'} ? 'page' : null">

@@ -43,7 +43,7 @@ class PlatformIntegrationTests {
         Integer tables = jdbc.queryForObject("""
                 SELECT count(*) FROM information_schema.tables
                 WHERE table_schema = 'public' AND table_name <> 'flyway_schema_history'""", Integer.class);
-        assertThat(tables).isEqualTo(31); // V11: library_images, V14: ai_usage_events
+        assertThat(tables).isEqualTo(32); // V11: library_images, V14: ai_usage_events
         assertThat(jdbc.queryForObject("SELECT count(*) FROM roles", Integer.class)).isEqualTo(3);
     }
 

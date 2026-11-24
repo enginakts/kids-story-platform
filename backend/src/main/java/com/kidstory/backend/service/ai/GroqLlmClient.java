@@ -17,6 +17,10 @@ public class GroqLlmClient extends OpenAiCompatibleLlmClient {
         super(NAME, "Groq", builder, baseUrl, apiKey);
     }
 
+    public GroqLlmClient(RestClient.Builder builder, String baseUrl, ApiKeyRing keys) {
+        super(NAME, "Groq", builder, baseUrl, keys);
+    }
+
     @Override
     protected void customize(Map<String, Object> body, LlmRequest request) {
         body.put("max_completion_tokens", 4096);

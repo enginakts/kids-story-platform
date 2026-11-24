@@ -29,7 +29,7 @@ public class GeminiLlmClient implements LlmClient {
     private final RestClient.Builder builder;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     private final String baseUrl;
-    private final String apiKey;
+    private final ApiKeyRing keys;
     private final String apiRevision;
     private final String name;
 
@@ -39,10 +39,15 @@ public class GeminiLlmClient implements LlmClient {
 
     /** Aynı API'nin ikinci kaydı (ör. yedek model): sağlayıcı adı ai_providers_config satırıyla eşleşir. */
     public GeminiLlmClient(String name, RestClient.Builder builder, String baseUrl, String apiKey, String apiRevision) {
+        this(name, builder, baseUrl, ApiKeyRing.single(name, apiKey), apiRevision);
+    }
+
+    /** keys: bu servisin (gemini / gemini-lite) birincil ve yedek anahtarları (V22). */
+    public GeminiLlmClient(String name, RestClient.Builder builder, String baseUrl, ApiKeyRing keys, String apiRevision) {
         this.name = name;
         this.builder = builder;
         this.baseUrl = baseUrl.replaceAll("/+$", "");
-        this.apiKey = apiKey;
+        this.keys = keys;
         this.apiRevision = apiRevision;
     }
 
@@ -56,8 +61,18 @@ public class GeminiLlmClient implements LlmClient {
         return AiProviderConfig.Type.SCENE;
     }
 
+    /** Açık anahtarı kalmayan sağlayıcı seçilmez (seslendirme planlayıcısı). */
+    @Override
+    public boolean hasUsableKey() {
+        return keys.hasUsable();
+    }
+
     @Override
     public String complete(LlmRequest request, AiProviderConfig config) {
+        return keys.call(key -> complete(request, config, key));
+    }
+
+    private String complete(LlmRequest request, AiProviderConfig config, ApiCredential key) {
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(http);
         factory.setReadTimeout(Duration.ofMillis(config.getTimeoutMs()));
         RestClient client = builder.clone().requestFactory(factory).baseUrl(baseUrl).build();
@@ -74,7 +89,7 @@ public class GeminiLlmClient implements LlmClient {
 
         try {
             ResponseEntity<Interaction> entity = client.post().uri("/interactions")
-                    .header("x-goog-api-key", apiKey)
+                    .header("x-goog-api-key", key.secret())
                     .header("Api-Revision", apiRevision)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
@@ -109,6 +124,9 @@ public class GeminiLlmClient implements LlmClient {
             return text.toString();
         } catch (RestClientResponseException e) {
             UsageMeter.status(e.getStatusCode().value());
+            if (KeyRejectedException.rejects(e.getStatusCode().value())) {
+                throw new KeyRejectedException("Gemini" + " anahtarı reddedildi: HTTP " + e.getStatusCode().value(), e.getStatusCode().value());
+            }
             if (e.getStatusCode().value() == HttpStatus.TOO_MANY_REQUESTS.value()) {
                 throw new RateLimitedException("Gemini", OpenAiCompatibleLlmClient.retryAfter(e));
             }

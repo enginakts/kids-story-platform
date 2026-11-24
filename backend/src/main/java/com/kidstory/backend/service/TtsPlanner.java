@@ -131,7 +131,7 @@ public class TtsPlanner {
 
     /** Etkin, adaptörü yüklü TTS sağlayıcıları; en uygun olan başta. */
     public List<Health> rank() {
-        Set<String> available = clients.stream().filter(c -> c instanceof TtsClient).map(AiClient::providerName).collect(Collectors.toSet());
+        Set<String> available = clients.stream().filter(c -> c instanceof TtsClient).filter(AiClient::hasUsableKey).map(AiClient::providerName).collect(Collectors.toSet());
         List<AiProviderConfig> active = configs.findByProviderTypeAndActiveTrueOrderByPriorityAsc(AiProviderConfig.Type.TTS).stream()
                 .filter(c -> available.contains(c.getProviderName())).toList();
         if (active.isEmpty()) {

@@ -33,13 +33,18 @@ public class GeminiTtsClient implements TtsClient {
     private final RestClient.Builder builder;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     private final String baseUrl;
-    private final String apiKey;
+    private final ApiKeyRing keys;
     private final String voice;
 
     public GeminiTtsClient(RestClient.Builder builder, String baseUrl, String apiKey, String voice) {
+        this(builder, baseUrl, ApiKeyRing.single(NAME, apiKey), voice);
+    }
+
+    /** keys: seslendirme için birincil ve yedek Gemini anahtarları; durumları sahne bölmeden ayrıdır (V22). */
+    public GeminiTtsClient(RestClient.Builder builder, String baseUrl, ApiKeyRing keys, String voice) {
         this.builder = builder;
         this.baseUrl = baseUrl.replaceAll("/+$", "");
-        this.apiKey = apiKey;
+        this.keys = keys;
         this.voice = voice;
     }
 
@@ -53,8 +58,18 @@ public class GeminiTtsClient implements TtsClient {
         return AiProviderConfig.Type.TTS;
     }
 
+    /** Açık anahtarı kalmayan sağlayıcı seçilmez (seslendirme planlayıcısı). */
+    @Override
+    public boolean hasUsableKey() {
+        return keys.hasUsable();
+    }
+
     @Override
     public SpeechResult synthesize(SpeechRequest request, AiProviderConfig config) {
+        return keys.call(key -> synthesize(request, config, key));
+    }
+
+    private SpeechResult synthesize(SpeechRequest request, AiProviderConfig config, ApiCredential key) {
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(http);
         factory.setReadTimeout(Duration.ofMillis(config.getTimeoutMs()));
         RestClient client = builder.clone().requestFactory(factory).baseUrl(baseUrl).build();
@@ -65,7 +80,7 @@ public class GeminiTtsClient implements TtsClient {
                         "speechConfig", Map.of("voiceConfig", Map.of("prebuiltVoiceConfig", Map.of("voiceName", voiceName)))));
         try {
             ResponseEntity<Response> entity = client.post().uri("/models/{model}:generateContent", config.getActiveModelName())
-                    .header("x-goog-api-key", apiKey)
+                    .header("x-goog-api-key", key.secret())
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
@@ -87,9 +102,12 @@ public class GeminiTtsClient implements TtsClient {
         } catch (RestClientResponseException e) {
             int status = e.getStatusCode().value();
             UsageMeter.status(status);
+            if (KeyRejectedException.rejects(status)) {
+                throw new KeyRejectedException("Gemini TTS anahtarı reddedildi: HTTP " + status, status);
+            }
             // 429: ücretsiz kota (dakikalık/günlük) doldu; yönlendirici sıradaki sağlayıcıya geçer, iş sonra yeniden denenir.
             if (status == HttpStatus.TOO_MANY_REQUESTS.value() || status == HttpStatus.SERVICE_UNAVAILABLE.value()) {
-                throw new RateLimitedException("Gemini TTS", OpenAiCompatibleLlmClient.retryAfter(e));
+                throw new RateLimitedException("Gemini TTS", OpenAiCompatibleLlmClient.retryAfter(e), status);
             }
             // Gövde log'a yazılmaz (metin çocuğun adını içerebilir); yalnızca durum kodu.
             throw new IllegalStateException("Gemini TTS isteği başarısız: HTTP " + status);

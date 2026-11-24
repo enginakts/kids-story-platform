@@ -107,7 +107,7 @@ class TtsClientsTests {
         server.stop(0);
         start(401, Map.of(), new byte[0]);
         assertThatThrownBy(() -> azure().synthesize(new TtsClient.SpeechRequest("Merhaba.", null, 1.0), config("tr-TR-EmelNeural")))
-                .hasMessage("Azure Speech isteği başarısız: HTTP 401");
+                .hasMessage("Azure Speech anahtarı reddedildi: HTTP 401"); // V22: anahtar halkası bu anahtarı kapatır
         server.stop(0);
         server = null;
         assertThatThrownBy(() -> azure().synthesize(new TtsClient.SpeechRequest("Merhaba.", null, 1.0), config("tr-TR-EmelNeural")))

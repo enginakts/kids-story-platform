@@ -55,7 +55,7 @@ public class AiRouter {
         }
         for (AiProviderConfig config : list) {
             C client = find(clientType, config.getProviderName());
-            if (client == null) {
+            if (client == null || !client.hasUsableKey()) { // adaptör yok ya da bütün anahtarları kapalı (V22)
                 continue;
             }
             UsageMeter.start();

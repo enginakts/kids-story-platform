@@ -28,13 +28,18 @@ public class AzureSpeechTtsClient implements TtsClient {
     private final RestClient.Builder builder;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     private final String baseUrl;
-    private final String key;
+    private final ApiKeyRing keys;
 
     /** baseUrl: https://{bölge}.tts.speech.microsoft.com */
     public AzureSpeechTtsClient(RestClient.Builder builder, String baseUrl, String key) {
+        this(builder, baseUrl, ApiKeyRing.single(NAME, key));
+    }
+
+    /** keys: birincil ve yedek Azure kaynakları; her yedeğin bölgesi kendi adresindedir (V22). */
+    public AzureSpeechTtsClient(RestClient.Builder builder, String baseUrl, ApiKeyRing keys) {
         this.builder = builder;
         this.baseUrl = baseUrl.replaceAll("/+$", "");
-        this.key = key;
+        this.keys = keys;
     }
 
     @Override
@@ -47,14 +52,25 @@ public class AzureSpeechTtsClient implements TtsClient {
         return AiProviderConfig.Type.TTS;
     }
 
+    /** Açık anahtarı kalmayan sağlayıcı seçilmez (seslendirme planlayıcısı). */
+    @Override
+    public boolean hasUsableKey() {
+        return keys.hasUsable();
+    }
+
     @Override
     public SpeechResult synthesize(SpeechRequest request, AiProviderConfig config) {
+        return keys.call(key -> synthesize(request, config, key));
+    }
+
+    private SpeechResult synthesize(SpeechRequest request, AiProviderConfig config, ApiCredential key) {
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(http);
         factory.setReadTimeout(Duration.ofMillis(config.getTimeoutMs()));
-        RestClient client = builder.clone().requestFactory(factory).baseUrl(baseUrl).build();
+        String url = key.baseUrl() == null || key.baseUrl().isBlank() ? baseUrl : key.baseUrl().replaceAll("/+$", "");
+        RestClient client = builder.clone().requestFactory(factory).baseUrl(url).build();
         try {
             byte[] audio = client.post().uri("/cognitiveservices/v1")
-                    .header("Ocp-Apim-Subscription-Key", key)
+                    .header("Ocp-Apim-Subscription-Key", key.secret())
                     .header("X-Microsoft-OutputFormat", OUTPUT)
                     .header("User-Agent", "masal-dunyasi")
                     .contentType(MediaType.parseMediaType("application/ssml+xml; charset=utf-8"))
@@ -71,8 +87,11 @@ public class AzureSpeechTtsClient implements TtsClient {
         } catch (RestClientResponseException e) {
             int status = e.getStatusCode().value();
             UsageMeter.status(status);
+            if (KeyRejectedException.rejects(status)) {
+                throw new KeyRejectedException("Azure Speech anahtarı reddedildi: HTTP " + status, status);
+            }
             if (status == HttpStatus.TOO_MANY_REQUESTS.value() || status == HttpStatus.SERVICE_UNAVAILABLE.value()) {
-                throw new RateLimitedException("Azure Speech", OpenAiCompatibleLlmClient.retryAfter(e));
+                throw new RateLimitedException("Azure Speech", OpenAiCompatibleLlmClient.retryAfter(e), status);
             }
             // Gövde log'a yazılmaz (metin çocuğun adını içerebilir); yalnızca durum kodu.
             throw new IllegalStateException("Azure Speech isteği başarısız: HTTP " + status);

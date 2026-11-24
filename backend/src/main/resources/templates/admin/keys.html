@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('API anahtarları · Yönetim')}"></head>
+<body>
+<svg th:replace="~{fragments/layout :: icons}"></svg>
+<a th:replace="~{fragments/layout :: skip}"></a>
+<div th:replace="~{fragments/admin :: adminNav('keys')}"></div>
+<!-- API anahtarı yönetimi (yalnızca süper yönetici, V22). Anahtarlar .env'dedir; burada yalnızca son 4 hane, durum ve
+     bugünkü kullanım görünür. Kapatılan anahtar atlanır, sıradaki yedek anahtar (yoksa sıradaki sağlayıcı) kullanılır. -->
+<main id="main">
+    <div th:replace="~{fragments/admin :: messages}"></div>
+    <header class="page-head">
+        <div>
+            <h1 class="page-title">API anahtarları</h1>
+            <p class="page-lead">Her servis önce birincil anahtarla çalışır; kapatılan ya da kotası dolan anahtarın yerine sıradaki yedek anahtar geçer. Yedek anahtarlar başka hesapların ücretsiz kotalarıdır. Bir servisin bütün anahtarları kapalıysa sıradaki sağlayıcı kullanılır.</p>
+        </div>
+    </header>
+
+    <section class="card key-help" aria-labelledby="help-title">
+        <h2 id="help-title">Yedek anahtar ekleme</h2>
+        <p>Anahtarlar veritabanına yazılmaz; sunucudaki <code>backend/.env</code> dosyasındadır. Yedek eklemek için aynı adın sonuna numara ekleyip uygulamayı yeniden başlatın:</p>
+        <pre><code>GEMINI_API_KEY=…      # birincil
+GEMINI_API_KEY_2=…    # yedek (başka hesap)
+GROQ_API_KEY_2=…   MURF_API_KEY_2=…   FEATHERLESS_API_KEY_2=…
+CLOUDFLARE_API_TOKEN_2=…  CLOUDFLARE_ACCOUNT_ID_2=…
+AZURE_SPEECH_KEY_2=…      AZURE_SPEECH_REGION_2=…</code></pre>
+        <p class="muted">Kota ya da yetki hatası (HTTP 401, 402, 403, 429) alan anahtar otomatik kapanır. 402/429 ile kapananlar ücretsiz kotanın yenilendiği saatte kendiliğinden açılır (Gemini: TR 10:00/11:00, diğerleri: TR 03:00); geçersiz anahtar (401/403) ve sizin kapattıklarınız siz açana kadar kapalı kalır.</p>
+    </section>
+
+    <section class="section" th:each="g : ${groups}" th:attr="aria-label=${g.title}">
+        <div class="section-head"><h2 th:text="${g.title}">Masal metni</h2></div>
+        <div class="key-services">
+            <article class="card key-service" th:each="s : ${g.services}" th:id="${s.name}"
+                     th:classappend="${!s.providerActive or s.keys.isEmpty()} ? 'is-off'">
+                <header class="key-service-head">
+                    <div>
+                        <h3 th:text="${s.label}">Gemini</h3>
+                        <p class="muted">
+                            <span th:text="${s.name}">gemini</span>
+                            <span th:if="${s.model}" th:text="' · ' + ${s.model}"> · model</span>
+                        </p>
+                    </div>
+                    <ul class="chips">
+                        <li class="chip status-failed" th:if="${!s.providerActive}">Sağlayıcı kapalı (Yapay zekâ sayfası)</li>
+                        <li class="chip status-failed" th:if="${s.providerActive and !s.keys.isEmpty() and s.usable == 0}">Açık anahtar yok · sıradaki sağlayıcı kullanılıyor</li>
+                        <li class="chip status-completed" th:if="${s.providerActive and s.usable > 0}" th:text="${s.usable} + ' / ' + ${#lists.size(s.keys)} + ' anahtar açık'">1 / 2 anahtar açık</li>
+                    </ul>
+                </header>
+                <p class="muted key-empty" th:if="${s.keys.isEmpty()}">Anahtar tanımlı değil. <code th:text="${s.envName}">GEMINI_API_KEY</code> .env dosyasına eklenince kullanılır.</p>
+                <p class="muted key-empty" th:if="${!s.keys.isEmpty() and !s.loaded}">Birincil anahtar (<code th:text="${s.envName}">X</code>) olmadan bu servis yüklenmez; yedekler de kullanılmaz.</p>
+                <div class="table-wrap" th:unless="${s.keys.isEmpty()}">
+                    <table class="data-table key-table">
+                        <thead><tr><th>Anahtar</th><th>Durum</th><th class="num">Bugün</th><th>Son kullanım</th><th>Son hata</th><th><span class="visually-hidden">İşlem</span></th></tr></thead>
+                        <tbody>
+                        <tr th:each="k : ${s.keys}" th:classappend="${!k.enabled} ? 'is-off'">
+                            <td>
+                                <strong th:text="${k.primary} ? 'Birincil' : ${k.slot} + '. yedek'">Birincil</strong>
+                                <small class="key-env"><code th:text="${k.envName}">GEMINI_API_KEY</code> <span th:text="${k.masked}">••••abcd</span></small>
+                            </td>
+                            <td>
+                                <span class="chip status-completed" th:if="${k.enabled}">Açık</span>
+                                <span class="chip status-failed" th:if="${!k.enabled and !k.auto}">Kapalı (yönetici)</span>
+                                <span class="chip status-pending" th:if="${!k.enabled and k.auto}">Otomatik kapandı</span>
+                                <small class="key-reason" th:if="${!k.enabled and k.reason != null}" th:text="${k.reason}">Kota doldu</small>
+                                <small class="key-reason" th:if="${!k.enabled and k.auto}"
+                                       th:text="${k.reenableAt != null} ? 'Yeniden açılış: ' + ${k.reenableAt} : 'Siz açana kadar kapalı'">Yeniden açılış</small>
+                            </td>
+                            <td class="num" th:text="${k.callsToday}">0</td>
+                            <td th:text="${k.lastUsedAt} ?: '—'">—</td>
+                            <td><span th:if="${k.lastError}" th:text="${k.lastErrorAt} + ' · ' + ${k.lastError}">hata</span><span th:unless="${k.lastError}">—</span></td>
+                            <td>
+                                <form class="inline-form" th:action="@{/admin/keys/{s}/{n}(s=${k.service}, n=${k.slot})}" method="post">
+                                    <input type="hidden" name="enabled" th:value="${!k.enabled}">
+                                    <button class="btn btn-sm" th:classappend="${k.enabled} ? 'btn-secondary' : 'btn-primary'" type="submit"
+                                            th:text="${k.enabled} ? 'Kapat' : 'Aç'"
+                                            th:attr="aria-label=(${k.enabled} ? 'Kapat: ' : 'Aç: ') + ${s.label} + ' ' + ${k.envName}">Kapat</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </div>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

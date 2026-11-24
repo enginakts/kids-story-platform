@@ -1725,3 +1725,42 @@ body.story-full:has(.story-stage.is-paged) main.story-page { max-width: none; wi
 .site-page .card-hero { box-shadow: none; }
 .site-page .theme-btn.is-active { box-shadow: none; position: relative; }
 .site-page .theme-btn.is-active::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--vurgu); }
+
+/* ---------- API anahtarları (yönetim, V22) ---------- */
+.key-help { margin-bottom: var(--space-6); }
+.key-help h2 { margin: 0 0 var(--space-2); font-size: 20px; }
+.key-help p { margin: 0 0 var(--space-3); }
+.key-help pre { margin: 0 0 var(--space-3); padding: var(--space-3) var(--space-4); overflow-x: auto; border-radius: 12px;
+    background: var(--paper-2); font-size: 13px; line-height: 1.6; }
+.key-services { display: grid; gap: var(--space-4); }
+.key-service { padding: var(--space-4) var(--space-5); }
+.key-service.is-off { opacity: 0.78; }
+.key-service-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
+.key-service-head h3 { margin: 0; font-size: 19px; }
+.key-service-head p { margin: 2px 0 0; font-size: 14px; }
+.key-service-head .chips { margin: 0; }
+.key-empty { margin: 0; }
+.key-table td { vertical-align: top; }
+.key-env, .key-reason { display: block; margin-top: 4px; color: var(--ink-soft); font-size: 13px; }
+.key-env code { font-size: 12px; }
+.key-table .inline-form { justify-content: flex-end; }
+.key-services > *, .key-service .table-wrap { min-width: 0; }
+@media (max-width: 640px) {
+    .key-service { padding: var(--space-4); }
+    /* Telefonda tablo yerine satır başına küçük kart */
+    .key-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .key-table, .key-table tbody { display: block; }
+    .key-table tr { display: grid; grid-template-columns: 1fr auto; gap: 6px var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--line); }
+    .key-table tr:first-child { border-top: 0; }
+    .key-table td, .key-table td.num { display: block; padding: 0; border: 0; text-align: left; }
+    .key-table td:nth-child(1) { grid-column: 1; }
+    .key-table td:nth-child(2) { grid-column: 2; grid-row: 1; text-align: right; }
+    .key-table td:nth-child(3)::before { content: "Bugün: "; color: var(--ink-soft); }
+    .key-table td:nth-child(4)::before { content: "Son kullanım: "; color: var(--ink-soft); }
+    .key-table td:nth-child(5)::before { content: "Son hata: "; color: var(--ink-soft); }
+    .key-table td:nth-child(3), .key-table td:nth-child(4), .key-table td:nth-child(5) { grid-column: 1 / -1; font-size: 14px; }
+    .key-table td:nth-child(6) { grid-column: 1 / -1; }
+    .key-table td:nth-child(6) .inline-form { justify-content: stretch; }
+    .key-table td:nth-child(6) .btn { width: 100%; min-height: 44px; }
+    .key-service .table-wrap { border: 0; padding: 0; }
+}

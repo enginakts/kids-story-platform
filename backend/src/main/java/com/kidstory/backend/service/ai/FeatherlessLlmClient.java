@@ -19,6 +19,10 @@ public class FeatherlessLlmClient extends OpenAiCompatibleLlmClient {
         super(NAME, "Featherless", builder, baseUrl, apiKey);
     }
 
+    public FeatherlessLlmClient(RestClient.Builder builder, String baseUrl, ApiKeyRing keys) {
+        super(NAME, "Featherless", builder, baseUrl, keys);
+    }
+
     @Override
     protected void customize(Map<String, Object> body, LlmRequest request) {
         body.put("max_tokens", 2048);
